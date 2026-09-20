@@ -1,1 +1,1 @@
-# fake-check
+# ScamGuard
