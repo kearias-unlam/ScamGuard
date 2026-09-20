@@ -13,7 +13,7 @@
 			"args": [
 				"-y",
 				"@azure-devops/mcp",
-				"fake-check-IAAplicada",
+				"ScamGuard",
 				"-d",
 				"core",
 				"work",
