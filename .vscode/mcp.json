@@ -1,0 +1,25 @@
+{
+	"servers": {
+		"mcp-playwright": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"@playwright/mcp@latest"
+			]
+		},
+		"mcp-ado": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"@azure-devops/mcp",
+				"fake-check-IAAplicada",
+				"-d",
+				"core",
+				"work",
+				"work-items"
+			]
+		}
+	},
+	"inputs": []
+}
