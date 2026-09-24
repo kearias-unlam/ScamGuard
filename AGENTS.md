@@ -32,3 +32,9 @@
 - Tests should cover the happy path and the most likely failure path for each touched feature.
 - When behavior is uncertain, choose the simplest implementation that satisfies the MVP.
 - Do not install dependencies without asking first.
+
+## Copilot / Claude parity
+- `.github/instructions/*.instructions.md` is the source of truth for path-scoped rules; `.claude/rules/*.md` only imports them. If an `applyTo` pattern changes, update the matching `paths` in `.claude/rules/` (and vice versa). When adding or removing an instructions file, add or remove its rule file.
+- `.github/agents/*.agent.md` and `.claude/agents/*.md` must stay in sync: any change to one agent's body must be applied to its counterpart in the same change.
+- `.claude/skills` is a symlink to `.github/skills`; edit skills only under `.github/skills`.
+- MCP servers are declared in both `.vscode/mcp.json` (Copilot, `servers` key) and `.mcp.json` (Claude, `mcpServers` key); any server change must be applied to both.
