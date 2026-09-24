@@ -1,4 +1,10 @@
 
+# Next.js
+/.next/
+
+# Local logs
+.command-log.txt
+
 # Playwright
 node_modules/
 /test-results/
