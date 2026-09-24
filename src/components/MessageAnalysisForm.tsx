@@ -15,12 +15,18 @@ export function MessageAnalysisForm({
   onMessageChange,
   onSubmit,
 }: MessageAnalysisFormProps) {
+  // Whitespace-only input counts as empty.
+  const isMessageEmpty = message.trim().length === 0;
+
   function handleMessageChange(event: ChangeEvent<HTMLTextAreaElement>): void {
     onMessageChange(event.target.value);
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
+    if (isMessageEmpty) {
+      return;
+    }
     const request: MessageAnalysisRequest = { message };
     void request;
     onSubmit();
@@ -36,7 +42,11 @@ export function MessageAnalysisForm({
         onChange={handleMessageChange}
         data-testid="message-input"
       />
-      <button type="submit" data-testid="submit-analysis-button">
+      <button
+        type="submit"
+        disabled={isMessageEmpty}
+        data-testid="submit-analysis-button"
+      >
         Analyze message
       </button>
     </form>

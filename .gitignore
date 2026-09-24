@@ -1,6 +1,7 @@
 
 # Next.js
 /.next/
+*.tsbuildinfo
 
 # Local logs
 .command-log.txt
@@ -12,3 +13,4 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+.playwright-mcp/
