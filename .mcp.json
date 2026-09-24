@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "mcp-playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    },
+    "mcp-ado": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@azure-devops/mcp", "ScamGuard", "-d", "core", "work", "work-items"]
+    }
+  }
+}
