@@ -1,6 +1,8 @@
-# Playwright Test Instructions
+---
+applyTo: "tests/**/*.spec.ts"
+---
 
-Applies only to `tests/**/*.spec.ts`.
+# Playwright Test Instructions
 
 ## Rules
 - Write test titles in Spanish.

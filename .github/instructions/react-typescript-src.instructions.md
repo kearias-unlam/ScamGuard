@@ -1,6 +1,8 @@
-# React and TypeScript Instructions
+---
+applyTo: "src/**/*.ts,src/**/*.tsx"
+---
 
-Applies only to `src/**/*.{ts,tsx}`.
+# React and TypeScript Instructions
 
 ## Rules
 - Use TypeScript strict mode conventions and avoid `any`.
