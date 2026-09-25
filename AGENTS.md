@@ -10,7 +10,7 @@
 - Target stack:
   - Frontend: Next.js + TypeScript
   - Backend: Python + FastAPI
-  - AI: `gpt-5.4-mini` deployed on Azure Foundry, called with the `openai` Python SDK (`AzureOpenAI` client)
+  - AI: `gpt-5.4-mini` deployed on Azure Foundry, called with the `openai` Python SDK (`OpenAI` client pointed at the Azure v1 endpoint, Responses API)
   - E2E: Playwright in TypeScript
   - Backend tests: Pytest
   - Package manager: npm (frontend); pip with `backend/requirements.txt` (backend)

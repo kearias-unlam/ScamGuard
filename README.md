@@ -8,9 +8,12 @@ Requires Python 3.14. Run from `backend/`:
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
+cp .env.example .env   # then fill in the Azure OpenAI values
+set -a; source .env; set +a
 uvicorn app.main:app --reload --port 8000
 ```
+
+The backend reads configuration with `os.environ` only (no python-dotenv), so load `.env` into the shell before starting uvicorn. Pytest does not need `.env`; the AI client is stubbed.
 
 Run tests: `pytest` (from `backend/` with the venv active).
 
