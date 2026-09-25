@@ -30,14 +30,14 @@ Tasks:
 ### US-1.2 Ejecutar el análisis
 Como usuario quiero ejecutar el análisis del mensaje.
 
-ADO ID: #4 · Status: partial (submit does not call the backend yet)
+ADO ID: #4 · Status: partial (frontend done; backend pending, #14-#18)
 
 El estado vacío se muestra solo antes del primer análisis; durante la carga o ante un error no se muestra. "Reintentar" reenvía el último mensaje enviado. Después de un análisis, el mensaje permanece en el campo.
 
 Criterios de aceptación:
 1. Al hacer clic en "Analizar mensaje", se envía `POST /analysis` con el cuerpo `{ "message": "<texto>" }`.
 2. Mientras el análisis está en curso, se muestra "Analizando mensaje..." (`role="status"`) y el botón está deshabilitado.
-3. Si el análisis falla, se muestra "Los servidores están ocupados. Intentá de nuevo más tarde." (`analysis-error`, new) y un botón "Reintentar" (`retry-analysis-button`, new).
+3. Si el análisis falla, se muestra "Los servidores están ocupados. Intentá de nuevo más tarde." (`analysis-error`) y un botón "Reintentar" (`retry-analysis-button`).
 4. Al reintentar con éxito, se muestra el resultado (`analysis-result`).
 5. Si un nuevo análisis falla, el resultado anterior deja de mostrarse.
 
@@ -167,6 +167,7 @@ export interface MessageAnalysisResponse {
 ```
 
 - `evidence`, `explanation`, and `UNDETERMINED` are new and must be added to `src/types.ts` (task #11) and to the backend models.
+- The frontend reads the backend base URL from `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:8000`). E2E tests mock `**/analysis`, so no backend needs to run.
 - JSON fields are camelCase; backend models use snake_case with camelCase aliases.
 - Errors:
   - `422`: empty or whitespace-only message. The UI cannot send it (the button is disabled), so it is covered by Pytest only.
