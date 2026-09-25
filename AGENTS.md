@@ -18,6 +18,7 @@
 ## Backend structure
 - `backend/app/main.py`: FastAPI app, CORS, and router registration.
 - `backend/app/models.py`: Pydantic request/response models.
+- `backend/app/routes.py`: HTTP endpoints (thin router: validate input, call services).
 - `backend/app/services/`: business logic.
 - `backend/app/ai/`: Azure OpenAI client, prompt, and output validation (the `/ai` layer).
 - `backend/tests/`: Pytest.
