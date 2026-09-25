@@ -14,9 +14,12 @@ interface RiskLevelViewProps {
 
 export function RiskLevelView({ riskLevel }: RiskLevelViewProps) {
   return (
-    <dl>
+    <dl className="risk-level">
       <dt>Nivel de riesgo</dt>
-      <dd data-testid="analysis-risk-level">{RISK_LEVEL_LABELS[riskLevel]}</dd>
+      {/* data-risk-level only drives the badge color; the Spanish label is always shown. */}
+      <dd className="risk-badge" data-risk-level={riskLevel} data-testid="analysis-risk-level">
+        {RISK_LEVEL_LABELS[riskLevel]}
+      </dd>
     </dl>
   );
 }

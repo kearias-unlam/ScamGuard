@@ -73,7 +73,7 @@ ADO ID: #1
 ### US-2.1 Conocer el nivel de riesgo
 Como usuario quiero conocer el nivel de riesgo o sospecha del mensaje.
 
-ADO ID: #6 · Status: active (styling task #25 open)
+ADO ID: #6 · Status: done
 
 Criterios de aceptación:
 1. El resultado muestra el rótulo "Nivel de riesgo" y, en `analysis-risk-level`, solo el valor.
@@ -146,11 +146,11 @@ Plain CSS in `src/app/globals.css` (built into Next.js; no CSS framework). Color
 
 | Token | Value | Use |
 |---|---|---|
-| `--color-bg` | `#f6f7fb` | Page background |
+| `--color-bg` | `#f6f7fb` | Page background, evidence background |
 | `--color-surface` | `#ffffff` | Cards (form, result, indicators) |
 | `--color-text` | `#111827` | Body text |
-| `--color-muted` | `#4b5563` | Empty state, disclaimer, status text, textarea border, disabled button text |
-| `--color-border` | `#d1d5db` | Card and disabled button borders |
+| `--color-muted` | `#4b5563` | Empty state, empty indicators, disclaimer, status text, textarea border, evidence border, disabled button text |
+| `--color-border` | `#d1d5db` | Card, indicator, disclaimer, and disabled button borders |
 | `--color-primary` | `#1d4ed8` | Primary button, heading underline, focus outline |
 | `--color-primary-hover` | `#1e40af` | Primary button hover |
 | `--color-disabled-bg` | `#e5e7eb` | Disabled button background |
