@@ -17,7 +17,7 @@ ADO ID: #2
 ### US-1.1 Ingresar un mensaje
 Como usuario quiero ingresar un mensaje de texto para analizarlo y conocer si presenta indicios de fraude o engaño.
 
-ADO ID: #3 · Status: done
+ADO ID: #3 · Status: active (styling task #24 open)
 
 Criterios de aceptación:
 1. Al abrir la página, el campo "Mensaje" está vacío y el botón "Analizar mensaje" está deshabilitado.
@@ -26,6 +26,7 @@ Criterios de aceptación:
 
 Tasks:
 - #10 Translate form texts and update US-1.1 tests: label "Mensaje", button "Analizar mensaje", `<html lang="es">`; update `tests/ingreso-mensaje.spec.ts` and replace the `User Story #3` comment with `US-1.1`; delete `tests/gestion-tareas.spec.ts`, which only asserts placeholder behavior.
+- #24 Frontend: page layout and message form styling. Plain CSS in `src/app/globals.css` (no new dependency) using the palette variables from [Visual design](#visual-design). Replace the centered grid on `main` with a left-aligned column (max-width 48rem, centered with auto margins, 2rem padding, 1.5rem vertical gap, page background `--color-bg`); `h1` at 2rem with an accent underline (`text-decoration-color: var(--color-primary)`, 3px thickness, 0.3em offset). The form is a white card (1px border, 0.5rem radius, 1.5rem padding) with the label above a full-width textarea (`rows={6}`, min-height 10rem, vertical resize, 1rem font, visible border). "Analizar mensaje" is a primary button with hover, a visible `:focus-visible` outline on every button and the textarea, and a disabled state (muted colors, `not-allowed` cursor). `analysis-status` keeps a fixed min-height so showing or hiding the loading text does not shift the page. The error block uses `--color-error-text` on `--color-error-bg` with a left border; "Reintentar" is a secondary (outlined) button. The empty state is muted text. Add class names and the `rows` attribute only: no text, role, element type, or `data-testid` changes, and no CSS-generated text (`::before`/`::after` content). WCAG AA: 4.5:1 for text, 3:1 for focus outlines and borders of controls. Verification: the full Playwright suite stays green with no new assertions; attach screenshots of the empty, loading, and error states. Depends on #23.
 
 ### US-1.2 Ejecutar el análisis
 Como usuario quiero ejecutar el análisis del mensaje.
@@ -72,7 +73,7 @@ ADO ID: #1
 ### US-2.1 Conocer el nivel de riesgo
 Como usuario quiero conocer el nivel de riesgo o sospecha del mensaje.
 
-ADO ID: #6 · Status: done
+ADO ID: #6 · Status: active (styling task #25 open)
 
 Criterios de aceptación:
 1. El resultado muestra el rótulo "Nivel de riesgo" y, en `analysis-risk-level`, solo el valor.
@@ -81,6 +82,7 @@ Criterios de aceptación:
 
 Tasks:
 - #20 Frontend: risk level label and Spanish values with tests. Show "Nivel de riesgo" and, in `analysis-risk-level`, only the mapped value (display mapping only). Add `tests/nivel-riesgo.spec.ts` for AC1 to AC3. Depends on #11 and #12.
+- #25 Frontend: result card and risk level badge styling. Plain CSS in `src/app/globals.css` with the palette variables. `analysis-result` is a white card like the form. `RiskLevelView` adds `data-risk-level={riskLevel}` to the `dd`, and CSS renders it as a rounded badge colored by level (LOW green, MEDIUM amber, HIGH red, UNDETERMINED gray). Color is presentation only and never the only signal: the Spanish value stays the only content of the `dd`. The `dt` "Nivel de riesgo" is bold. Explanation and summary are spaced paragraphs in body color. The indicator list has no bullets; each item is a bordered block with 1rem padding and 0.75rem gap. Indicator `h3` titles are underlined with the accent color. The evidence `blockquote` has a 4px left border, italic text, a light background, and no extra quote characters. The disclaimer is a smaller muted note with a top border. No text, role, element type, or `data-testid` changes; no new lists, headings, or `dt` elements inside `analysis-result`. WCAG AA contrast for every badge. Verification: the full Playwright suite stays green with no new assertions; attach screenshots of a result for each risk level and of a result with zero indicators. Depends on #24.
 
 ### US-2.2 Conocer los indicadores detectados
 Como usuario quiero conocer los indicadores detectados en el mensaje.
@@ -137,6 +139,29 @@ Tasks:
 | No indicators | No se detectaron indicadores. |
 | Disclaimer | Este resultado es una ayuda para decidir, no una confirmación de fraude. |
 | Explanation when `UNDETERMINED` (set by the backend) | No se encontraron citas del mensaje que respalden los indicadores. |
+
+## Visual design
+
+Plain CSS in `src/app/globals.css` (built into Next.js; no CSS framework). Colors are CSS variables in `:root`; components use class names, never `data-testid` selectors, for styling. Styling never adds or changes visible text, roles, or `data-testid` values.
+
+| Token | Value | Use |
+|---|---|---|
+| `--color-bg` | `#f6f7fb` | Page background |
+| `--color-surface` | `#ffffff` | Cards (form, result, indicators) |
+| `--color-text` | `#111827` | Body text |
+| `--color-muted` | `#4b5563` | Empty state, disclaimer |
+| `--color-border` | `#d1d5db` | Card and field borders |
+| `--color-primary` | `#1d4ed8` | Primary button, heading underline, focus outline |
+| `--color-primary-hover` | `#1e40af` | Primary button hover |
+| `--color-error-text` / `--color-error-bg` | `#b91c1c` / `#fef2f2` | Error block |
+| `--color-risk-low` / `-bg` | `#166534` / `#dcfce7` | Risk badge "Bajo" |
+| `--color-risk-medium` / `-bg` | `#92400e` / `#fef3c7` | Risk badge "Medio" |
+| `--color-risk-high` / `-bg` | `#991b1b` / `#fee2e2` | Risk badge "Alto" |
+| `--color-risk-undetermined` / `-bg` | `#374151` / `#e5e7eb` | Risk badge "Indeterminado" |
+
+- The risk badge color is selected with `[data-risk-level="..."]` on the `dd`; the Spanish label is always shown, so color is never the only signal.
+- All text/background pairs meet WCAG AA (4.5:1); focus is always visible (`:focus-visible` outline, 2px `--color-primary`, 2px offset).
+- Layout: single column, max-width 48rem, centered.
 
 ## API contract
 
