@@ -85,11 +85,11 @@ Tasks:
 ### US-2.2 Conocer los indicadores detectados
 Como usuario quiero conocer los indicadores detectados en el mensaje.
 
-ADO ID: #7 · Status: partial (no empty message)
+ADO ID: #7 · Status: done
 
 Criterios de aceptación:
 1. Cada indicador se muestra en `analysis-indicator` con su título y descripción.
-2. Si no se detectan indicadores, se muestra "No se detectaron indicadores." en `analysis-indicators-empty` (new).
+2. Si no se detectan indicadores, se muestra "No se detectaron indicadores." en `analysis-indicators-empty`.
 
 Tasks:
 - #21 Frontend: indicators empty message, key fix, and tests. Show the empty message when the list is empty; change the React key from `indicator.type` to `${type}-${index}`. Add `tests/indicadores.spec.ts` for AC1 (two indicators with the same type) and AC2. Depends on #12.

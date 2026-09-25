@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 
-import type { MessageAnalysisResponse, RiskLevel } from '../../src/types';
+import type { Indicator, MessageAnalysisResponse, RiskLevel } from '../../src/types';
 
 const ANALYSIS_ROUTE = '**/analysis';
 const CORS_HEADERS = { 'Access-Control-Allow-Origin': '*' };
@@ -25,6 +25,27 @@ export const analysisResponse: MessageAnalysisResponse = {
 export function analysisResponseWithRisk(riskLevel: RiskLevel): MessageAnalysisResponse {
   return { result: { ...analysisResponse.result, riskLevel } };
 }
+
+// Same response as analysisResponse with a different list of indicators.
+export function analysisResponseWithIndicators(indicators: Indicator[]): MessageAnalysisResponse {
+  return { result: { ...analysisResponse.result, indicators } };
+}
+
+// Two indicators sharing a type, as returned by the real model.
+export const sameTypeIndicators: Indicator[] = [
+  {
+    type: 'payment_request',
+    title: 'Pedido de pago',
+    description: 'El mensaje pide transferir dinero.',
+    evidence: 'Transferí $5000',
+  },
+  {
+    type: 'payment_request',
+    title: 'Pago por adelantado',
+    description: 'El mensaje exige pagar antes de recibir el premio.',
+    evidence: 'pagá el envío',
+  },
+];
 
 interface MockAnalysisOptions {
   status?: number;
