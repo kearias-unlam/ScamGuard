@@ -1,3 +1,3 @@
 export function EmptyState() {
-  return <p>No analysis has been run yet.</p>;
+  return <p data-testid="analysis-result-empty">Todavía no se analizó ningún mensaje.</p>;
 }

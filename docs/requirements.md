@@ -54,7 +54,7 @@ Tasks:
 ### US-1.3 Ver un resumen del análisis
 Como usuario quiero ver un resumen del análisis realizado.
 
-ADO ID: #5 · Status: partial (rendered but never reachable)
+ADO ID: #5 · Status: done
 
 El resumen describe qué pide o qué pretende ser el mensaje. No explica el nivel de riesgo (eso es US-2.3).
 
