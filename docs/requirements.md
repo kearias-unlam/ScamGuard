@@ -85,6 +85,8 @@ Tasks:
 ### US-2.2 Conocer los indicadores detectados
 Como usuario quiero conocer los indicadores detectados en el mensaje.
 
+Tipos de indicador: urgencia inusual, pedido de datos personales o códigos, enlaces sospechosos, suplantación de identidad, errores de redacción, promesas poco realistas y pedidos de pago o transferencias (ver [AI contract](#ai-contract)).
+
 ADO ID: #7 · Status: done
 
 Criterios de aceptación:
@@ -97,10 +99,10 @@ Tasks:
 ### US-2.3 Entender el nivel de riesgo
 Como usuario quiero entender por qué el mensaje recibió ese nivel de riesgo.
 
-ADO ID: #8 · Status: not started
+ADO ID: #8 · Status: done
 
 Criterios de aceptación:
-1. El resultado muestra la explicación del nivel de riesgo en `analysis-explanation` (new).
+1. El resultado muestra la explicación del nivel de riesgo en `analysis-explanation`.
 2. La explicación se muestra dentro de `analysis-result`.
 
 Tasks:

@@ -17,6 +17,7 @@ export function AnalysisResultView({ result, isIdle }: AnalysisResultViewProps) 
   return (
     <section data-testid="analysis-result">
       <RiskLevelView riskLevel={result.riskLevel} />
+      <p data-testid="analysis-explanation">{result.explanation}</p>
       <p data-testid="analysis-summary">{result.summary}</p>
       <IndicatorList indicators={result.indicators} />
     </section>
