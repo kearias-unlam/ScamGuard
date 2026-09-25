@@ -1,7 +1,14 @@
+export type AnalysisRequestStatus = 'idle' | 'loading' | 'error' | 'success';
+
 interface AnalysisStatusProps {
-  status: 'idle' | 'loading' | 'error' | 'success';
+  status: AnalysisRequestStatus;
 }
 
 export function AnalysisStatus({ status }: AnalysisStatusProps) {
-  return <div data-testid="analysis-status">{status}</div>;
+  // Always rendered so screen readers announce text changes.
+  return (
+    <p role="status" data-testid="analysis-status">
+      {status === 'loading' ? 'Analizando mensaje...' : null}
+    </p>
+  );
 }

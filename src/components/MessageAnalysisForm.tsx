@@ -2,16 +2,16 @@
 
 import type { FormEvent, ChangeEvent } from 'react';
 
-import type { MessageAnalysisRequest } from '@/types';
-
 interface MessageAnalysisFormProps {
   message: string;
+  isSubmitting: boolean;
   onMessageChange: (message: string) => void;
   onSubmit: () => void;
 }
 
 export function MessageAnalysisForm({
   message,
+  isSubmitting,
   onMessageChange,
   onSubmit,
 }: MessageAnalysisFormProps) {
@@ -24,11 +24,9 @@ export function MessageAnalysisForm({
 
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
-    if (isMessageEmpty) {
+    if (isMessageEmpty || isSubmitting) {
       return;
     }
-    const request: MessageAnalysisRequest = { message };
-    void request;
     onSubmit();
   }
 
@@ -44,7 +42,7 @@ export function MessageAnalysisForm({
       />
       <button
         type="submit"
-        disabled={isMessageEmpty}
+        disabled={isMessageEmpty || isSubmitting}
         data-testid="submit-analysis-button"
       >
         Analizar mensaje

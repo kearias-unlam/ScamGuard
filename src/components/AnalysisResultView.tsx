@@ -2,11 +2,15 @@ import type { AnalysisResult } from '@/types';
 
 interface AnalysisResultViewProps {
   result: AnalysisResult | null;
+  isIdle: boolean;
 }
 
-export function AnalysisResultView({ result }: AnalysisResultViewProps) {
+export function AnalysisResultView({ result, isIdle }: AnalysisResultViewProps) {
   if (result === null) {
-    return <div data-testid="analysis-result-empty">No analysis has been run yet.</div>;
+    // The empty state is shown only before the first analysis.
+    return isIdle ? (
+      <div data-testid="analysis-result-empty">No analysis has been run yet.</div>
+    ) : null;
   }
 
   return (
