@@ -36,7 +36,7 @@ class MessageAnalysisRequest(CamelModel):
     def reject_blank(cls, value: str) -> str:
         if not value.strip():
             raise ValueError("message must not be empty or whitespace-only")
-        return value  # Keep the original text; the evidence check in task #18 compares against it.
+        return value  # Keep the original text; the evidence check compares against it.
 
 
 class MessageAnalysisResponse(CamelModel):

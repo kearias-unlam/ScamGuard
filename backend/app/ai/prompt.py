@@ -1,8 +1,10 @@
 """Prompt and structured output schema for message analysis (see docs/requirements.md, AI contract)."""
 
+from typing import Literal, get_args
+
 from openai.types.responses import ResponseFormatTextJSONSchemaConfigParam
 
-INDICATOR_TYPES: tuple[str, ...] = (
+IndicatorType = Literal[
     "urgency",
     "personal_data_request",
     "suspicious_link",
@@ -10,10 +12,12 @@ INDICATOR_TYPES: tuple[str, ...] = (
     "writing_errors",
     "unrealistic_promise",
     "payment_request",
-)
+]
+INDICATOR_TYPES: tuple[str, ...] = get_args(IndicatorType)
 
-# The model may only return these; UNDETERMINED is set by the backend (task #18).
-MODEL_RISK_LEVELS: tuple[str, ...] = ("LOW", "MEDIUM", "HIGH")
+# The model may only return these; UNDETERMINED is set only by the backend (services/analysis.py).
+ModelRiskLevel = Literal["LOW", "MEDIUM", "HIGH"]
+MODEL_RISK_LEVELS: tuple[str, ...] = get_args(ModelRiskLevel)
 
 INSTRUCTIONS = """You analyze a text message for signs of scam or fraud. Your output is decision support, not proof: never state that the message is certainly a scam or certainly safe.
 
@@ -29,7 +33,7 @@ Fields:
   - writing_errors: spelling or grammar errors.
   - unrealistic_promise: prizes or unrealistic gains.
   - payment_request: asks for transfers or payments.
-  For each indicator: title is a short label; description is your interpretation of why it is a sign of scam; evidence is an exact, contiguous quote copied character by character from the message that supports it (do not paraphrase, translate, or add text). Only report an indicator if you can quote it. The same type may appear more than once with different evidence. Return an empty list if there are no signs.
+  For each indicator: title is a short label; description is your interpretation of why it is a sign of scam; evidence is an exact, contiguous quote copied character by character from the message that supports it (do not paraphrase, translate, or add text). Only report an indicator if the sign is present and you can quote it; never add an indicator to say that a type does not apply or is absent. The same type may appear more than once with different evidence. Return an empty list if there are no signs.
 - riskLevel: LOW, MEDIUM or HIGH, consistent with the indicators. With no indicators, use LOW.
 - explanation: one to three sentences justifying riskLevel based on the indicators, using cautious language ("podría", "sugiere").
 
