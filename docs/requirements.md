@@ -17,7 +17,7 @@ ADO ID: #2
 ### US-1.1 Ingresar un mensaje
 Como usuario quiero ingresar un mensaje de texto para analizarlo y conocer si presenta indicios de fraude o engaño.
 
-ADO ID: #3 · Status: partial (behavior done, UI texts still in English)
+ADO ID: #3 · Status: done
 
 Criterios de aceptación:
 1. Al abrir la página, el campo "Mensaje" está vacío y el botón "Analizar mensaje" está deshabilitado.

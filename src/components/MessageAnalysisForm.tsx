@@ -34,7 +34,7 @@ export function MessageAnalysisForm({
 
   return (
     <form onSubmit={handleSubmit}>
-      <label htmlFor="message">Message</label>
+      <label htmlFor="message">Mensaje</label>
       <textarea
         id="message"
         name="message"
@@ -47,7 +47,7 @@ export function MessageAnalysisForm({
         disabled={isMessageEmpty}
         data-testid="submit-analysis-button"
       >
-        Analyze message
+        Analizar mensaje
       </button>
     </form>
   );
