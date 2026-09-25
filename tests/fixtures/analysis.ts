@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 
-import type { MessageAnalysisResponse } from '../../src/types';
+import type { MessageAnalysisResponse, RiskLevel } from '../../src/types';
 
 const ANALYSIS_ROUTE = '**/analysis';
 const CORS_HEADERS = { 'Access-Control-Allow-Origin': '*' };
@@ -20,6 +20,11 @@ export const analysisResponse: MessageAnalysisResponse = {
     ],
   },
 };
+
+// Same response as analysisResponse with a different risk level.
+export function analysisResponseWithRisk(riskLevel: RiskLevel): MessageAnalysisResponse {
+  return { result: { ...analysisResponse.result, riskLevel } };
+}
 
 interface MockAnalysisOptions {
   status?: number;

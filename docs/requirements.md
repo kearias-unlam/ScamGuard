@@ -72,7 +72,7 @@ ADO ID: #1
 ### US-2.1 Conocer el nivel de riesgo
 Como usuario quiero conocer el nivel de riesgo o sospecha del mensaje.
 
-ADO ID: #6 · Status: partial (raw value shown without label)
+ADO ID: #6 · Status: done
 
 Criterios de aceptación:
 1. El resultado muestra el rótulo "Nivel de riesgo" y, en `analysis-risk-level`, solo el valor.

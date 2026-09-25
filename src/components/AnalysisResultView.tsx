@@ -1,4 +1,5 @@
 import { EmptyState } from '@/components/EmptyState';
+import { RiskLevelView } from '@/components/RiskLevelView';
 import type { AnalysisResult } from '@/types';
 
 interface AnalysisResultViewProps {
@@ -14,7 +15,7 @@ export function AnalysisResultView({ result, isIdle }: AnalysisResultViewProps) 
 
   return (
     <section data-testid="analysis-result">
-      <p data-testid="analysis-risk-level">{result.riskLevel}</p>
+      <RiskLevelView riskLevel={result.riskLevel} />
       <p data-testid="analysis-summary">{result.summary}</p>
       <ul data-testid="analysis-indicators">
         {result.indicators.map((indicator) => (
