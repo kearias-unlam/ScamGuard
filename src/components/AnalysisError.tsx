@@ -10,11 +10,16 @@ export function AnalysisError({ onRetry }: AnalysisErrorProps) {
   }
 
   return (
-    <div>
+    <div className="analysis-error">
       <p role="alert" data-testid="analysis-error">
         {ANALYSIS_ERROR_TEXT}
       </p>
-      <button type="button" onClick={handleRetryClick} data-testid="retry-analysis-button">
+      <button
+        type="button"
+        className="button button--secondary"
+        onClick={handleRetryClick}
+        data-testid="retry-analysis-button"
+      >
         Reintentar
       </button>
     </div>

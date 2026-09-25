@@ -7,7 +7,7 @@ interface AnalysisStatusProps {
 export function AnalysisStatus({ status }: AnalysisStatusProps) {
   // Always rendered so screen readers announce text changes.
   return (
-    <p role="status" data-testid="analysis-status">
+    <p role="status" className="analysis-status" data-testid="analysis-status">
       {status === 'loading' ? 'Analizando mensaje...' : null}
     </p>
   );

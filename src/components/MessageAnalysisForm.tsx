@@ -31,17 +31,19 @@ export function MessageAnalysisForm({
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="card message-form">
       <label htmlFor="message">Mensaje</label>
       <textarea
         id="message"
         name="message"
+        rows={6}
         value={message}
         onChange={handleMessageChange}
         data-testid="message-input"
       />
       <button
         type="submit"
+        className="button button--primary"
         disabled={isMessageEmpty || isSubmitting}
         data-testid="submit-analysis-button"
       >

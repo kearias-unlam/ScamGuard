@@ -17,7 +17,7 @@ ADO ID: #2
 ### US-1.1 Ingresar un mensaje
 Como usuario quiero ingresar un mensaje de texto para analizarlo y conocer si presenta indicios de fraude o engaño.
 
-ADO ID: #3 · Status: active (styling task #24 open)
+ADO ID: #3 · Status: done
 
 Criterios de aceptación:
 1. Al abrir la página, el campo "Mensaje" está vacío y el botón "Analizar mensaje" está deshabilitado.
@@ -149,10 +149,11 @@ Plain CSS in `src/app/globals.css` (built into Next.js; no CSS framework). Color
 | `--color-bg` | `#f6f7fb` | Page background |
 | `--color-surface` | `#ffffff` | Cards (form, result, indicators) |
 | `--color-text` | `#111827` | Body text |
-| `--color-muted` | `#4b5563` | Empty state, disclaimer |
-| `--color-border` | `#d1d5db` | Card and field borders |
+| `--color-muted` | `#4b5563` | Empty state, disclaimer, status text, textarea border, disabled button text |
+| `--color-border` | `#d1d5db` | Card and disabled button borders |
 | `--color-primary` | `#1d4ed8` | Primary button, heading underline, focus outline |
 | `--color-primary-hover` | `#1e40af` | Primary button hover |
+| `--color-disabled-bg` | `#e5e7eb` | Disabled button background |
 | `--color-error-text` / `--color-error-bg` | `#b91c1c` / `#fef2f2` | Error block |
 | `--color-risk-low` / `-bg` | `#166534` / `#dcfce7` | Risk badge "Bajo" |
 | `--color-risk-medium` / `-bg` | `#92400e` / `#fef3c7` | Risk badge "Medio" |
