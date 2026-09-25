@@ -1,40 +1,39 @@
 ---
 name: ado-work-items
-description: "Use when you need to create, load, or report a fixed Azure DevOps backlog with Features and User Stories through whatever Azure DevOps MCP tools are available in the current environment."
-argument-hint: "Confirm the fixed backlog to load or describe the Azure DevOps backlog work to execute."
+description: "Use when you need to create, sync, or report the Azure DevOps backlog (Features, User Stories, and Tasks) from docs/requirements.md through whatever Azure DevOps MCP tools are available in the current environment."
+argument-hint: "Say which Features or User Stories from docs/requirements.md to load or sync, or leave empty for the full backlog."
 ---
 
 # ado-work-items
 
-Load and create a fixed Azure DevOps backlog using the available Azure DevOps MCP tools.
+Mirror the backlog defined in `docs/requirements.md` into Azure DevOps using the available Azure DevOps MCP tools.
+
+## Source of truth
+- `docs/requirements.md` defines every Feature, User Story, acceptance criterion, and Task. Read it at the start of every run.
+- Azure DevOps mirrors that file. Never add, reword, or rescope backlog items in ADO that are not in the file; if something must change, update `docs/requirements.md` first.
+
+## Mapping
+| docs/requirements.md | Azure DevOps |
+|---|---|
+| `## Feature N - <title>` | Feature, title as written |
+| `### US-N.M <title>` | User Story, child of its Feature; title `US-N.M <title>` |
+| Story sentence ("Como usuario quiero...") | User Story description |
+| `Criterios de aceptación` list | User Story acceptance criteria |
+| `Tasks` list | Task, child of its User Story |
 
 ## Workflow
-
-1. List the available Azure DevOps MCP tools first and map which ones fit the current environment.
-2. Show the proposed plan to the user and wait for approval before creating anything.
-3. Create Features first.
-4. Create User Stories as children of the corresponding Feature.
-5. Do not delete or close any work items.
-6. At the end, report the created work item IDs in a table with columns for ID, title, type, and parent.
-7. If a tool cannot be found or the available MCP surface differs, stop and explain the mismatch before proceeding.
-
-## Backlog
-
-### Feature 1 - Análisis de mensajes de texto
-- Como usuario quiero ingresar un mensaje de texto para analizarlo y conocer si presenta indicios de fraude o engaño.
-- Como usuario quiero ejecutar el análisis del mensaje.
-- Como usuario quiero ver un resumen del análisis realizado.
-
-### Feature 2 - Nivel de riesgo e indicadores
-- Como usuario quiero conocer el nivel de riesgo o sospecha del mensaje.
-- Como usuario quiero conocer los indicadores detectados en el mensaje.
-- Como usuario quiero entender por qué el mensaje recibió ese nivel de riesgo.
-- Como usuario quiero diferenciar entre indicios y hechos comprobados.
+1. Read `docs/requirements.md` and list the items in scope.
+2. List the available Azure DevOps MCP tools and map which ones fit the current environment.
+3. Query ADO for existing Features and User Stories to avoid duplicates. Match by `US-N.M` in the title, or by the story sentence for items created before IDs existed.
+4. Show the plan to the user: items to create, items to update, and items already in sync. Wait for approval before creating or updating anything.
+5. Create or update Features first, then their User Stories, then their Tasks.
+6. Report the result in a table with columns for ADO ID, title, type, and parent.
+7. Propose writing each new ADO ID into its `ADO ID:` line in `docs/requirements.md`, and apply it only after approval.
+8. If a tool cannot be found or the available MCP surface differs, stop and explain the mismatch before proceeding.
 
 ## Rules
 - Never hardcode Azure DevOps MCP tool names; always list the available tools and use the ones that fit.
 - Do not create, update, delete, or close work items without explicit user approval on the proposed plan.
-- Keep the hierarchy strict: Features first, then child User Stories.
-- Preserve the backlog wording and scope unless the user asks to change it.
-- Return a final table with work item IDs, titles, and parent relationships.
-- Use the fixed backlog exactly as written unless the user explicitly asks for changes.
+- Do not delete or close any work items.
+- Keep the hierarchy strict: Feature > User Story > Task.
+- Preserve the wording from `docs/requirements.md` exactly (backlog items are in Spanish).

@@ -10,21 +10,35 @@
 - Target stack:
   - Frontend: Next.js + TypeScript
   - Backend: Python + FastAPI
-  - AI: Azure Foundry model selected by the team
+  - AI: `gpt-5.4-mini` deployed on Azure Foundry, called with the `openai` Python SDK (`AzureOpenAI` client)
   - E2E: Playwright in TypeScript
   - Backend tests: Pytest
-  - Package manager: npm
+  - Package manager: npm (frontend); pip with `backend/requirements.txt` (backend)
+
+## Backend structure
+- `backend/app/main.py`: FastAPI app, CORS, and router registration.
+- `backend/app/models.py`: Pydantic request/response models.
+- `backend/app/services/`: business logic.
+- `backend/app/ai/`: Azure OpenAI client, prompt, and output validation (the `/ai` layer).
+- `backend/tests/`: Pytest.
+- `backend/requirements.txt`: Python dependencies.
+
+## Requirements
+- The backlog (Features, User Stories, acceptance criteria), API contract, AI contract, and non-functional requirements live in [docs/requirements.md](docs/requirements.md): @docs/requirements.md
+- `docs/requirements.md` is the source of truth; Azure DevOps mirrors it. Change requirements there first, then sync ADO.
+- Implement only what is listed there; if a request is not covered, ask first.
 
 ## Rules
 - Do not add technologies without justification or asking first.
 - Keep frontend and backend separated.
-- Separate responsibilities strictly: HTTP endpoints, business logic services, AI integration under /ai, and shared contracts/types only where needed.
+- Separate responsibilities strictly: HTTP endpoints, business logic services, AI integration under `backend/app/ai/`, and shared contracts/types only where needed.
 - Keep API contracts explicit and stable; prefer small typed request/response models.
 - Use local filesystem only.
 - Keep secrets out of code; use .env files.
 - Do not duplicate logic.
 - Frontend must not contain business logic.
 - Code in English; comments in English.
+- User-visible UI texts in Spanish; backlog items in Spanish. Everything else (code, identifiers, `data-testid`, docs structure) in English.
 - If a decision changes architecture, technology, or behavior, update the related documentation.
 - Prefer small, reversible changes over broad refactors.
 - Keep prompts, model expectations, and risk indicators documented when they affect behavior.
