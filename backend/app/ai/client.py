@@ -1,6 +1,7 @@
-"""Thin Azure OpenAI client (v1 API, Responses API): sends instructions and input, returns the raw output text."""
+"""Thin Azure OpenAI client (v1 API, Responses API): sends instructions and input, returns the raw output text, optionally constrained by a JSON schema."""
 
 from openai import OpenAI, OpenAIError
+from openai.types.responses import ResponseFormatTextJSONSchemaConfigParam
 
 from app.ai.config import AzureOpenAISettings, load_settings
 from app.ai.errors import AIServiceError
@@ -19,16 +20,28 @@ def build_client(settings: AzureOpenAISettings) -> OpenAI:
     )
 
 
-def generate_text(instructions: str, user_input: str, *, client: OpenAI | None = None) -> str:
-    """Call the deployment with the Responses API and return output_text. Raise AIServiceError on any failure."""
+def generate_text(
+    instructions: str,
+    user_input: str,
+    *,
+    client: OpenAI | None = None,
+    text_format: ResponseFormatTextJSONSchemaConfigParam | None = None,
+) -> str:
+    """Call the deployment with the Responses API and return output_text. Raise AIServiceError on any failure.
+
+    text_format, when given, enables structured output (sent as text.format)."""
     settings = load_settings()
     try:
         sdk_client = client if client is not None else build_client(settings)
-        response = sdk_client.responses.create(
-            model=settings.deployment,
-            instructions=instructions,
-            input=user_input,
-        )
+        if text_format is None:
+            response = sdk_client.responses.create(
+                model=settings.deployment, instructions=instructions, input=user_input,
+            )
+        else:
+            response = sdk_client.responses.create(
+                model=settings.deployment, instructions=instructions, input=user_input,
+                text={"format": text_format},
+            )
     except OpenAIError as error:
         raise AIServiceError("Azure OpenAI call failed") from error
     text = response.output_text

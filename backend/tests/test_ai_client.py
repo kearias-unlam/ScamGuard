@@ -6,6 +6,7 @@ from openai.types.responses import Response
 from app.ai.client import MAX_RETRIES, TIMEOUT_SECONDS, build_client, generate_text
 from app.ai.config import load_settings
 from app.ai.errors import AIServiceError
+from app.ai.prompt import INSTRUCTIONS, OUTPUT_FORMAT
 
 REQUEST = httpx.Request("POST", "https://example.invalid/openai/v1/responses")
 
@@ -86,3 +87,18 @@ def test_missing_config_becomes_ai_error(monkeypatch: pytest.MonkeyPatch) -> Non
     monkeypatch.delenv("AZURE_OPENAI_API_KEY")
     with pytest.raises(AIServiceError, match="AZURE_OPENAI_API_KEY"):
         generate_text("prompt", "hola")
+
+
+def test_forwards_output_schema_in_text_format(monkeypatch: pytest.MonkeyPatch) -> None:
+    client = build_client(load_settings())
+    captured: dict[str, object] = {}
+
+    def fake_create(**kwargs: object) -> Response:
+        captured.update(kwargs)
+        return _response_with_text("{}")
+
+    monkeypatch.setattr(client.responses, "create", fake_create)
+    generate_text(INSTRUCTIONS, "hola", client=client, text_format=OUTPUT_FORMAT)
+
+    assert captured["text"] == {"format": OUTPUT_FORMAT}
+    assert captured["instructions"] == INSTRUCTIONS
