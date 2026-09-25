@@ -1,9 +1,10 @@
-export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH';
+export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'UNDETERMINED';
 
 export interface Indicator {
   type: string;
   title: string;
   description: string;
+  evidence: string;
 }
 
 export interface MessageAnalysisRequest {
@@ -13,6 +14,7 @@ export interface MessageAnalysisRequest {
 export interface AnalysisResult {
   riskLevel: RiskLevel;
   summary: string;
+  explanation: string;
   indicators: Indicator[];
 }
 
