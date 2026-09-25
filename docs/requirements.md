@@ -111,13 +111,13 @@ Tasks:
 ### US-2.4 Diferenciar evidencia de inferencia
 Como usuario quiero diferenciar entre lo que dice el mensaje y lo que el modelo infiere.
 
-ADO ID: #9 · Status: not started
+ADO ID: #9 · Status: done
 
 El MVP no puede verificar hechos. Cada indicador separa la cita literal del mensaje (evidencia) de la interpretación del modelo (descripción).
 
 Criterios de aceptación:
-1. Cada indicador muestra el fragmento citado del mensaje en `analysis-indicator-evidence` (new), separado de la descripción.
-2. Con cualquier resultado, se muestra el aviso "Este resultado es una ayuda para decidir, no una confirmación de fraude." en `analysis-disclaimer` (new).
+1. Cada indicador muestra el fragmento citado del mensaje en `analysis-indicator-evidence`, separado de la descripción.
+2. Con cualquier resultado, se muestra el aviso "Este resultado es una ayuda para decidir, no una confirmación de fraude." en `analysis-disclaimer`.
 
 Tasks:
 - #23 Frontend: indicator evidence and disclaimer with tests. Show `indicator.evidence` in `analysis-indicator-evidence` and the disclaimer in `analysis-disclaimer` whenever there is a result. Add `tests/evidencia-inferencia.spec.ts` for AC1 and AC2 (disclaimer visible with zero indicators). Depends on #11 and #12.
@@ -204,7 +204,7 @@ export interface MessageAnalysisResponse {
 ## Non-functional requirements
 
 ### NFR-01 Decision support disclaimer
-The result is presented as decision support, not as a guarantee that a message is or is not a scam (see US-2.4).
+The result is presented as decision support, not as a guarantee that a message is or is not a scam. Satisfied by US-2.4: the disclaimer in `analysis-disclaimer` is shown with every result.
 
 ### NFR-02 Stable API contract
 The request/response contract is explicit and typed. Any change must be applied to the frontend, the backend, and this document in the same change.

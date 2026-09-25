@@ -15,7 +15,10 @@ export function IndicatorList({ indicators }: IndicatorListProps) {
         // The model may return several indicators of the same type.
         <li key={`${indicator.type}-${index}`} data-testid="analysis-indicator">
           <h3>{indicator.title}</h3>
+          {/* Model inference. */}
           <p>{indicator.description}</p>
+          {/* Literal quote from the submitted message, kept separate from the inference. */}
+          <blockquote data-testid="analysis-indicator-evidence">{indicator.evidence}</blockquote>
         </li>
       ))}
     </ul>
