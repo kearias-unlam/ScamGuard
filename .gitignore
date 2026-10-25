@@ -18,6 +18,7 @@ node_modules/
 # Python backend
 /backend/.venv/
 /backend/.env
+/backend/data/
 __pycache__/
 .pytest_cache/
 
