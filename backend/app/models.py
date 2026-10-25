@@ -1,4 +1,4 @@
-"""Pydantic request/response models for POST /analysis (mirror of src/types.ts)."""
+"""Pydantic request/response models for POST /analysis and GET /critical-messages (mirror of src/types.ts)."""
 
 from typing import Literal
 
@@ -6,6 +6,18 @@ from pydantic import BaseModel, ConfigDict, field_validator
 from pydantic.alias_generators import to_camel
 
 RiskLevel = Literal["LOW", "MEDIUM", "HIGH", "UNDETERMINED"]
+
+# Fixed topic list (docs/requirements.md, AI contract).
+Topic = Literal[
+    "family_money_request",
+    "bank_impersonation",
+    "credentials_request",
+    "prize_or_giveaway",
+    "package_delivery",
+    "investment_offer",
+    "job_offer",
+    "other",
+]
 
 
 class CamelModel(BaseModel):
@@ -30,6 +42,8 @@ class AnalysisResult(CamelModel):
 
 class MessageAnalysisRequest(CamelModel):
     message: str
+    share_in_panel: bool = False  # US-3.3: optional, so a request with only the message stays valid.
+    sensitive_data: str = ""
 
     @field_validator("message")
     @classmethod
@@ -41,3 +55,18 @@ class MessageAnalysisRequest(CamelModel):
 
 class MessageAnalysisResponse(CamelModel):
     result: AnalysisResult
+
+
+class CriticalMessage(CamelModel):
+    id: int
+    text: str  # Masked text, never the original.
+
+
+class CriticalTopic(CamelModel):
+    topic: Topic
+    title: str
+    messages: list[CriticalMessage]
+
+
+class CriticalMessagesResponse(CamelModel):
+    topics: list[CriticalTopic]
