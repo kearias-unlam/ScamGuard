@@ -1,5 +1,6 @@
 "use client";
 
+import Link from 'next/link';
 import { useState } from 'react';
 
 import { AnalysisError } from '@/components/AnalysisError';
@@ -45,6 +46,9 @@ export default function HomePage() {
   return (
     <main>
       <h1>ScamGuard</h1>
+      <Link href="/panel" data-testid="panel-link">
+        Ver mensajes críticos
+      </Link>
       <MessageAnalysisForm
         message={message}
         isSubmitting={status === 'loading'}

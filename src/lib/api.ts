@@ -1,4 +1,8 @@
-import type { MessageAnalysisRequest, MessageAnalysisResponse } from '@/types';
+import type {
+  CriticalMessagesResponse,
+  MessageAnalysisRequest,
+  MessageAnalysisResponse,
+} from '@/types';
 
 export function buildBackendUrl(path: `/${string}`): string {
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
@@ -21,4 +25,16 @@ export async function postAnalysis(
     throw new Error(`Analysis request failed with status ${response.status}`);
   }
   return (await response.json()) as MessageAnalysisResponse;
+}
+
+export function getCriticalMessagesEndpoint(): string {
+  return buildBackendUrl('/critical-messages');
+}
+
+export async function getCriticalMessages(): Promise<CriticalMessagesResponse> {
+  const response = await fetch(getCriticalMessagesEndpoint());
+  if (!response.ok) {
+    throw new Error(`Critical messages request failed with status ${response.status}`);
+  }
+  return (await response.json()) as CriticalMessagesResponse;
 }
