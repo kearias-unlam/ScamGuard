@@ -20,3 +20,6 @@ node_modules/
 /backend/.env
 __pycache__/
 .pytest_cache/
+
+#App logs
+logs/
