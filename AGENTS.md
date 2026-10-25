@@ -3,9 +3,10 @@
 ## Scope
 - Build a minimal, university-ready MVP for scam/fraud detection.
 - Primary input for the first delivery is text messages; other formats can be considered later only if they do not expand scope.
-- Closed scope: 2 user-facing features only.
+- Closed scope: 3 user-facing features only.
   - Submit a message and receive an analysis result.
   - Display risk level and the indicators detected by the model.
+  - Browse a panel of high-risk messages that users chose to share, masked and grouped by topic.
 - Treat the output as decision support, not as a guarantee of fraud detection.
 - Target stack:
   - Frontend: Next.js + TypeScript
@@ -21,6 +22,7 @@
 - `backend/app/routes.py`: HTTP endpoints (thin router: validate input, call services).
 - `backend/app/services/`: business logic.
 - `backend/app/ai/`: Azure OpenAI client, prompt, and output validation (the `/ai` layer).
+- `backend/app/storage/`: SQLite persistence of critical messages (standard library `sqlite3`).
 - `backend/tests/`: Pytest.
 - `backend/requirements.txt`: Python dependencies.
 

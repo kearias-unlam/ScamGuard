@@ -6,7 +6,7 @@ Single source of truth for what ScamGuard must do. Implement only what is listed
 - Each User Story is loaded into Azure DevOps with the `ado-work-items` skill. Record the ADO ID next to each Feature, User Story, and Task once created.
 - Reference story IDs in commits and tests (e.g. `// US-1.2`). Each acceptance criterion maps to one Playwright test.
 - Every task ships with the tests it adds or breaks; no task leaves the suite failing.
-- E2E tests mock `POST /analysis` with `page.route` through the shared helper `tests/fixtures/analysis.ts`; Pytest covers the backend with the AI client stubbed.
+- E2E tests mock `POST /analysis` with `page.route` through the shared helper `tests/fixtures/analysis.ts`, and `GET /critical-messages` through `tests/fixtures/critical-messages.ts`; Pytest covers the backend with the AI client stubbed and SQLite on a temporary file.
 - Selectors marked **(new)** do not exist yet; confirm them with a page snapshot after implementation.
 - Task dependencies are listed as "Depends on"; do not start a task before its dependencies are done.
 
@@ -124,6 +124,61 @@ Criterios de aceptación:
 Tasks:
 - #23 Frontend: indicator evidence and disclaimer with tests. Show `indicator.evidence` in `analysis-indicator-evidence` and the disclaimer in `analysis-disclaimer` whenever there is a result. Add `tests/evidencia-inferencia.spec.ts` for AC1 and AC2 (disclaimer visible with zero indicators). Depends on #11 and #12.
 
+## Feature 3 - Panel de mensajes críticos
+
+ADO ID: #26
+
+### US-3.1 Ver el panel de mensajes críticos
+Como usuario quiero ver un panel con los mensajes de riesgo alto que se analizaron en ScamGuard, agrupados por tópico, para conocer los engaños más frecuentes.
+
+ADO ID: #27 · Status: todo
+
+El panel está en `/panel`. Los mensajes se agrupan por el `topic` que asigna la IA (ver [AI contract](#ai-contract)). Cada tópico muestra su título y la cantidad de mensajes similares. Los tópicos llegan ordenados desde el backend, de mayor a menor cantidad de mensajes.
+
+Criterios de aceptación:
+1. En la página principal, el enlace "Ver mensajes críticos" lleva al panel, que muestra el título "Mensajes críticos" y un enlace "Volver al análisis".
+2. Cada tópico se muestra en `panel-topic` con su título y "Mensajes similares: N", en el orden recibido del backend.
+3. Si no hay mensajes críticos, se muestra "Todavía no hay mensajes críticos registrados." (`panel-empty`).
+4. Si la carga del panel falla, se muestra "No se pudo cargar el panel. Intentá de nuevo más tarde." (`panel-error`) y un botón "Reintentar" (`panel-retry-button`); al reintentar con éxito se muestran los tópicos.
+
+Tasks:
+- #30 Contract: add `Topic`, `CriticalMessage`, `CriticalTopic`, and `CriticalMessagesResponse`, and the optional `shareInPanel` and `sensitiveData` fields of `MessageAnalysisRequest`, to `src/types.ts` and the matching Pydantic models (camelCase aliases; `share_in_panel` defaults to `false`, `sensitive_data` to `""`) to `backend/app/models.py`. Nothing is rendered, sent, or served yet.
+- #31 Storage: `backend/app/storage/critical_messages.py` with `sqlite3` (standard library): create the table on first use, `save_critical_message(topic, text)`, and `list_critical_topics()` grouped and ordered as documented in [Critical messages storage](#critical-messages-storage). DB path from `SCAMGUARD_DB_PATH` (default `backend/data/scamguard.db`); add the variable to `backend/.env.example` and `/backend/data/` to `.gitignore`. Define a typed `StorageError` and raise it on any `sqlite3` or `OSError` error. Pytest on a temporary DB file: save and list (grouping and order), empty DB, and a `sqlite3` error becoming `StorageError`. Depends on #30.
+- #32 Backend: `GET /critical-messages` endpoint. Thin router; the service builds the response with the Spanish topic titles (defined once in the backend); CORS also allows `GET`; `StorageError` becomes the 503 error (see [API contract](#api-contract)). Pytest: grouped and ordered response with titles, empty list, storage error returning 503, and CORS for `GET`. Depends on #30 and #31.
+- #33 Frontend: panel page, topic list, empty, and error states. Add `getCriticalMessages` to `src/lib/api.ts` (throws on non-2xx). Create `src/app/panel/page.tsx` with the heading, the "Volver al análisis" link, a `role="status"` element holding "Cargando mensajes críticos..." while loading, the topic list (title and "Mensajes similares: N" from `messages.length`), the empty state, and error with retry. Add the "Ver mensajes críticos" link to the home page. New selectors **(new)**: `panel-link` (home link), `panel-back-link`, and `panel-status`. Create `tests/fixtures/critical-messages.ts` (mocks `**/critical-messages`) and add `tests/panel-mensajes-criticos.spec.ts` for AC1 to AC4. Depends on #30.
+
+### US-3.2 Ver los mensajes de un tópico
+Como usuario quiero ver el detalle y todos los mensajes guardados de un tópico para reconocer cómo se escriben esos engaños.
+
+ADO ID: #28 · Status: todo
+
+Criterios de aceptación:
+1. El detalle del tópico ("Ver detalle", `panel-topic-detail`) está cerrado al cargar y, al abrirlo, muestra el mensaje más reciente del tópico.
+2. Al hacer clic en "Ver todos los mensajes" (`panel-topic-show-all`), cada mensaje guardado del tópico se muestra en `panel-topic-message`.
+
+Tasks:
+- #38 Frontend: topic detail and all messages. Each `panel-topic` has a native `<details>`/`<summary>` "Ver detalle" (`panel-topic-detail`) showing `messages[0]`, and a "Ver todos los mensajes" button that shows every message in `panel-topic-message`. Add `tests/mensajes-topico.spec.ts` for AC1 and AC2. Depends on #33.
+- #39 Frontend: panel styling. Plain CSS in `src/app/globals.css` with the palette variables: each topic is a white card like the result card; the topic title is bold; the count is muted text; the detail and the message list reuse the evidence `blockquote` style; links and buttons reuse the existing button and focus styles; the privacy notice is a muted note like the disclaimer. No text, role, element type, or `data-testid` changes. WCAG AA contrast. Verification: the full Playwright suite stays green with no new assertions; attach screenshots of the panel with topics, with a detail open, with all messages shown, empty, and with an error. Depends on #38 and #37.
+
+### US-3.3 Compartir un mensaje en el panel sin exponer datos personales
+Como usuario quiero elegir si mi mensaje se comparte en el panel e indicar qué datos ocultar, para ayudar a otras personas sin exponer información personal.
+
+ADO ID: #29 · Status: todo
+
+Un mensaje se guarda solo si el usuario marcó la casilla y el nivel de riesgo final es `HIGH` (después del chequeo de evidencia). Antes de guardarlo, se ocultan los datos personales que detecta la IA, los que indicó el usuario y los links, emails y números (ver [Critical messages storage](#critical-messages-storage)). El guardado y el enmascarado ocurren en el backend y se cubren con Pytest; el resultado del análisis no cambia para el usuario.
+
+Criterios de aceptación:
+1. Al abrir la página, la casilla "Compartir este mensaje en el panel de mensajes críticos" (`share-in-panel-checkbox`) está desmarcada y el campo "Datos a ocultar (separados por coma)" no se muestra.
+2. Al marcar la casilla, se muestra el campo "Datos a ocultar (separados por coma)" (`sensitive-data-input`).
+3. Con la casilla marcada, "Analizar mensaje" envía `POST /analysis` con el cuerpo `{ "message": "<texto>", "shareInPanel": true, "sensitiveData": "<datos>" }`.
+4. El panel muestra el aviso "Los mensajes se comparten solo si quien los analiza lo permite, y sus datos personales se ocultan antes de guardarlos." (`panel-privacy-notice`).
+
+Tasks:
+- #34 AI topic and masked message: add the required `topic` (enum from the fixed [topic list](#ai-contract)) and `maskedMessage` fields to `OUTPUT_SCHEMA` and describe them in `INSTRUCTIONS`. `analyze_with_model` returns an internal `AnalyzedMessage` (`result: AnalysisResult`, `topic: Topic`, `masked_message: str`); adapt the `Analyzer` type and `analyze_message` so the `POST /analysis` response does not change. Pytest: the schema has both fields; stubbed output with a valid topic and masked message; a topic outside the list raises the typed AI error; the `POST /analysis` response has neither `topic` nor `maskedMessage`. Depends on #30.
+- #35 Masking: `mask_personal_data(text: str, sensitive_data: str) -> str` in `backend/app/services/masking.py`, applying the user's terms and the pattern rules in [Critical messages storage](#critical-messages-storage). Pytest: user terms (case-insensitive, trimmed, empty terms ignored), URL, shortened link, email, phone, CBU/card number, DNI with dots, and text that must stay unchanged ("10000 pesos").
+- #36 Backend: save shared critical messages. In `services/analysis.py`, after the evidence check, if `shareInPanel` is true, `riskLevel` is `HIGH`, and `maskedMessage` is not blank, apply `mask_personal_data` to the model's `maskedMessage` with the request's `sensitiveData` and save it with its topic through an injected storage dependency. A `StorageError` on save is logged and the analysis is returned as usual. Pytest: shared `HIGH` saved masked with its topic; not shared `HIGH` not saved; shared `LOW`, `MEDIUM`, and `UNDETERMINED` not saved; blank `maskedMessage` not saved; a storage error still returns 200 with the result. Depends on #31, #34, and #35.
+- #37 Frontend: share checkbox, sensitive data field, and privacy notice. Add the native checkbox and the text input (each with its `label`) to the message form; the input is rendered only while the checkbox is checked. `postAnalysis` sends `shareInPanel` and `sensitiveData` only when the checkbox is checked, so the unchecked body stays `{ "message": "<texto>" }` (US-1.2 AC1). Show the notice in `panel-privacy-notice` on the panel, also when it is empty or has an error. Add `tests/compartir-mensaje.spec.ts` for AC1 to AC4. Depends on #33.
+
 ## UI texts
 
 | Where | Text |
@@ -139,6 +194,20 @@ Tasks:
 | No indicators | No se detectaron indicadores. |
 | Disclaimer | Este resultado es una ayuda para decidir, no una confirmación de fraude. |
 | Explanation when `UNDETERMINED` (set by the backend) | No se encontraron citas del mensaje que respalden los indicadores. |
+| Home link to the panel | Ver mensajes críticos |
+| Panel heading | Mensajes críticos |
+| Panel link back to home | Volver al análisis |
+| Share checkbox label | Compartir este mensaje en el panel de mensajes críticos |
+| Sensitive data field label | Datos a ocultar (separados por coma) |
+| Panel privacy notice | Los mensajes se comparten solo si quien los analiza lo permite, y sus datos personales se ocultan antes de guardarlos. |
+| Panel loading status | Cargando mensajes críticos... |
+| Topic count | Mensajes similares: N |
+| Topic detail toggle | Ver detalle |
+| Topic show all button | Ver todos los mensajes |
+| Panel empty | Todavía no hay mensajes críticos registrados. |
+| Panel error | No se pudo cargar el panel. Intentá de nuevo más tarde. |
+| Panel retry button | Reintentar |
+| Topic titles (set by the backend) | See the topic list in [AI contract](#ai-contract) |
 
 ## Visual design
 
@@ -180,6 +249,8 @@ export interface Indicator {
 
 export interface MessageAnalysisRequest {
   message: string;
+  shareInPanel?: boolean; // Sent only when the share checkbox is checked (US-3.3)
+  sensitiveData?: string; // Comma-separated terms to hide; sent with shareInPanel
 }
 
 export interface AnalysisResult {
@@ -195,12 +266,45 @@ export interface MessageAnalysisResponse {
 ```
 
 - `evidence`, `explanation`, and `UNDETERMINED` are new and must be added to `src/types.ts` (task #11) and to the backend models.
-- The frontend reads the backend base URL from `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:8000`). E2E tests mock `**/analysis`, so no backend needs to run.
+- The frontend reads the backend base URL from `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:8000`). E2E tests mock `**/analysis` and `**/critical-messages`, so no backend needs to run.
 - JSON fields are camelCase; backend models use snake_case with camelCase aliases.
 - Errors:
   - `422`: empty or whitespace-only message. The UI cannot send it (the button is disabled), so it is covered by Pytest only.
   - `503`: the AI call failed, timed out, or returned invalid output. Body: `{ "detail": "Los servidores están ocupados. Intentá de nuevo más tarde." }`.
 - The frontend ignores the error body and shows the error text from [UI texts](#ui-texts) for any non-2xx response or network error.
+- The AI `topic` and `maskedMessage` are internal: they are never part of the `POST /analysis` response.
+- `shareInPanel` defaults to `false` and `sensitiveData` to `""`; the request without them stays valid.
+
+`GET /critical-messages`
+
+```ts
+export type Topic =
+  | 'family_money_request'
+  | 'bank_impersonation'
+  | 'credentials_request'
+  | 'prize_or_giveaway'
+  | 'package_delivery'
+  | 'investment_offer'
+  | 'job_offer'
+  | 'other';
+
+export interface CriticalMessage {
+  id: number;
+  text: string; // Masked text, never the original
+}
+
+export interface CriticalTopic {
+  topic: Topic;
+  title: string; // Spanish title, set by the backend
+  messages: CriticalMessage[]; // Newest first; never empty
+}
+
+export interface CriticalMessagesResponse {
+  topics: CriticalTopic[]; // Most messages first; empty when nothing is stored
+}
+```
+
+- Errors: `503` when the storage cannot be read. Body: `{ "detail": "No se pudo cargar el panel. Intentá de nuevo más tarde." }`. The frontend ignores the body, as with `POST /analysis`.
 
 ## AI contract
 
@@ -214,7 +318,10 @@ export interface MessageAnalysisResponse {
 - Where the rules run: output validation in `backend/app/ai/analyzer.py`; the evidence check and the undetermined rule in `backend/app/services/analysis.py`, after any analyzer. Indicators that pass the check are kept as returned (evidence verbatim). If only some are dropped, `riskLevel` and `explanation` are kept.
 - Fallback: if the call fails, times out, or returns invalid output, the AI layer raises one typed AI error and the endpoint returns the `503` error. Never a partial or invented result. Missing configuration also raises the typed AI error.
 - Prompt: `backend/app/ai/prompt.py` (`INSTRUCTIONS`), in English; the model writes `summary`, `explanation`, `title`, and `description` in neutral Spanish, and copies `evidence` verbatim from the message. `summary` states what the message asks for or claims to be (it does not explain the risk); `explanation` justifies `riskLevel` from the indicators without claiming certainty. With no indicators, `riskLevel` is `LOW`. Indicators list only signs present in the message; types that do not apply are omitted.
-- Output schema: `OUTPUT_SCHEMA` in the same file, sent as `text.format` (`type: json_schema`, `name: analysis_result`, `strict: true`). Keys are camelCase and match `AnalysisResult`; every field is required and no extra fields are allowed; `riskLevel` is `LOW | MEDIUM | HIGH`; `indicators` may be empty; `type` is one of the values below.
+- Output schema: `OUTPUT_SCHEMA` in the same file, sent as `text.format` (`type: json_schema`, `name: analysis_result`, `strict: true`). Keys are camelCase and match `AnalysisResult` plus `topic` and `maskedMessage`; every field is required and no extra fields are allowed; `riskLevel` is `LOW | MEDIUM | HIGH`; `indicators` may be empty; `type` is one of the indicator types below; `topic` is one of the topics below.
+- Topic: the scam pattern the message fits best, returned for every message (`other` when none fits).
+- Masked message: the message copied verbatim except that names of people, addresses, and any other personal data are replaced with `[nombre]`, `[dirección]`, or `[dato oculto]`. Returned for every message (the schema is fixed), used only when the message is shared. Best effort: the model may miss data, so the backend masking always runs on top of it.
+- The analyzer returns `topic` and `maskedMessage` next to the `AnalysisResult` as an internal `AnalyzedMessage`; they are used only to store shared critical messages.
 - Indicator types (fixed list):
 
 | `type` | Meaning |
@@ -226,6 +333,36 @@ export interface MessageAnalysisResponse {
 | `writing_errors` | Spelling or grammar errors |
 | `unrealistic_promise` | Prizes or unrealistic gains |
 | `payment_request` | Asks for transfers or payments |
+
+- Topics (fixed list; the title is shown in the panel):
+
+| `topic` | Meaning | Title |
+|---|---|---|
+| `family_money_request` | A relative or acquaintance urgently asks for money | Pedido de dinero de un familiar o conocido |
+| `bank_impersonation` | Pretends to be a bank or digital wallet | Suplantación de bancos o billeteras virtuales |
+| `credentials_request` | Asks for passwords, codes, or account data | Pedido de claves, códigos o datos de cuenta |
+| `prize_or_giveaway` | Prizes, giveaways, or gifts | Premios, sorteos y regalos |
+| `package_delivery` | Held packages or delivery fees | Envíos y paquetes retenidos |
+| `investment_offer` | Investments or easy gains | Inversiones y ganancias fáciles |
+| `job_offer` | Job offers | Ofertas de trabajo |
+| `other` | None of the above | Otros engaños |
+
+## Critical messages storage
+
+- Engine: SQLite through the Python standard library `sqlite3` (no new dependency), in `backend/app/storage/`. File path from `SCAMGUARD_DB_PATH` (default `backend/data/scamguard.db`, resolved relative to the backend package, not the working directory; ignored by git).
+- Table `critical_messages`: `id INTEGER PRIMARY KEY`, `topic TEXT NOT NULL`, `text TEXT NOT NULL` (masked), `created_at TEXT NOT NULL` (UTC, ISO 8601). Created on first use.
+- What is saved: only messages the user chose to share (`shareInPanel`) whose final `riskLevel` is `HIGH` (after the evidence check), as masked text with their topic. If `maskedMessage` is blank, nothing is saved. The original text, the user's `sensitiveData`, and the indicators are never stored.
+- Masking, applied in this order:
+  1. The model's `maskedMessage` (names, addresses, and other personal data; see [AI contract](#ai-contract)) is the starting text.
+  2. User terms (`backend/app/services/masking.py`): each comma-separated term of `sensitiveData`, trimmed and non-empty, is replaced case-insensitively with `[dato oculto]`.
+  3. Links: tokens starting with `http://`, `https://`, or `www.`, or containing a domain followed by a path (e.g. `bit.ly/abc`), become `[enlace]`.
+  4. Emails become `[email]`.
+  5. Sequences of 7 or more digits, optionally starting with `+` and with spaces, dots, or dashes between digits (phones, CBU, cards, DNI), become `[número]`.
+  - Steps 2 to 5 are deterministic; step 1 is best effort, so names or addresses the model misses and the user does not list may remain (MVP limitation).
+- Grouping and order: one group per topic with at least one message; groups by message count (descending), ties by newest message; messages newest first. Equal `created_at` values are ordered by `id` (descending).
+- Errors: any `sqlite3` or filesystem (`OSError`) error is raised as the typed `StorageError`.
+- Failure: a save error is logged and never changes the `POST /analysis` response; a read error returns the `503` of `GET /critical-messages`.
+- Retention: messages are never deleted in the MVP.
 
 ## Non-functional requirements
 
@@ -246,3 +383,6 @@ Follow `.github/instructions/*.instructions.md`.
 
 ### NFR-06 Test coverage
 Each story has tests for the happy path and the most likely failure path, as defined in `AGENTS.md`.
+
+### NFR-07 Privacy of stored messages
+Only `HIGH` risk messages the user chose to share are stored, always masked, and the panel says so. See [Critical messages storage](#critical-messages-storage).
