@@ -9,7 +9,7 @@ from app.ai.analyzer import AnalyzedMessage, analyze_with_model
 from app.ai.errors import AIServiceError
 from app.main import app
 from app.models import AnalysisResult, Indicator
-from app.services.analysis import get_analyzer
+from app.services.analysis import get_analyzer, get_message_saver
 
 BUSY_DETAIL = "Los servidores están ocupados. Intentá de nuevo más tarde."
 
@@ -102,3 +102,43 @@ def test_default_dependency_invalid_model_output_returns_503(client: TestClient,
     response = client.post("/analysis", json={"message": "hola"})
     assert response.status_code == 503
     assert response.json() == {"detail": BUSY_DETAIL}
+
+
+# US-3.3: the router passes the share fields and the injected saver to the service.
+def test_shared_high_message_is_saved_through_the_injected_saver(client: TestClient) -> None:
+    saved: list[tuple[str, str]] = []
+    result = AnalysisResult(
+        risk_level="HIGH",
+        summary="Pide plata urgente.",
+        explanation="Urgencia y pedido de dinero.",
+        indicators=[Indicator(type="urgency", title="Urgencia", description="Presiona al usuario.", evidence="urgente")],
+    )
+
+    def stub(message: str) -> AnalyzedMessage:
+        return AnalyzedMessage(result=result, topic="family_money_request", masked_message="Soy [nombre], Juan te pide plata urgente")
+
+    app.dependency_overrides[get_analyzer] = lambda: stub
+    app.dependency_overrides[get_message_saver] = lambda: lambda topic, text: saved.append((topic, text))
+    response = client.post("/analysis", json={
+        "message": "Soy Ana, Juan te pide plata urgente", "shareInPanel": True, "sensitiveData": "Juan",
+    })
+
+    assert response.status_code == 200
+    assert saved == [("family_money_request", "Soy [nombre], [dato oculto] te pide plata urgente")]
+
+
+def test_request_without_share_fields_saves_nothing(client: TestClient) -> None:
+    saved: list[tuple[str, str]] = []
+    result = AnalysisResult(
+        risk_level="HIGH",
+        summary="Pide plata urgente.",
+        explanation="Urgencia.",
+        indicators=[Indicator(type="urgency", title="Urgencia", description="Presiona al usuario.", evidence="urgente")],
+    )
+    app.dependency_overrides[get_analyzer] = lambda: lambda _: AnalyzedMessage(result=result, topic="other", masked_message="urgente")
+    app.dependency_overrides[get_message_saver] = lambda: lambda topic, text: saved.append((topic, text))
+
+    response = client.post("/analysis", json={"message": "Es urgente"})
+
+    assert response.status_code == 200
+    assert saved == []
