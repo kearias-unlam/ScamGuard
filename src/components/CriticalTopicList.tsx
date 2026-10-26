@@ -1,3 +1,4 @@
+import { CriticalTopicItem } from '@/components/CriticalTopicItem';
 import type { CriticalTopic } from '@/types';
 
 interface CriticalTopicListProps {
@@ -18,8 +19,7 @@ export function CriticalTopicList({ topics }: CriticalTopicListProps) {
     <ul>
       {topics.map((topic) => (
         <li key={topic.topic} className="card" data-testid="panel-topic">
-          <h2>{topic.title}</h2>
-          <p className="muted">{`Mensajes similares: ${topic.messages.length}`}</p>
+          <CriticalTopicItem topic={topic} />
         </li>
       ))}
     </ul>
