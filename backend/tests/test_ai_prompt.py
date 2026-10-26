@@ -1,4 +1,4 @@
-from app.ai.prompt import INDICATOR_TYPES, INSTRUCTIONS, OUTPUT_FORMAT, OUTPUT_SCHEMA
+from app.ai.prompt import INDICATOR_TYPES, INSTRUCTIONS, OUTPUT_FORMAT, OUTPUT_SCHEMA, TOPICS
 
 
 def _objects(schema: dict) -> list[dict]:
@@ -20,8 +20,10 @@ def test_schema_is_strict_valid() -> None:
     assert OUTPUT_FORMAT["schema"] is OUTPUT_SCHEMA
 
 
-def test_schema_keys_match_analysis_result() -> None:
-    assert set(OUTPUT_SCHEMA["properties"]) == {"riskLevel", "summary", "explanation", "indicators"}
+def test_schema_keys_match_analysis_result_plus_internal_fields() -> None:
+    assert set(OUTPUT_SCHEMA["properties"]) == {
+        "riskLevel", "summary", "explanation", "indicators", "topic", "maskedMessage",
+    }
     item = OUTPUT_SCHEMA["properties"]["indicators"]["items"]
     assert set(item["properties"]) == {"type", "title", "description", "evidence"}
 
@@ -41,3 +43,18 @@ def test_indicator_type_enum_matches_documented_list() -> None:
 def test_instructions_mention_every_indicator_type() -> None:
     for indicator_type in INDICATOR_TYPES:
         assert indicator_type in INSTRUCTIONS
+
+
+# US-3.3: topic and masked message for shared critical messages.
+def test_topic_enum_matches_documented_list() -> None:
+    assert OUTPUT_SCHEMA["properties"]["topic"]["enum"] == [
+        "family_money_request", "bank_impersonation", "credentials_request", "prize_or_giveaway",
+        "package_delivery", "investment_offer", "job_offer", "other",
+    ]
+    assert OUTPUT_SCHEMA["properties"]["maskedMessage"] == {"type": "string"}
+
+
+def test_instructions_mention_every_topic_and_masked_message() -> None:
+    for topic in TOPICS:
+        assert topic in INSTRUCTIONS
+    assert "maskedMessage" in INSTRUCTIONS

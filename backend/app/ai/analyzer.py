@@ -1,11 +1,22 @@
 """Validated AI analyzer: calls the model with the prompt and output schema, and validates its JSON (see docs/requirements.md, AI contract)."""
 
+from dataclasses import dataclass
+
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from app.ai.client import generate_text
 from app.ai.errors import AIServiceError
 from app.ai.prompt import INSTRUCTIONS, OUTPUT_FORMAT, IndicatorType, ModelRiskLevel
-from app.models import AnalysisResult, Indicator
+from app.models import AnalysisResult, Indicator, Topic
+
+
+@dataclass(frozen=True)
+class AnalyzedMessage:
+    """Internal analyzer output: the result plus the fields used only to store shared critical messages."""
+
+    result: AnalysisResult
+    topic: Topic
+    masked_message: str  # Best effort; the backend masking always runs on top of it.
 
 
 class _ModelIndicator(BaseModel):
@@ -26,15 +37,17 @@ class _ModelOutput(BaseModel):
     indicators: list[_ModelIndicator]
     risk_level: ModelRiskLevel = Field(alias="riskLevel")
     explanation: str
+    topic: Topic
+    masked_message: str = Field(alias="maskedMessage")
 
 
-def parse_model_output(text: str) -> AnalysisResult:
+def parse_model_output(text: str) -> AnalyzedMessage:
     """Validate the model JSON; raise AIServiceError if it is not JSON or does not match the schema."""
     try:
         output = _ModelOutput.model_validate_json(text)
     except ValidationError as error:
         raise AIServiceError("Model returned invalid output") from error
-    return AnalysisResult(
+    result = AnalysisResult(
         risk_level=output.risk_level,
         summary=output.summary,
         explanation=output.explanation,
@@ -43,8 +56,9 @@ def parse_model_output(text: str) -> AnalysisResult:
             for item in output.indicators
         ],
     )
+    return AnalyzedMessage(result=result, topic=output.topic, masked_message=output.masked_message)
 
 
-def analyze_with_model(message: str) -> AnalysisResult:
+def analyze_with_model(message: str) -> AnalyzedMessage:
     """Default analyzer: one structured-output call, then schema validation. Raises AIServiceError on any failure."""
     return parse_model_output(generate_text(INSTRUCTIONS, message, text_format=OUTPUT_FORMAT))

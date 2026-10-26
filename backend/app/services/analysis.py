@@ -2,11 +2,12 @@
 
 from collections.abc import Callable
 
-from app.ai.analyzer import analyze_with_model
+from app.ai.analyzer import AnalyzedMessage, analyze_with_model
 from app.models import AnalysisResult
 
-# Takes the user message and returns a schema-validated result; raises AIServiceError on any failure.
-Analyzer = Callable[[str], AnalysisResult]
+# Takes the user message and returns a schema-validated result with its topic and masked message;
+# raises AIServiceError on any failure.
+Analyzer = Callable[[str], AnalyzedMessage]
 
 # User-visible text (docs/requirements.md, UI texts). Defined once in the backend.
 UNDETERMINED_EXPLANATION = "No se encontraron citas del mensaje que respalden los indicadores."
@@ -38,4 +39,5 @@ def apply_evidence_check(message: str, result: AnalysisResult) -> AnalysisResult
 
 
 def analyze_message(message: str, analyzer: Analyzer) -> AnalysisResult:
-    return apply_evidence_check(message, analyzer(message))
+    # topic and masked_message stay internal: only the checked result is returned.
+    return apply_evidence_check(message, analyzer(message).result)

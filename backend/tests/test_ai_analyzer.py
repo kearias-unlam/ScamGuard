@@ -7,13 +7,14 @@ from app.ai.analyzer import analyze_with_model, parse_model_output
 from app.ai.errors import AIServiceError
 from app.ai.prompt import INSTRUCTIONS, OUTPUT_FORMAT
 
-VALID = {
+RESULT = {
     "summary": "Pide transferir dinero.",
     "indicators": [{"type": "payment_request", "title": "Pedido de pago",
                     "description": "Solicita una transferencia.", "evidence": "Transferí hoy"}],
     "riskLevel": "HIGH",
     "explanation": "El pedido de pago sugiere un posible fraude.",
 }
+VALID = {**RESULT, "topic": "family_money_request", "maskedMessage": "[nombre], transferí hoy"}
 
 
 def _with(**changes: object) -> str:
@@ -28,9 +29,10 @@ def test_valid_output_is_parsed_with_prompt_and_schema(monkeypatch: pytest.Monke
         return json.dumps(VALID)
 
     monkeypatch.setattr(analyzer, "generate_text", fake_generate_text)
-    result = analyze_with_model("Transferí hoy")
+    analyzed = analyze_with_model("Transferí hoy")
 
-    assert result.model_dump(by_alias=True) == VALID
+    assert analyzed.result.model_dump(by_alias=True) == RESULT
+    assert (analyzed.topic, analyzed.masked_message) == ("family_money_request", "[nombre], transferí hoy")
     assert calls == [(INSTRUCTIONS, "Transferí hoy", OUTPUT_FORMAT)]
 
 
@@ -42,6 +44,10 @@ def test_valid_output_is_parsed_with_prompt_and_schema(monkeypatch: pytest.Monke
     _with(indicators=[{**VALID["indicators"][0], "type": "phishing"}]),
     _with(extra="x"),
     json.dumps({key: value for key, value in VALID.items() if key != "explanation"}),
+    # US-3.3: topic outside the fixed list, missing or non-string masked message.
+    _with(topic="phishing"),
+    json.dumps({key: value for key, value in VALID.items() if key != "maskedMessage"}),
+    _with(maskedMessage=123),
 ])
 def test_invalid_output_raises_ai_error(text: str) -> None:
     with pytest.raises(AIServiceError):

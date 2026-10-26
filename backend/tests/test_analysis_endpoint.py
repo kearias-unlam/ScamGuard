@@ -5,7 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.ai import analyzer as ai_analyzer
-from app.ai.analyzer import analyze_with_model
+from app.ai.analyzer import AnalyzedMessage, analyze_with_model
 from app.ai.errors import AIServiceError
 from app.main import app
 from app.models import AnalysisResult, Indicator
@@ -23,14 +23,15 @@ def reset_overrides() -> Iterator[None]:
 def test_returns_camel_case_result_from_analyzer(client: TestClient) -> None:
     received: list[str] = []
 
-    def stub(message: str) -> AnalysisResult:
+    def stub(message: str) -> AnalyzedMessage:
         received.append(message)
-        return AnalysisResult(
+        result = AnalysisResult(
             risk_level="HIGH",
             summary="Pide transferir dinero.",
             explanation="Urgencia y pedido de pago.",
             indicators=[Indicator(type="urgency", title="Urgencia", description="Presiona al usuario.", evidence="hoy mismo")],
         )
+        return AnalyzedMessage(result=result, topic="other", masked_message="Transferí hoy mismo")
 
     app.dependency_overrides[get_analyzer] = lambda: stub
     response = client.post("/analysis", json={"message": "Transferí hoy mismo"})
@@ -46,7 +47,7 @@ def test_returns_camel_case_result_from_analyzer(client: TestClient) -> None:
 
 
 def test_ai_error_returns_503_with_spanish_detail(client: TestClient) -> None:
-    def failing(message: str) -> AnalysisResult:
+    def failing(message: str) -> AnalyzedMessage:
         raise AIServiceError("boom")
 
     app.dependency_overrides[get_analyzer] = lambda: failing
@@ -58,7 +59,7 @@ def test_ai_error_returns_503_with_spanish_detail(client: TestClient) -> None:
 
 @pytest.mark.parametrize("message", ["", "   \n\t "])
 def test_blank_message_returns_422(client: TestClient, message: str) -> None:
-    def must_not_run(_: str) -> AnalysisResult:
+    def must_not_run(_: str) -> AnalyzedMessage:
         raise AssertionError("analyzer must not be called")
 
     app.dependency_overrides[get_analyzer] = lambda: must_not_run
@@ -78,12 +79,15 @@ def test_default_dependency_returns_checked_camel_case_result(client: TestClient
                         "description": "Solicita un código de verificación.", "evidence": "Pasame el CÓDIGO"}],
         "riskLevel": "HIGH",
         "explanation": "Podría ser un intento de robo de cuenta.",
+        "topic": "credentials_request",
+        "maskedMessage": "Hola, pasame el código que te llegó",
     })
     monkeypatch.setattr(ai_analyzer, "generate_text", lambda instructions, user_input, **_: model_json)
 
     response = client.post("/analysis", json={"message": "Hola, pasame el código que te llegó"})
 
     assert response.status_code == 200
+    # US-3.3: topic and maskedMessage are internal and never reach the response.
     assert response.json() == {"result": {
         "riskLevel": "HIGH",
         "summary": "Pide un código de verificación.",

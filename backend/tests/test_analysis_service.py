@@ -1,5 +1,6 @@
 import pytest
 
+from app.ai.analyzer import AnalyzedMessage
 from app.models import AnalysisResult, Indicator, RiskLevel
 from app.services.analysis import analyze_message
 
@@ -12,7 +13,7 @@ def _indicator(evidence: str, type_: str = "urgency") -> Indicator:
 
 def _analyze(message: str, indicators: list[Indicator], risk: RiskLevel = "HIGH") -> AnalysisResult:
     model_result = AnalysisResult(risk_level=risk, summary="Resumen.", explanation=MODEL_EXPLANATION, indicators=indicators)
-    return analyze_message(message, lambda _: model_result)
+    return analyze_message(message, lambda _: AnalyzedMessage(result=model_result, topic="other", masked_message=""))
 
 
 def test_keeps_quoted_evidence_and_model_values() -> None:
