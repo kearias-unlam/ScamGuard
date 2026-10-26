@@ -12,16 +12,18 @@ export const criticalMessagesResponse: CriticalMessagesResponse = {
     {
       topic: 'family_money_request',
       title: 'Pedido de dinero de un familiar o conocido',
+      timesShared: 3,
       messages: [
-        { id: 3, text: 'Hola, soy [nombre], necesito 10000 pesos urgente, te los devuelvo en un rato.' },
-        { id: 2, text: 'Ma, se me rompió el celu, pasame plata a [número].' },
-        { id: 1, text: 'Tía, estoy en un problema, transferime hoy mismo.' },
+        { id: 3, text: 'Hola, soy [nombre], necesito 10000 pesos urgente, te los devuelvo en un rato.', timesShared: 1 },
+        { id: 2, text: 'Ma, se me rompió el celu, pasame plata a [número].', timesShared: 1 },
+        { id: 1, text: 'Tía, estoy en un problema, transferime hoy mismo.', timesShared: 1 },
       ],
     },
     {
       topic: 'bank_impersonation',
       title: 'Suplantación de bancos o billeteras virtuales',
-      messages: [{ id: 4, text: 'Su cuenta fue bloqueada, ingrese a [enlace] para validarla.' }],
+      timesShared: 1,
+      messages: [{ id: 4, text: 'Su cuenta fue bloqueada, ingrese a [enlace] para validarla.', timesShared: 1 }],
     },
   ],
 };

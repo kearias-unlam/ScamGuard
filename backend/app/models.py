@@ -60,11 +60,13 @@ class MessageAnalysisResponse(CamelModel):
 class CriticalMessage(CamelModel):
     id: int
     text: str  # Masked text, never the original.
+    times_shared: int  # US-3.4: times this message was shared; at least 1.
 
 
 class CriticalTopic(CamelModel):
     topic: Topic
     title: str
+    times_shared: int  # US-3.4: total times its messages were shared.
     messages: list[CriticalMessage]
 
 

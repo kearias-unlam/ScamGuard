@@ -24,15 +24,17 @@ def test_returns_grouped_topics_with_spanish_titles(client: TestClient) -> None:
         {
             "topic": "family_money_request",
             "title": "Pedido de dinero de un familiar o conocido",
+            "timesShared": 2,
             "messages": [
-                {"id": 3, "text": "Ma, se me rompió el celu, pasame plata a [número]."},
-                {"id": 2, "text": "Hola, soy [nombre], necesito plata urgente."},
+                {"id": 3, "text": "Ma, se me rompió el celu, pasame plata a [número].", "timesShared": 1},
+                {"id": 2, "text": "Hola, soy [nombre], necesito plata urgente.", "timesShared": 1},
             ],
         },
         {
             "topic": "bank_impersonation",
             "title": "Suplantación de bancos o billeteras virtuales",
-            "messages": [{"id": 1, "text": "Su cuenta fue bloqueada, ingrese a [enlace]."}],
+            "timesShared": 1,
+            "messages": [{"id": 1, "text": "Su cuenta fue bloqueada, ingrese a [enlace].", "timesShared": 1}],
         },
     ]}
 

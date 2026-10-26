@@ -76,7 +76,8 @@ def list_critical_topics() -> list[StoredTopic]:
 
     groups: dict[str, list[CriticalMessage]] = {}
     for message_id, topic, text in rows:
-        groups.setdefault(topic, []).append(CriticalMessage(id=message_id, text=text))
+        # Until deduplication (#42) every row is exactly one share.
+        groups.setdefault(topic, []).append(CriticalMessage(id=message_id, text=text, times_shared=1))
     # Groups are created in order of their newest message; the stable sort keeps that order for ties.
     ordered = sorted(groups.items(), key=lambda group: len(group[1]), reverse=True)
     return [StoredTopic(topic=topic, messages=messages) for topic, messages in ordered]

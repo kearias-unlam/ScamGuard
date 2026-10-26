@@ -25,16 +25,27 @@ def test_critical_messages_response_serializes_camel_case() -> None:
     response = CriticalMessagesResponse.model_validate({"topics": [{
         "topic": "family_money_request",
         "title": "Pedido de dinero de un familiar o conocido",
-        "messages": [{"id": 1, "text": "Hola, soy [nombre], necesito plata urgente."}],
+        "timesShared": 3,
+        "messages": [{"id": 1, "text": "Hola, soy [nombre], necesito plata urgente.", "timesShared": 3}],
     }]})
 
     assert response.model_dump(by_alias=True) == {"topics": [{
         "topic": "family_money_request",
         "title": "Pedido de dinero de un familiar o conocido",
-        "messages": [{"id": 1, "text": "Hola, soy [nombre], necesito plata urgente."}],
+        "timesShared": 3,
+        "messages": [{"id": 1, "text": "Hola, soy [nombre], necesito plata urgente.", "timesShared": 3}],
     }]}
 
 
 def test_critical_topic_rejects_unknown_topic() -> None:
     with pytest.raises(ValidationError):
-        CriticalMessagesResponse.model_validate({"topics": [{"topic": "unknown", "title": "x", "messages": []}]})
+        CriticalMessagesResponse.model_validate({"topics": [{"topic": "unknown", "title": "x", "timesShared": 0, "messages": []}]})
+
+
+# US-3.4: the share counts are required, never defaulted.
+def test_critical_message_requires_times_shared() -> None:
+    with pytest.raises(ValidationError):
+        CriticalMessagesResponse.model_validate({"topics": [{
+            "topic": "other", "title": "Otros engaños", "timesShared": 1,
+            "messages": [{"id": 1, "text": "Hola"}],
+        }]})

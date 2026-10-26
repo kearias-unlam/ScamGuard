@@ -28,10 +28,10 @@ def test_groups_by_topic_ordered_by_count_then_newest_message() -> None:
 
     assert list_critical_topics() == [
         StoredTopic(topic="family_money_request", messages=[
-            CriticalMessage(id=3, text="f2"), CriticalMessage(id=1, text="f1"),
+            CriticalMessage(id=3, text="f2", times_shared=1), CriticalMessage(id=1, text="f1", times_shared=1),
         ]),
-        StoredTopic(topic="prize_or_giveaway", messages=[CriticalMessage(id=4, text="p1")]),
-        StoredTopic(topic="bank_impersonation", messages=[CriticalMessage(id=2, text="b1")]),
+        StoredTopic(topic="prize_or_giveaway", messages=[CriticalMessage(id=4, text="p1", times_shared=1)]),
+        StoredTopic(topic="bank_impersonation", messages=[CriticalMessage(id=2, text="b1", times_shared=1)]),
     ]
 
 
@@ -45,7 +45,7 @@ def test_equal_timestamps_are_ordered_by_id() -> None:
     connection.close()
 
     assert list_critical_topics() == [
-        StoredTopic(topic="other", messages=[CriticalMessage(id=2, text="second"), CriticalMessage(id=1, text="first")]),
+        StoredTopic(topic="other", messages=[CriticalMessage(id=2, text="second", times_shared=1), CriticalMessage(id=1, text="first", times_shared=1)]),
     ]
 
 

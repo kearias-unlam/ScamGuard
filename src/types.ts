@@ -37,14 +37,16 @@ export type Topic =
 export interface CriticalMessage {
   id: number;
   text: string; // Masked text, never the original
+  timesShared: number; // Times this message was shared (US-3.4); at least 1
 }
 
 export interface CriticalTopic {
   topic: Topic;
   title: string; // Spanish title, set by the backend
-  messages: CriticalMessage[]; // Newest first; never empty
+  timesShared: number; // Total times its messages were shared (US-3.4)
+  messages: CriticalMessage[]; // Each message once, most recently shared first; never empty
 }
 
 export interface CriticalMessagesResponse {
-  topics: CriticalTopic[]; // Most messages first; empty when nothing is stored
+  topics: CriticalTopic[]; // Most shared first; empty when nothing is stored
 }
