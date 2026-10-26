@@ -20,6 +20,7 @@
 - `backend/app/services/`: business logic.
 - `backend/app/ai/`: Azure OpenAI client, prompt, and output validation (the `/ai` layer).
 - `backend/app/storage/`: SQLite persistence of critical messages (standard library `sqlite3`).
+- `backend/app/normalization.py`: text normalization shared by the evidence check and duplicate detection.
 - `backend/tests/`: Pytest.
 - `backend/requirements.txt`: Python dependencies.
 

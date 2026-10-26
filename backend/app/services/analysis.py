@@ -6,6 +6,7 @@ from collections.abc import Callable
 
 from app.ai.analyzer import AnalyzedMessage, analyze_with_model
 from app.models import AnalysisResult, Topic
+from app.normalization import normalize_text
 from app.services.masking import mask_personal_data
 from app.storage.critical_messages import StorageError, save_critical_message
 
@@ -32,18 +33,13 @@ def get_message_saver() -> MessageSaver:
     return save_critical_message
 
 
-def _normalize(text: str) -> str:
-    """Case-insensitive form with runs of whitespace collapsed to one space and edges trimmed."""
-    return " ".join(text.split()).casefold()
-
-
 def apply_evidence_check(message: str, result: AnalysisResult) -> AnalysisResult:
     """Drop indicators whose evidence is empty or not quoted from the message.
     If the model returned indicators and all are dropped, the risk becomes UNDETERMINED."""
-    normalized_message = _normalize(message)
+    normalized_message = normalize_text(message)
     kept = [
         indicator for indicator in result.indicators
-        if (evidence := _normalize(indicator.evidence)) and evidence in normalized_message
+        if (evidence := normalize_text(indicator.evidence)) and evidence in normalized_message
     ]
     if result.indicators and not kept:
         return result.model_copy(update={
