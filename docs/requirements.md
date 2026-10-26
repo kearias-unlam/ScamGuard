@@ -115,7 +115,7 @@ Como usuario quiero diferenciar entre lo que dice el mensaje y lo que el modelo 
 
 ADO ID: #9 · Status: done
 
-El MVP no puede verificar hechos. Cada indicador separa la cita literal del mensaje (evidencia) de la interpretación del modelo (descripción).
+ScamGuard no puede verificar hechos. Cada indicador separa la cita literal del mensaje (evidencia) de la interpretación del modelo (descripción).
 
 Criterios de aceptación:
 1. Cada indicador muestra el fragmento citado del mensaje en `analysis-indicator-evidence`, separado de la descripción.
@@ -358,11 +358,11 @@ export interface CriticalMessagesResponse {
   3. Links: tokens starting with `http://`, `https://`, or `www.`, or containing a domain followed by a path (e.g. `bit.ly/abc`), become `[enlace]`.
   4. Emails become `[email]`.
   5. Sequences of 7 or more digits, optionally starting with `+` and with spaces, dots, or dashes between digits (phones, CBU, cards, DNI), become `[número]`.
-  - Steps 2 to 5 are deterministic; step 1 is best effort, so names or addresses the model misses and the user does not list may remain (MVP limitation).
+  - Steps 2 to 5 are deterministic; step 1 is best effort, so names or addresses the model misses and the user does not list may remain (known limitation).
 - Grouping and order: one group per topic with at least one message; groups by message count (descending), ties by newest message; messages newest first. Equal `created_at` values are ordered by `id` (descending).
 - Errors: any `sqlite3` or filesystem (`OSError`) error is raised as the typed `StorageError`.
 - Failure: a save error is logged and never changes the `POST /analysis` response; a read error returns the `503` of `GET /critical-messages`.
-- Retention: messages are never deleted in the MVP.
+- Retention: messages are never deleted.
 
 ## Non-functional requirements
 

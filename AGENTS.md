@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Scope
-- Build a minimal, university-ready MVP for scam/fraud detection.
+- Build a university-ready application for scam/fraud detection.
 - Primary input for the first delivery is text messages; other formats can be considered later only if they do not expand scope.
 - Closed scope: 3 user-facing features only.
   - Submit a message and receive an analysis result.
@@ -47,7 +47,7 @@
 - Keep prompts, model expectations, and risk indicators documented when they affect behavior.
 - For AI calls, define the expected input, output schema, and failure fallback before implementation.
 - Tests should cover the happy path and the most likely failure path for each touched feature.
-- When behavior is uncertain, choose the simplest implementation that satisfies the MVP.
+- When behavior is uncertain, choose the simplest implementation that satisfies `docs/requirements.md`.
 - Do not install dependencies without asking first.
 
 ## Copilot / Claude parity
