@@ -354,9 +354,9 @@ export interface CriticalMessagesResponse {
 - What is saved: only messages the user chose to share (`shareInPanel`) whose final `riskLevel` is `HIGH` (after the evidence check), as masked text with their topic. If `maskedMessage` is blank, nothing is saved. The original text, the user's `sensitiveData`, and the indicators are never stored.
 - Masking, applied in this order:
   1. The model's `maskedMessage` (names, addresses, and other personal data; see [AI contract](#ai-contract)) is the starting text.
-  2. User terms (`backend/app/services/masking.py`): each comma-separated term of `sensitiveData`, trimmed and non-empty, is replaced case-insensitively with `[dato oculto]`.
-  3. Links: tokens starting with `http://`, `https://`, or `www.`, or containing a domain followed by a path (e.g. `bit.ly/abc`), become `[enlace]`.
-  4. Emails become `[email]`.
+  2. Links (`backend/app/services/masking.py`): tokens starting with `http://`, `https://`, or `www.`, or containing a domain followed by a path (e.g. `bit.ly/abc`), become `[enlace]`.
+  3. Emails become `[email]`.
+  4. User terms: each comma-separated term of `sensitiveData`, trimmed and non-empty, is replaced case-insensitively with `[dato oculto]`. Runs after links and emails so a term inside them does not break their detection, and never alters a placeholder already in the text (e.g. `[nombre]`, `[email]`).
   5. Sequences of 7 or more digits, optionally starting with `+` and with spaces, dots, or dashes between digits (phones, CBU, cards, DNI), become `[número]`. Amounts of money are kept: a sequence preceded by a currency symbol or code (`$`, `US$`, `U$S`, `USD`, `ARS`) or followed by a currency word (`pesos`, `dólares`, `dolares`, `USD`, `ARS`), case-insensitive, is never masked.
   - Steps 2 to 5 are deterministic; step 1 is best effort, so names or addresses the model misses and the user does not list may remain (known limitation).
 - Grouping and order: one group per topic with at least one message; groups by message count (descending), ties by newest message; messages newest first. Equal `created_at` values are ordered by `id` (descending).
