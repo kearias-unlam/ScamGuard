@@ -32,3 +32,17 @@ test('al ver todos los mensajes cada uno se muestra una sola vez con "Compartido
     'Compartido 1 vez',
   ]);
 });
+
+test('al ver todos los mensajes el detalle del tópico deja de mostrarse', async ({ page }) => {
+  await mockCriticalMessages(page);
+  await page.goto('/panel');
+  const topic = page.getByTestId('panel-topic').nth(0);
+  const detail = topic.getByTestId('panel-topic-detail');
+
+  await expect(detail).toBeVisible();
+
+  await topic.getByRole('button', { name: 'Ver todos los mensajes' }).click();
+
+  await expect(detail).toBeHidden();
+  await expect(topic.getByTestId('panel-topic-message')).toHaveCount(firstTopic.messages.length);
+});

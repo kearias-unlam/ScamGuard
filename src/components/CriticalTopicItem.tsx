@@ -26,10 +26,13 @@ export function CriticalTopicItem({ topic }: CriticalTopicItemProps) {
     <>
       <h2>{topic.title}</h2>
       <p className="muted">{`Mensajes similares: ${topic.timesShared}`}</p>
-      <details>
-        <summary data-testid="panel-topic-detail">Ver detalle</summary>
-        <blockquote className="evidence">{latestMessage.text}</blockquote>
-      </details>
+      {/* US-3.4: once every message is shown, the detail is hidden so no message appears twice. */}
+      {showAll ? null : (
+        <details>
+          <summary data-testid="panel-topic-detail">Ver detalle</summary>
+          <blockquote className="evidence">{latestMessage.text}</blockquote>
+        </details>
+      )}
       {/* The button disappears once every message is shown. */}
       {showAll ? (
         <ul className="topic-message-list">
