@@ -31,7 +31,7 @@ test('al hacer clic en "Ver todos los mensajes" se muestra cada mensaje guardado
 
   await topic.getByRole('button', { name: 'Ver todos los mensajes' }).click();
 
-  await expect(messages).toHaveText(firstTopic.messages.map((message) => message.text));
+  await expect(messages.getByRole('blockquote')).toHaveText(firstTopic.messages.map((message) => message.text));
   await expect(topic.getByRole('button', { name: 'Ver todos los mensajes' })).toBeHidden();
   await expect(page.getByTestId('panel-topic').nth(1).getByTestId('panel-topic-message')).toHaveCount(0);
 });

@@ -6,16 +6,16 @@ import type { CriticalMessagesResponse } from '../../src/types';
 const CRITICAL_MESSAGES_ROUTE = '**/critical-messages';
 const CORS_HEADERS = { 'Access-Control-Allow-Origin': '*' };
 
-// Two topics, already ordered by the backend (most messages first).
+// Two topics, already ordered by the backend (most shared first). The first has 3 distinct messages shared 7 times.
 export const criticalMessagesResponse: CriticalMessagesResponse = {
   topics: [
     {
       topic: 'family_money_request',
       title: 'Pedido de dinero de un familiar o conocido',
-      timesShared: 3,
+      timesShared: 7,
       messages: [
-        { id: 3, text: 'Hola, soy [nombre], necesito 10000 pesos urgente, te los devuelvo en un rato.', timesShared: 1 },
-        { id: 2, text: 'Ma, se me rompió el celu, pasame plata a [número].', timesShared: 1 },
+        { id: 3, text: 'Hola, soy [nombre], necesito 10000 pesos urgente, te los devuelvo en un rato.', timesShared: 4 },
+        { id: 2, text: 'Ma, se me rompió el celu, pasame plata a [número].', timesShared: 2 },
         { id: 1, text: 'Tía, estoy en un problema, transferime hoy mismo.', timesShared: 1 },
       ],
     },

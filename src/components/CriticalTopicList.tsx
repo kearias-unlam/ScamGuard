@@ -14,7 +14,7 @@ export function CriticalTopicList({ topics }: CriticalTopicListProps) {
     );
   }
 
-  // Topics keep the backend order (most messages first).
+  // Topics keep the backend order (most shared first).
   return (
     <ul className="topic-list">
       {topics.map((topic) => (

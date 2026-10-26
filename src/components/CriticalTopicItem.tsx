@@ -8,9 +8,14 @@ interface CriticalTopicItemProps {
   topic: CriticalTopic;
 }
 
+// US-3.4: display mapping only (singular for one share).
+function formatTimesShared(timesShared: number): string {
+  return timesShared === 1 ? 'Compartido 1 vez' : `Compartido ${timesShared} veces`;
+}
+
 export function CriticalTopicItem({ topic }: CriticalTopicItemProps) {
   const [showAll, setShowAll] = useState(false);
-  // Messages arrive newest first and are never empty (API contract).
+  // Messages arrive most recently shared first and are never empty (API contract).
   const [latestMessage] = topic.messages;
 
   function handleShowAll(): void {
@@ -20,7 +25,7 @@ export function CriticalTopicItem({ topic }: CriticalTopicItemProps) {
   return (
     <>
       <h2>{topic.title}</h2>
-      <p className="muted">{`Mensajes similares: ${topic.messages.length}`}</p>
+      <p className="muted">{`Mensajes similares: ${topic.timesShared}`}</p>
       <details>
         <summary data-testid="panel-topic-detail">Ver detalle</summary>
         <blockquote className="evidence">{latestMessage.text}</blockquote>
@@ -31,6 +36,9 @@ export function CriticalTopicItem({ topic }: CriticalTopicItemProps) {
           {topic.messages.map((message) => (
             <li key={message.id} data-testid="panel-topic-message">
               <blockquote className="evidence">{message.text}</blockquote>
+              <p className="muted share-count" data-testid="panel-topic-message-count">
+                {formatTimesShared(message.timesShared)}
+              </p>
             </li>
           ))}
         </ul>

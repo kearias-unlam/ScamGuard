@@ -26,7 +26,7 @@ test('cada tópico se muestra con su título y la cantidad de mensajes similares
 
   await expect(topics).toHaveCount(2);
   await expect(topics.nth(0).getByRole('heading', { level: 2 })).toHaveText('Pedido de dinero de un familiar o conocido');
-  await expect(topics.nth(0)).toContainText('Mensajes similares: 3');
+  await expect(topics.nth(0)).toContainText('Mensajes similares: 7');
   await expect(topics.nth(1).getByRole('heading', { level: 2 })).toHaveText('Suplantación de bancos o billeteras virtuales');
   await expect(topics.nth(1)).toContainText('Mensajes similares: 1');
 });

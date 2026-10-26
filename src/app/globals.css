@@ -309,3 +309,9 @@ a.button {
 .critical-topic details[open] summary {
   margin-bottom: 0.5rem;
 }
+
+/* US-3.4: share count below each message of the full list. */
+.share-count {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+}
