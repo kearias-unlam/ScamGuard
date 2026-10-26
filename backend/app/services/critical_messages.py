@@ -17,12 +17,12 @@ TOPIC_TITLES: dict[Topic, str] = {
 
 
 def get_critical_messages() -> CriticalMessagesResponse:
-    """Stored groups keep their order (most messages first); raises StorageError if the DB cannot be read."""
+    """Stored groups keep their order (most shared first); raises StorageError if the DB cannot be read."""
     return CriticalMessagesResponse(topics=[
         CriticalTopic(
             topic=stored.topic,
             title=TOPIC_TITLES[stored.topic],
-            times_shared=sum(message.times_shared for message in stored.messages),
+            times_shared=stored.times_shared,
             messages=stored.messages,
         )
         for stored in list_critical_topics()
