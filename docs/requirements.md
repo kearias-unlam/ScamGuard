@@ -150,7 +150,7 @@ Tasks:
 ### US-3.2 Ver los mensajes de un tópico
 Como usuario quiero ver el detalle y todos los mensajes guardados de un tópico para reconocer cómo se escriben esos engaños.
 
-ADO ID: #28 · Status: todo
+ADO ID: #28 · Status: done
 
 Criterios de aceptación:
 1. El detalle del tópico ("Ver detalle", `panel-topic-detail`) está cerrado al cargar y, al abrirlo, muestra el mensaje más reciente del tópico.
