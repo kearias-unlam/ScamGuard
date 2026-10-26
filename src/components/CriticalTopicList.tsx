@@ -16,9 +16,9 @@ export function CriticalTopicList({ topics }: CriticalTopicListProps) {
 
   // Topics keep the backend order (most messages first).
   return (
-    <ul>
+    <ul className="topic-list">
       {topics.map((topic) => (
-        <li key={topic.topic} className="card" data-testid="panel-topic">
+        <li key={topic.topic} className="card critical-topic" data-testid="panel-topic">
           <CriticalTopicItem topic={topic} />
         </li>
       ))}

@@ -61,7 +61,7 @@ export default function HomePage() {
   return (
     <main>
       <h1>ScamGuard</h1>
-      <Link href="/panel" data-testid="panel-link">
+      <Link href="/panel" className="button button--secondary" data-testid="panel-link">
         Ver mensajes críticos
       </Link>
       <MessageAnalysisForm

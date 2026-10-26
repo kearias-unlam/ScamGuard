@@ -27,7 +27,7 @@ export function CriticalTopicItem({ topic }: CriticalTopicItemProps) {
       </details>
       {/* The button disappears once every message is shown. */}
       {showAll ? (
-        <ul>
+        <ul className="topic-message-list">
           {topic.messages.map((message) => (
             <li key={message.id} data-testid="panel-topic-message">
               <blockquote className="evidence">{message.text}</blockquote>

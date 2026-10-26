@@ -48,10 +48,10 @@ export default function PanelPage() {
   return (
     <main>
       <h1>Mensajes críticos</h1>
-      <Link href="/" data-testid="panel-back-link">
+      <Link href="/" className="button button--secondary" data-testid="panel-back-link">
         Volver al análisis
       </Link>
-      <p className="muted" data-testid="panel-privacy-notice">
+      <p className="disclaimer" data-testid="panel-privacy-notice">
         {PRIVACY_NOTICE_TEXT}
       </p>
       {/* Always rendered so screen readers announce text changes. */}

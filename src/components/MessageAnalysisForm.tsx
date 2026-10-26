@@ -57,7 +57,7 @@ export function MessageAnalysisForm({
         onChange={handleMessageChange}
         data-testid="message-input"
       />
-      <div>
+      <div className="share-option">
         <input
           type="checkbox"
           id="share-in-panel"
