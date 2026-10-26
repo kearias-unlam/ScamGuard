@@ -3,10 +3,7 @@
 ## Scope
 - Build a university-ready application for scam/fraud detection.
 - Primary input for the first delivery is text messages; other formats can be considered later only if they do not expand scope.
-- Closed scope: 3 user-facing features only.
-  - Submit a message and receive an analysis result.
-  - Display risk level and the indicators detected by the model.
-  - Browse a panel of high-risk messages that users chose to share, masked and grouped by topic.
+- Open scope: the user-facing features are the ones listed in `docs/requirements.md`, with no fixed limit. New features are added there first, as they are requested, before any implementation.
 - Treat the output as decision support, not as a guarantee of fraud detection.
 - Target stack:
   - Frontend: Next.js + TypeScript
