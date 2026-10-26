@@ -160,6 +160,23 @@ Tasks:
 - #38 Frontend: topic detail and all messages. Each `panel-topic` has a native `<details>`/`<summary>` "Ver detalle" (`panel-topic-detail`) showing `messages[0]`, and a "Ver todos los mensajes" button that shows every message in `panel-topic-message`. `panel-topic-detail` goes on the `<summary>`; `panel-topic-message` is used only in the full list, not in the detail. The button disappears once all messages are shown (no hide toggle), and it is shown even when the topic has a single message. Each topic is a `CriticalTopicItem` component with its own state. Add `tests/mensajes-topico.spec.ts` for AC1 and AC2. Depends on #33.
 - #39 Frontend: panel styling. Plain CSS in `src/app/globals.css` with the palette variables: each topic is a white card like the result card; the topic title is bold; the count is muted text; the detail and the message list reuse the evidence `blockquote` style; links and buttons reuse the existing button and focus styles; the privacy notice is a muted note like the disclaimer. In the home form (US-3.3): the share checkbox and its label sit on one line with regular-weight text, the sensitive data input is styled like the textarea, and the `panel-link` reuses the secondary button style. No text, role, element type, or `data-testid` changes. WCAG AA contrast. Verification: the full Playwright suite stays green with no new assertions; attach screenshots of the panel with topics, with a detail open, with all messages shown, empty, and with an error, and of the home form with the share checkbox checked. Depends on #38 and #37.
 
+### US-3.4 Ver cada mensaje una sola vez
+Como usuario quiero ver cada mensaje compartido una sola vez, con la cantidad de veces que se compartió, para no leer mensajes repetidos y saber qué engaños circulan más.
+
+ADO ID: #40 · Status: todo
+
+Si un mensaje compartido ya existe en el mismo tópico (mismo texto enmascarado, sin distinguir mayúsculas ni espacios repetidos), no se guarda de nuevo: se suma 1 a su contador. Como el enmascarado reemplaza nombres, números y links, los mensajes que solo difieren en esos datos se cuentan como el mismo. La detección es exacta, no por similitud: dos redacciones distintas del mismo engaño se guardan por separado. "Mensajes similares: N" pasa a contar todas las veces que se compartieron mensajes del tópico.
+
+Criterios de aceptación:
+1. Cada tópico muestra en "Mensajes similares: N" la cantidad total de veces que se compartieron sus mensajes, aunque tenga menos mensajes distintos.
+2. Al hacer clic en "Ver todos los mensajes", cada mensaje se muestra una sola vez con "Compartido N veces" (`panel-topic-message-count`), o "Compartido 1 vez" si se compartió una sola vez.
+
+Tasks:
+- #41 Contract: add `timesShared` to `CriticalMessage` (times that message was shared) and to `CriticalTopic` (total of its messages) in `src/types.ts` and `backend/app/models.py` (`times_shared`). Nothing is rendered or served yet.
+- #42 Storage: deduplicate on save. Change the `critical_messages` table as documented in [Critical messages storage](#critical-messages-storage) (`normalized_text`, `times_shared`, `last_shared_at`, unique `topic` + `normalized_text`); `save_critical_message` inserts a new row or, for an existing one, adds 1 to `times_shared` and updates `last_shared_at`; `list_critical_topics` returns each message once with its `times_shared`, in the documented order. The normalization is the same as the evidence check (case-insensitive, whitespace collapsed and trimmed) and is defined once. No migration: after deploying, delete the local `backend/data/scamguard.db` so it is recreated with the new table. Pytest on a temporary DB file: same text twice gives one row with `times_shared` 2; different case or spacing counts as the same message; same text in another topic is a separate row; ordering by total shares and by last share. Depends on #41.
+- #43 Backend: `GET /critical-messages` returns `timesShared` per message and per topic (sum of its messages). Pytest: response with the counts and the documented order, and a topic with fewer distinct messages than total shares. Depends on #41 and #42.
+- #44 Frontend: "Mensajes similares: N" shows `topic.timesShared` instead of `messages.length`; each item of the "Ver todos los mensajes" list shows "Compartido N veces" or "Compartido 1 vez" in `panel-topic-message-count` **(new)**, as muted text below the quote (display mapping only). Add `timesShared` to the data in `tests/fixtures/critical-messages.ts` and update the existing panel tests that depend on the count. Add `tests/mensajes-repetidos.spec.ts` for AC1 and AC2. Depends on #41.
+
 ### US-3.3 Compartir un mensaje en el panel sin exponer datos personales
 Como usuario quiero elegir si mi mensaje se comparte en el panel e indicar qué datos ocultar, para ayudar a otras personas sin exponer información personal.
 
@@ -201,7 +218,8 @@ Tasks:
 | Sensitive data field label | Datos a ocultar (separados por coma) |
 | Panel privacy notice | Los mensajes se comparten solo si quien los analiza lo permite, y sus datos personales se ocultan antes de guardarlos. |
 | Panel loading status | Cargando mensajes críticos... |
-| Topic count | Mensajes similares: N |
+| Topic count | Mensajes similares: N (total times its messages were shared) |
+| Message share count | Compartido N veces / Compartido 1 vez |
 | Topic detail toggle | Ver detalle |
 | Topic show all button | Ver todos los mensajes |
 | Panel empty | Todavía no hay mensajes críticos registrados. |
@@ -291,16 +309,18 @@ export type Topic =
 export interface CriticalMessage {
   id: number;
   text: string; // Masked text, never the original
+  timesShared: number; // Times this message was shared (US-3.4); at least 1
 }
 
 export interface CriticalTopic {
   topic: Topic;
   title: string; // Spanish title, set by the backend
-  messages: CriticalMessage[]; // Newest first; never empty
+  timesShared: number; // Total times its messages were shared (US-3.4)
+  messages: CriticalMessage[]; // Each message once, most recently shared first; never empty
 }
 
 export interface CriticalMessagesResponse {
-  topics: CriticalTopic[]; // Most messages first; empty when nothing is stored
+  topics: CriticalTopic[]; // Most shared first; empty when nothing is stored
 }
 ```
 
@@ -350,7 +370,8 @@ export interface CriticalMessagesResponse {
 ## Critical messages storage
 
 - Engine: SQLite through the Python standard library `sqlite3` (no new dependency), in `backend/app/storage/`. File path from `SCAMGUARD_DB_PATH` (default `backend/data/scamguard.db`, resolved relative to the backend package, not the working directory; ignored by git).
-- Table `critical_messages`: `id INTEGER PRIMARY KEY`, `topic TEXT NOT NULL`, `text TEXT NOT NULL` (masked), `created_at TEXT NOT NULL` (UTC, ISO 8601). Created on first use.
+- Table `critical_messages`: `id INTEGER PRIMARY KEY`, `topic TEXT NOT NULL`, `text TEXT NOT NULL` (masked, as first shared), `normalized_text TEXT NOT NULL`, `times_shared INTEGER NOT NULL` (starts at 1), `created_at TEXT NOT NULL` (first share), `last_shared_at TEXT NOT NULL` (latest share), with `UNIQUE (topic, normalized_text)`. Dates are UTC, ISO 8601. Created on first use.
+- Duplicates (US-3.4): `normalized_text` is the masked text with the evidence check normalization (case-insensitive, whitespace collapsed and trimmed). Saving a message whose `topic` and `normalized_text` already exist adds 1 to `times_shared` and updates `last_shared_at` instead of inserting a row. Detection is exact, not by similarity.
 - What is saved: only messages the user chose to share (`shareInPanel`) whose final `riskLevel` is `HIGH` (after the evidence check), as masked text with their topic. If `maskedMessage` is blank, nothing is saved. The original text, the user's `sensitiveData`, and the indicators are never stored.
 - Masking, applied in this order:
   1. The model's `maskedMessage` (names, addresses, and other personal data; see [AI contract](#ai-contract)) is the starting text.
@@ -359,7 +380,7 @@ export interface CriticalMessagesResponse {
   4. User terms: each comma-separated term of `sensitiveData`, trimmed and non-empty, is replaced case-insensitively with `[dato oculto]`. Runs after links and emails so a term inside them does not break their detection, and never alters a placeholder already in the text (e.g. `[nombre]`, `[email]`).
   5. Sequences of 7 or more digits, optionally starting with `+` and with spaces, dots, or dashes between digits (phones, CBU, cards, DNI), become `[número]`. Amounts of money are kept: a sequence preceded by a currency symbol or code (`$`, `US$`, `U$S`, `USD`, `ARS`) or followed by a currency word (`pesos`, `dólares`, `dolares`, `USD`, `ARS`), case-insensitive, is never masked.
   - Steps 2 to 5 are deterministic; step 1 is best effort, so names or addresses the model misses and the user does not list may remain (known limitation).
-- Grouping and order: one group per topic with at least one message; groups by message count (descending), ties by newest message; messages newest first. Equal `created_at` values are ordered by `id` (descending).
+- Grouping and order: one group per topic with at least one message; groups by total `times_shared` (descending), ties by most recent `last_shared_at`; messages by `last_shared_at` (most recent first). Equal dates are ordered by `id` (descending).
 - Errors: any `sqlite3` or filesystem (`OSError`) error is raised as the typed `StorageError`.
 - Failure: a save error is logged and never changes the `POST /analysis` response; a read error returns the `503` of `GET /critical-messages`.
 - Retention: messages are never deleted.
