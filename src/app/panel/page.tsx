@@ -10,6 +10,10 @@ import type { CriticalTopic } from '@/types';
 
 type PanelRequestStatus = 'loading' | 'error' | 'success';
 
+// NFR-07: shown in every panel state.
+const PRIVACY_NOTICE_TEXT =
+  'Los mensajes se comparten solo si quien los analiza lo permite, y sus datos personales se ocultan antes de guardarlos.';
+
 export default function PanelPage() {
   const [status, setStatus] = useState<PanelRequestStatus>('loading');
   const [topics, setTopics] = useState<CriticalTopic[]>([]);
@@ -47,6 +51,9 @@ export default function PanelPage() {
       <Link href="/" data-testid="panel-back-link">
         Volver al análisis
       </Link>
+      <p className="muted" data-testid="panel-privacy-notice">
+        {PRIVACY_NOTICE_TEXT}
+      </p>
       {/* Always rendered so screen readers announce text changes. */}
       <p role="status" className="analysis-status" data-testid="panel-status">
         {status === 'loading' ? 'Cargando mensajes críticos...' : null}

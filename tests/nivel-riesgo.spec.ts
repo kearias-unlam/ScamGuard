@@ -14,7 +14,7 @@ async function analyzeWithRisk(page: Page, riskLevel: RiskLevel): Promise<void> 
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
-  await page.getByLabel('Mensaje').fill(MESSAGE);
+  await page.getByLabel('Mensaje', { exact: true }).fill(MESSAGE);
 });
 
 test('el resultado muestra el rótulo "Nivel de riesgo" y en analysis-risk-level solo el valor', async ({ page }) => {

@@ -15,7 +15,7 @@ const DISCLAIMER_TEXT = 'Este resultado es una ayuda para decidir, no una confir
 async function analyzeWithIndicators(page: Page, indicators: Indicator[]): Promise<void> {
   await mockAnalysis(page, { body: analysisResponseWithIndicators(indicators) });
   await page.goto('/');
-  await page.getByLabel('Mensaje').fill(MESSAGE);
+  await page.getByLabel('Mensaje', { exact: true }).fill(MESSAGE);
   await page.getByRole('button', { name: 'Analizar mensaje' }).click();
 }
 

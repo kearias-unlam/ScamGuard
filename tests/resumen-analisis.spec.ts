@@ -10,7 +10,7 @@ const EMPTY_TEXT = 'Todavía no se analizó ningún mensaje.';
 test('con un resultado, el resumen se muestra en analysis-summary', async ({ page }) => {
   await mockAnalysis(page);
   await page.goto('/');
-  await page.getByLabel('Mensaje').fill(MESSAGE);
+  await page.getByLabel('Mensaje', { exact: true }).fill(MESSAGE);
 
   await page.getByRole('button', { name: 'Analizar mensaje' }).click();
 

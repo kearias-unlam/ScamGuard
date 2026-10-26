@@ -8,11 +8,13 @@ import { AnalysisResultView } from '@/components/AnalysisResultView';
 import { AnalysisStatus, type AnalysisRequestStatus } from '@/components/AnalysisStatus';
 import { MessageAnalysisForm } from '@/components/MessageAnalysisForm';
 import { postAnalysis } from '@/lib/api';
-import type { AnalysisResult } from '@/types';
+import type { AnalysisResult, MessageAnalysisRequest } from '@/types';
 
 export default function HomePage() {
   const [message, setMessage] = useState('');
-  const [lastSubmittedMessage, setLastSubmittedMessage] = useState('');
+  const [shareInPanel, setShareInPanel] = useState(false);
+  const [sensitiveData, setSensitiveData] = useState('');
+  const [lastSubmittedRequest, setLastSubmittedRequest] = useState<MessageAnalysisRequest>({ message: '' });
   const [status, setStatus] = useState<AnalysisRequestStatus>('idle');
   const [result, setResult] = useState<AnalysisResult | null>(null);
 
@@ -20,13 +22,25 @@ export default function HomePage() {
     setMessage(nextMessage);
   }
 
+  // Unchecking clears the sensitive data so it is never sent by accident.
+  function handleShareInPanelChange(nextShareInPanel: boolean): void {
+    setShareInPanel(nextShareInPanel);
+    if (!nextShareInPanel) {
+      setSensitiveData('');
+    }
+  }
+
+  function handleSensitiveDataChange(nextSensitiveData: string): void {
+    setSensitiveData(nextSensitiveData);
+  }
+
   // Shared by submit and retry; clears the previous result so a failure never shows stale data.
-  async function runAnalysis(messageToAnalyze: string): Promise<void> {
-    setLastSubmittedMessage(messageToAnalyze);
+  async function runAnalysis(request: MessageAnalysisRequest): Promise<void> {
+    setLastSubmittedRequest(request);
     setResult(null);
     setStatus('loading');
     try {
-      const response = await postAnalysis({ message: messageToAnalyze });
+      const response = await postAnalysis(request);
       setResult(response.result);
       setStatus('success');
     } catch {
@@ -35,12 +49,13 @@ export default function HomePage() {
   }
 
   function handleSubmit(): void {
-    void runAnalysis(message);
+    // The share fields are sent only when checked, so the unchecked body stays { message } (US-1.2 AC1).
+    void runAnalysis(shareInPanel ? { message, shareInPanel: true, sensitiveData } : { message });
   }
 
-  // Resends the last submitted message, not the current field content.
+  // Resends the last submitted request (message and share fields), not the current form content.
   function handleRetry(): void {
-    void runAnalysis(lastSubmittedMessage);
+    void runAnalysis(lastSubmittedRequest);
   }
 
   return (
@@ -51,8 +66,12 @@ export default function HomePage() {
       </Link>
       <MessageAnalysisForm
         message={message}
+        shareInPanel={shareInPanel}
+        sensitiveData={sensitiveData}
         isSubmitting={status === 'loading'}
         onMessageChange={handleMessageChange}
+        onShareInPanelChange={handleShareInPanelChange}
+        onSensitiveDataChange={handleSensitiveDataChange}
         onSubmit={handleSubmit}
       />
       <AnalysisStatus status={status} />

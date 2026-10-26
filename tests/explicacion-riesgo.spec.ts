@@ -9,7 +9,7 @@ const MESSAGE = 'Ganaste un premio, hacé clic acá';
 test('el resultado muestra la explicación del nivel de riesgo en analysis-explanation', async ({ page }) => {
   await mockAnalysis(page);
   await page.goto('/');
-  await page.getByLabel('Mensaje').fill(MESSAGE);
+  await page.getByLabel('Mensaje', { exact: true }).fill(MESSAGE);
 
   await page.getByRole('button', { name: 'Analizar mensaje' }).click();
 
@@ -25,7 +25,7 @@ test('la explicación se muestra dentro de analysis-result', async ({ page }) =>
   // No result yet: the explanation must not exist outside a result.
   await expect(page.getByTestId('analysis-explanation')).toBeHidden();
 
-  await page.getByLabel('Mensaje').fill(MESSAGE);
+  await page.getByLabel('Mensaje', { exact: true }).fill(MESSAGE);
   await page.getByRole('button', { name: 'Analizar mensaje' }).click();
 
   await expect(

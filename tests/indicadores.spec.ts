@@ -16,7 +16,7 @@ const DUPLICATE_KEY_WARNING = /same key/i;
 async function analyzeWithIndicators(page: Page, indicators: Indicator[]): Promise<void> {
   await mockAnalysis(page, { body: analysisResponseWithIndicators(indicators) });
   await page.goto('/');
-  await page.getByLabel('Mensaje').fill(MESSAGE);
+  await page.getByLabel('Mensaje', { exact: true }).fill(MESSAGE);
   await page.getByRole('button', { name: 'Analizar mensaje' }).click();
 }
 
