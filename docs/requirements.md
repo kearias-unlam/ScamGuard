@@ -131,7 +131,7 @@ ADO ID: #26
 ### US-3.1 Ver el panel de mensajes críticos
 Como usuario quiero ver un panel con los mensajes de riesgo alto que se analizaron en ScamGuard, agrupados por tópico, para conocer los engaños más frecuentes.
 
-ADO ID: #27 · Status: todo
+ADO ID: #27 · Status: done
 
 El panel está en `/panel`. Los mensajes se agrupan por el `topic` que asigna la IA (ver [AI contract](#ai-contract)). Cada tópico muestra su título y la cantidad de mensajes similares. Los tópicos llegan ordenados desde el backend, de mayor a menor cantidad de mensajes.
 
