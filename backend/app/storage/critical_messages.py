@@ -9,7 +9,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from app.models import CriticalMessage, Topic
-from app.normalization import normalize_text
+from app.normalization import duplicate_key
 
 # Resolved from this file, not the working directory: the Makefile runs uvicorn from backend/.
 DEFAULT_DB_PATH = Path(__file__).resolve().parents[2] / "data" / "scamguard.db"
@@ -78,7 +78,7 @@ def save_critical_message(topic: Topic, text: str) -> None:
     """Store an already masked message; the caller never passes the original text."""
     shared_at = datetime.now(UTC).isoformat(timespec="microseconds")
     with _connect() as connection:
-        connection.execute(_UPSERT, (topic, text, normalize_text(text), shared_at, shared_at))
+        connection.execute(_UPSERT, (topic, text, duplicate_key(text), shared_at, shared_at))
 
 
 def list_critical_topics() -> list[StoredTopic]:

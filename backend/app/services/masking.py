@@ -3,6 +3,8 @@ Runs on top of the model's maskedMessage (step 1), which is best effort."""
 
 import re
 
+from app.normalization import PLACEHOLDER_PATTERN
+
 USER_TERM_PLACEHOLDER = "[dato oculto]"
 LINK_PLACEHOLDER = "[enlace]"
 EMAIL_PLACEHOLDER = "[email]"
@@ -16,8 +18,6 @@ _LINK = re.compile(
     re.IGNORECASE,
 )
 _EMAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
-# Any placeholder already in the text ([nombre] from the model, [enlace], [email], ...).
-_PLACEHOLDER = r"\[[^\[\]]*\]"
 # 7 or more digits, optionally starting with + and with one space, dot, or dash between digits.
 _NUMBER = re.compile(r"\+?\d(?:[ .-]?\d){6,}")
 # Amounts of money are kept: currency symbol or code before the number, or currency word after it.
@@ -31,7 +31,7 @@ def _mask_user_terms(text: str, sensitive_data: str) -> str:
     terms = sorted({term.strip() for term in sensitive_data.split(",") if term.strip()}, key=len, reverse=True)
     if not terms:
         return text
-    pattern = re.compile(f"({_PLACEHOLDER})|" + "|".join(re.escape(term) for term in terms), re.IGNORECASE)
+    pattern = re.compile(f"({PLACEHOLDER_PATTERN})|" + "|".join(re.escape(term) for term in terms), re.IGNORECASE)
     return pattern.sub(lambda match: match.group(1) or USER_TERM_PLACEHOLDER, text)
 
 

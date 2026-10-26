@@ -72,6 +72,20 @@ def test_case_and_spacing_differences_are_the_same_message_and_keep_the_first_te
     ]
 
 
+
+def test_texts_that_differ_only_in_the_placeholder_are_the_same_message() -> None:
+    # The model hid the CBU once and left it for the number rule the other time.
+    save_critical_message("family_money_request", "Transferime a este CBU: [dato oculto].")
+    save_critical_message("family_money_request", "Transferime a este CBU: [número].")
+    save_critical_message("family_money_request", "Transferime hoy a este CBU: [número].")
+
+    assert list_critical_topics() == [
+        StoredTopic(topic="family_money_request", times_shared=3, messages=[
+            _message(2, "Transferime hoy a este CBU: [número]."),  # The upsert does not use an id.
+            _message(1, "Transferime a este CBU: [dato oculto].", 2),
+        ]),
+    ]
+
 def test_same_text_in_another_topic_is_a_separate_message() -> None:
     save_critical_message("family_money_request", "Pasame plata")
     save_critical_message("other", "Pasame plata")
