@@ -163,7 +163,7 @@ Tasks:
 ### US-3.4 Ver cada mensaje una sola vez
 Como usuario quiero ver cada mensaje compartido una sola vez, con la cantidad de veces que se compartió, para no leer mensajes repetidos y saber qué engaños circulan más.
 
-ADO ID: #40 · Status: todo
+ADO ID: #40 · Status: done
 
 Si un mensaje compartido ya existe en el mismo tópico (mismo texto enmascarado, sin distinguir mayúsculas ni espacios repetidos), no se guarda de nuevo: se suma 1 a su contador. Como el enmascarado reemplaza nombres, números y links, los mensajes que solo difieren en esos datos se cuentan como el mismo. La detección es exacta, no por similitud: dos redacciones distintas del mismo engaño se guardan por separado. Para comparar, todos los marcadores (`[nombre]`, `[dato oculto]`, `[número]`, etc.) cuentan como iguales, porque la IA no siempre oculta el mismo dato con el mismo marcador. "Mensajes similares: N" pasa a contar todas las veces que se compartieron mensajes del tópico. Al ver todos los mensajes, el detalle deja de mostrarse para que ningún mensaje aparezca dos veces.
 
