@@ -37,6 +37,7 @@ def test_indicator_type_enum_matches_documented_list() -> None:
     assert item["properties"]["type"]["enum"] == [
         "urgency", "personal_data_request", "suspicious_link", "impersonation",
         "writing_errors", "unrealistic_promise", "payment_request",
+        "sender_mismatch", "failed_authentication", "deceptive_link", "dangerous_attachment",
     ]
 
 
@@ -58,3 +59,10 @@ def test_instructions_mention_every_topic_and_masked_message() -> None:
     for topic in TOPICS:
         assert topic in INSTRUCTIONS
     assert "maskedMessage" in INSTRUCTIONS
+
+
+# US-4.3: the prompt describes the email digest built by the backend.
+def test_instructions_describe_the_email_digest() -> None:
+    assert "Cuerpo:" in INSTRUCTIONS
+    assert "use them only when the message is an email digest" in INSTRUCTIONS
+    assert "For an email digest, return an empty string" in INSTRUCTIONS

@@ -235,7 +235,7 @@ Criterios de aceptación:
 
 Tasks:
 - #51 Contract: add `EmailAnalysisRequest` (`emailContent`) to `src/types.ts` and the matching Pydantic model (`email_content`) to `backend/app/models.py`. Nothing is sent or served yet.
-- #54 Backend: `POST /analysis/email` endpoint. Thin router; blank `emailContent` or more than 1,000,000 characters returns 422; the service builds the digest (`InvalidEmailError` becomes 422) and calls `analyze_message` with it, so the evidence check runs against the digest; emails are never saved. The typed AI error becomes the 503 error. Pytest: happy path (the stubbed analyzer receives the digest), an indicator quoting a header line is kept, a quote not in the digest is dropped, blank content, too large, invalid email, AI error, the response has neither `topic` nor `maskedMessage`, and nothing is saved. Depends on #51, #52, and #53.
+- #54 Backend: `POST /analysis/email` endpoint. Thin router; blank `emailContent` or more than 1,000,000 characters returns 422; the service builds the digest (`InvalidEmailError` becomes 422 with the documented body) and calls `analyze_message` with it, so the evidence check runs against the digest; emails are never saved. The typed AI error becomes the 503 error. Pytest: happy path (the stubbed analyzer receives the digest), an indicator quoting a header line is kept, a quote not in the digest is dropped, blank content, too large, invalid email, AI error, the response has neither `topic` nor `maskedMessage`, and nothing is saved. Depends on #51, #52, and #53.
 - #56 Frontend: email request, loading, and retry. The file is read with `File.text()`. Add `postEmailAnalysis` to `src/lib/api.ts`, throwing an `ApiError` that carries the status on non-2xx. `page.tsx` keeps the last request as a union (message or email) so "Reintentar" resends whichever was last, and disables both submit buttons while loading. Add email helpers mocking `**/analysis/email` to `tests/fixtures/analysis.ts` and `tests/analisis-correo.spec.ts` for US-4.2 AC1 to AC4. Depends on #51 and #55.
 - #57 Frontend: unreadable email error. On an `ApiError` with status 422 from `postEmailAnalysis`, `analysis-error` shows the unreadable email text and no "Reintentar" button; any other failure keeps the current error and retry. `AnalysisError` receives the text and whether to show retry as props (no text duplicated). Add the US-4.2 AC5 test to `tests/analisis-correo.spec.ts`. Depends on #56.
 
@@ -251,7 +251,7 @@ Criterios de aceptación:
 
 Tasks:
 - #52 Backend: email digest. `build_email_digest(raw: str) -> str` in `backend/app/services/email_digest.py` with the standard library `email` (`policy.default`) and `html.parser` (no new dependency), producing the format in [Email digest](#email-digest). Define a typed `InvalidEmailError` and raise it when there is no readable text body. Pytest: plain text email; HTML-only email (text extracted, script and style dropped, links listed with visible text and destination); `From` with display name, `Reply-To`, and `Return-Path` lines; `Authentication-Results` parsed; attachment names listed and their content never included; missing optional headers omit their line; body truncated at 20,000 characters; an email without a text body raises `InvalidEmailError`. Depends on #51.
-- #53 AI prompt: add the email indicator types to `IndicatorType` and `INSTRUCTIONS` and document them in the [AI contract](#ai-contract). The prompt describes the digest: only the lines before `Cuerpo:` come from the system, and the email types apply only when the input is a digest. Pytest: the output schema `type` enum has the 11 indicator types.
+- #53 AI prompt: add the email indicator types to `IndicatorType` and `INSTRUCTIONS` and document them in the [AI contract](#ai-contract). The prompt describes the digest: only the lines before `Cuerpo:` come from the system, the email types apply only when the input is a digest, and `maskedMessage` is `""` for a digest. Pytest: the output schema `type` enum has the 11 indicator types.
 - #58 Frontend: email indicators test. Add `tests/senales-correo.spec.ts` for US-4.3 AC1 (mocked `failed_authentication` indicator whose evidence is the `Autenticación:` line). Depends on #56.
 
 ## UI texts
@@ -399,7 +399,7 @@ export interface EmailAnalysisRequest {
 - Response: `MessageAnalysisResponse`, the same as `POST /analysis`.
 - The file is sent as text inside JSON, not as `multipart/form-data`, so no new backend dependency is needed.
 - Errors:
-  - `422`: `emailContent` is blank, has more than 1,000,000 characters, or has no readable text body (see [Email digest](#email-digest)). The frontend shows the unreadable email text from [UI texts](#ui-texts), without retry.
+  - `422`: `emailContent` is blank, has more than 1,000,000 characters, or has no readable text body (see [Email digest](#email-digest)). For an unreadable email the body is `{ "detail": "No se pudo leer el correo. Verificá que sea un archivo .eml de hasta 1 MB." }`; blank or too large content keeps FastAPI's default validation body. The frontend ignores the body and shows the unreadable email text from [UI texts](#ui-texts), without retry.
   - `503`: same as `POST /analysis`. Any other non-2xx or network error shows the `POST /analysis` error text with retry.
 - Emails are never shared in the panel: the request has no `shareInPanel`.
 
@@ -414,10 +414,10 @@ export interface EmailAnalysisRequest {
 - Undetermined risk: if the model returned at least one indicator and the evidence check drops all of them, the backend sets `riskLevel` to `UNDETERMINED` and replaces `explanation` with the text from [UI texts](#ui-texts). If the model returned no indicators, its `riskLevel` and `explanation` are kept.
 - Where the rules run: output validation in `backend/app/ai/analyzer.py`; the evidence check and the undetermined rule in `backend/app/services/analysis.py`, after any analyzer. Indicators that pass the check are kept as returned (evidence verbatim). If only some are dropped, `riskLevel` and `explanation` are kept.
 - Fallback: if the call fails, times out, or returns invalid output, the AI layer raises one typed AI error and the endpoint returns the `503` error. Never a partial or invented result. Missing configuration also raises the typed AI error.
-- Prompt: `backend/app/ai/prompt.py` (`INSTRUCTIONS`), in English; the model writes `summary`, `explanation`, `title`, and `description` in neutral Spanish, and copies `evidence` verbatim from the message. `summary` states what the message asks for or claims to be (it does not explain the risk); `explanation` justifies `riskLevel` from the indicators without claiming certainty. With no indicators, `riskLevel` is `LOW`. Indicators list only signs present in the message; types that do not apply are omitted.
+- Prompt: `backend/app/ai/prompt.py` (`INSTRUCTIONS`), in English; the model writes `summary`, `explanation`, `title`, and `description` in neutral Spanish, and copies `evidence` verbatim from the message. `summary` states what the message asks for or claims to be (it does not explain the risk); `explanation` justifies `riskLevel` from the indicators without claiming certainty. With no indicators, `riskLevel` is `LOW`. Indicators list only signs present in the message; types that do not apply are omitted. The prompt tells the model that, in an [email digest](#email-digest), only the lines before `Cuerpo:` come from the system; the email-only indicator types apply only to a digest and quote one of those system lines as evidence.
 - Output schema: `OUTPUT_SCHEMA` in the same file, sent as `text.format` (`type: json_schema`, `name: analysis_result`, `strict: true`). Keys are camelCase and match `AnalysisResult` plus `topic` and `maskedMessage`; every field is required and no extra fields are allowed; `riskLevel` is `LOW | MEDIUM | HIGH`; `indicators` may be empty; `type` is one of the indicator types below; `topic` is one of the topics below.
 - Topic: the scam pattern the message fits best, returned for every message (`other` when none fits).
-- Masked message: the message copied verbatim except that names of people, addresses, and any other personal data are replaced with `[nombre]`, `[dirección]`, or `[dato oculto]`. Amounts of money are kept. Returned for every message (the schema is fixed), used only when the message is shared. Best effort: the model may miss data, so the backend masking always runs on top of it.
+- Masked message: the message copied verbatim except that names of people, addresses, and any other personal data are replaced with `[nombre]`, `[dirección]`, or `[dato oculto]`. Amounts of money are kept. Returned for every message (the schema is fixed), used only when the message is shared. For an email digest the model returns `""`, since emails are never shared and copying a long digest would only add latency and cost. Best effort: the model may miss data, so the backend masking always runs on top of it.
 - The analyzer returns `topic` and `maskedMessage` next to the `AnalysisResult` as an internal `AnalyzedMessage`; they are used only to store shared critical messages.
 - Indicator types (fixed list):
 
@@ -468,11 +468,12 @@ Cuerpo:
 <body text>
 ```
 
-- `Autenticación`: from the first (topmost) `Authentication-Results` header; only the `spf`, `dkim`, and `dmarc` results present are listed.
-- `Enlaces`: each distinct `<a href>` of the HTML body with its visible text, in order of appearance, up to 20.
-- `Adjuntos`: file names only; attachment content is never read or sent to the model.
-- `Cuerpo`: the `text/plain` part; if there is none, the `text/html` part converted to text (script and style content dropped). Truncated to 20,000 characters.
-- Invalid email: no `text/plain` or `text/html` part, or a blank body after conversion, raises `InvalidEmailError` (`422`).
+- Header lines: each value is decoded and collapsed to one line, so a header can never add a digest line. A header that cannot be parsed omits its line.
+- `Autenticación`: from the first (topmost) `Authentication-Results` header; only the `spf`, `dkim`, and `dmarc` results present are listed, in that order and lowercase.
+- `Enlaces`: each `<a href>` of the HTML body with its visible text, in order of appearance, up to 20. Repeated links are dropped; a link is repeated only when both its visible text and its destination are equal, so a deceptive link that shares a destination with another one is still listed. Taken from the HTML part even when the body comes from `text/plain`.
+- `Adjuntos`: file names only, separated by `, `; attachment content is never read or sent to the model.
+- `Cuerpo`: the `text/plain` part; if there is none, the `text/html` part converted to text (script and style content dropped). Only the body is truncated, to 20,000 characters; header lines are not. A part with an unknown or invalid charset is decoded as UTF-8, replacing unreadable characters.
+- Invalid email: no `text/plain` or `text/html` part, or a blank body after conversion, raises `InvalidEmailError` (`422`). Text without email headers is analyzed as an email with only `Cuerpo:`.
 - Privacy: the file and the digest exist only during the request; they are never stored, logged, or shared.
 - Known limitation: the body is free text, so a sender could write lines that look like header lines. The prompt tells the model that only lines before `Cuerpo:` come from the system, but the evidence check cannot tell them apart.
 
