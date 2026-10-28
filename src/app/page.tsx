@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { AnalysisError } from '@/components/AnalysisError';
 import { AnalysisResultView } from '@/components/AnalysisResultView';
 import { AnalysisStatus, type AnalysisRequestStatus } from '@/components/AnalysisStatus';
+import { EmailAnalysisForm } from '@/components/EmailAnalysisForm';
 import { MessageAnalysisForm } from '@/components/MessageAnalysisForm';
 import { postAnalysis } from '@/lib/api';
 import type { AnalysisResult, MessageAnalysisRequest } from '@/types';
@@ -14,6 +15,7 @@ export default function HomePage() {
   const [message, setMessage] = useState('');
   const [shareInPanel, setShareInPanel] = useState(false);
   const [sensitiveData, setSensitiveData] = useState('');
+  const [emailFile, setEmailFile] = useState<File | null>(null);
   const [lastSubmittedRequest, setLastSubmittedRequest] = useState<MessageAnalysisRequest>({ message: '' });
   const [status, setStatus] = useState<AnalysisRequestStatus>('idle');
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -32,6 +34,14 @@ export default function HomePage() {
 
   function handleSensitiveDataChange(nextSensitiveData: string): void {
     setSensitiveData(nextSensitiveData);
+  }
+
+  function handleEmailFileChange(nextEmailFile: File | null): void {
+    setEmailFile(nextEmailFile);
+  }
+
+  function handleEmailSubmit(): void {
+    // US-4.2: wired in #56.
   }
 
   // Shared by submit and retry; clears the previous result so a failure never shows stale data.
@@ -73,6 +83,12 @@ export default function HomePage() {
         onShareInPanelChange={handleShareInPanelChange}
         onSensitiveDataChange={handleSensitiveDataChange}
         onSubmit={handleSubmit}
+      />
+      <EmailAnalysisForm
+        emailFile={emailFile}
+        isSubmitting={status === 'loading'}
+        onEmailFileChange={handleEmailFileChange}
+        onSubmit={handleEmailSubmit}
       />
       <AnalysisStatus status={status} />
       {status === 'error' ? <AnalysisError onRetry={handleRetry} /> : null}
