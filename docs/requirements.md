@@ -6,7 +6,7 @@ Single source of truth for what ScamGuard must do. Implement only what is listed
 - Each User Story is loaded into Azure DevOps with the `ado-work-items` skill. Record the ADO ID next to each Feature, User Story, and Task once created.
 - Reference story IDs in commits and tests (e.g. `// US-1.2`). Each acceptance criterion maps to one Playwright test.
 - Every task ships with the tests it adds or breaks; no task leaves the suite failing.
-- E2E tests mock `POST /analysis` with `page.route` through the shared helper `tests/fixtures/analysis.ts`, and `GET /critical-messages` through `tests/fixtures/critical-messages.ts`; Pytest covers the backend with the AI client stubbed and SQLite on a temporary file.
+- E2E tests mock `POST /analysis` and `POST /analysis/email` with `page.route` through the shared helper `tests/fixtures/analysis.ts`, and `GET /critical-messages` through `tests/fixtures/critical-messages.ts`; Pytest covers the backend with the AI client stubbed and SQLite on a temporary file.
 - Selectors marked **(new)** do not exist yet; confirm them with a page snapshot after implementation.
 - Task dependencies are listed as "Depends on"; do not start a task before its dependencies are done.
 
@@ -199,6 +199,61 @@ Tasks:
 - #36 Backend: save shared critical messages. In `services/analysis.py`, after the evidence check, if `shareInPanel` is true, `riskLevel` is `HIGH`, and `maskedMessage` is not blank, apply `mask_personal_data` to the model's `maskedMessage` with the request's `sensitiveData` and save it with its topic through an injected storage dependency. A `StorageError` on save is logged and the analysis is returned as usual. Pytest: shared `HIGH` saved masked with its topic; not shared `HIGH` not saved; shared `LOW`, `MEDIUM`, and `UNDETERMINED` not saved; blank `maskedMessage` not saved; a storage error still returns 200 with the result. Depends on #31, #34, and #35.
 - #37 Frontend: share checkbox, sensitive data field, and privacy notice. Add the native checkbox and the text input (each with its `label`) to the message form; the input is rendered only while the checkbox is checked, and unchecking the checkbox clears it. `page.tsx` builds the request with `shareInPanel` and `sensitiveData` only when the checkbox is checked (`postAnalysis` sends it unchanged), so the unchecked body stays `{ "message": "<texto>" }` (US-1.2 AC1). "Reintentar" resends the last full request, including `shareInPanel` and `sensitiveData`. Show the notice in `panel-privacy-notice` on the panel, also when it is empty or has an error. Add `tests/compartir-mensaje.spec.ts` for AC1 to AC4. Depends on #33.
 
+## Feature 4 - Análisis de correos electrónicos
+
+ADO ID: #47
+
+Primera entrega: solo archivos `.eml` (los exportan Gmail, Outlook web, Apple Mail y Thunderbird). `.msg` y `.mbox` quedan fuera de alcance. El archivo se procesa en memoria y nunca se guarda. Los correos no se comparten en el panel de mensajes críticos.
+
+### US-4.1 Elegir un archivo de correo
+Como usuario quiero elegir un archivo de correo electrónico para analizarlo sin copiar su contenido a mano.
+
+ADO ID: #48 · Status: todo
+
+Criterios de aceptación:
+1. Al abrir la página, el campo "Archivo de correo (.eml)" está vacío y el botón "Analizar correo" está deshabilitado.
+2. Al elegir un archivo `.eml`, el botón se habilita.
+3. Al elegir un archivo con otra extensión, el botón sigue deshabilitado y se muestra "Elegí un archivo con extensión .eml." (`email-file-hint`).
+
+Tasks:
+- #55 Frontend: email form. `EmailAnalysisForm` component below the message form: native `<input type="file" accept=".eml">` with its label and the "Analizar correo" button, enabled only when a file is chosen and its name ends in `.eml` (case-insensitive); otherwise `email-file-hint` is shown. `page.tsx` renders it; the submit is wired in #56. New selectors **(new)**: `email-file-input`, `analyze-email-button`, `email-file-hint`. Add `tests/ingreso-correo.spec.ts` for US-4.1 AC1 to AC3.
+- #59 Frontend: email form styling. Plain CSS in `src/app/globals.css` with the palette variables: the email form is a card like the message form; the file input has a visible border and the shared `:focus-visible` outline; the hint is muted text; "Analizar correo" reuses the primary button. No text, role, element type, or `data-testid` changes. WCAG AA contrast. Verification: the full Playwright suite stays green with no new assertions; attach screenshots of the home page with no file, with an `.eml` file chosen, with a wrong file, and with the unreadable email error. Depends on #57.
+
+### US-4.2 Analizar un correo
+Como usuario quiero analizar el correo elegido para conocer si presenta indicios de fraude o engaño.
+
+ADO ID: #49 · Status: todo
+
+El resultado se muestra en el mismo lugar y con el mismo formato que el de un mensaje (Features 1 y 2). "Reintentar" reenvía el último pedido, sea un mensaje o un correo.
+
+Criterios de aceptación:
+1. Al hacer clic en "Analizar correo", se envía `POST /analysis/email` con el cuerpo `{ "emailContent": "<contenido del archivo>" }`.
+2. Mientras el análisis está en curso, se muestra "Analizando mensaje..." (`role="status"`) y los botones "Analizar mensaje" y "Analizar correo" están deshabilitados.
+3. Con un resultado, se muestra en `analysis-result`.
+4. Si el análisis falla, se muestra "Los servidores están ocupados. Intentá de nuevo más tarde." (`analysis-error`) y "Reintentar"; al reintentar con éxito se reenvía el mismo correo y se muestra el resultado.
+5. Si el correo no se puede leer, se muestra "No se pudo leer el correo. Verificá que sea un archivo .eml de hasta 1 MB." (`analysis-error`) sin el botón "Reintentar".
+
+Tasks:
+- #51 Contract: add `EmailAnalysisRequest` (`emailContent`) to `src/types.ts` and the matching Pydantic model (`email_content`) to `backend/app/models.py`. Nothing is sent or served yet.
+- #54 Backend: `POST /analysis/email` endpoint. Thin router; blank `emailContent` or more than 1,000,000 characters returns 422; the service builds the digest (`InvalidEmailError` becomes 422) and calls `analyze_message` with it, so the evidence check runs against the digest; emails are never saved. The typed AI error becomes the 503 error. Pytest: happy path (the stubbed analyzer receives the digest), an indicator quoting a header line is kept, a quote not in the digest is dropped, blank content, too large, invalid email, AI error, the response has neither `topic` nor `maskedMessage`, and nothing is saved. Depends on #51, #52, and #53.
+- #56 Frontend: email request, loading, and retry. The file is read with `File.text()`. Add `postEmailAnalysis` to `src/lib/api.ts`, throwing an `ApiError` that carries the status on non-2xx. `page.tsx` keeps the last request as a union (message or email) so "Reintentar" resends whichever was last, and disables both submit buttons while loading. Add email helpers mocking `**/analysis/email` to `tests/fixtures/analysis.ts` and `tests/analisis-correo.spec.ts` for US-4.2 AC1 to AC4. Depends on #51 and #55.
+- #57 Frontend: unreadable email error. On an `ApiError` with status 422 from `postEmailAnalysis`, `analysis-error` shows the unreadable email text and no "Reintentar" button; any other failure keeps the current error and retry. `AnalysisError` receives the text and whether to show retry as props (no text duplicated). Add the US-4.2 AC5 test to `tests/analisis-correo.spec.ts`. Depends on #56.
+
+### US-4.3 Ver las señales propias del correo
+Como usuario quiero saber si el remitente, la autenticación, los enlaces o los adjuntos del correo muestran señales de engaño.
+
+ADO ID: #50 · Status: todo
+
+El backend extrae del correo los datos que el texto no muestra (dirección visible del remitente, "Responder a", dirección de retorno, resultado de SPF/DKIM/DMARC, destino real de los enlaces y nombres de los adjuntos) y se los pasa a la IA junto con el cuerpo (ver [Email digest](#email-digest)). Tipos de indicador nuevos: remitente que no coincide, autenticación fallida, enlaces engañosos y adjuntos peligrosos. Usan la misma cita literal y el mismo chequeo de evidencia que el resto. La extracción se cubre con Pytest.
+
+Criterios de aceptación:
+1. Un indicador propio del correo se muestra en `analysis-indicator` con su título y descripción, y la línea citada del correo en `analysis-indicator-evidence`.
+
+Tasks:
+- #52 Backend: email digest. `build_email_digest(raw: str) -> str` in `backend/app/services/email_digest.py` with the standard library `email` (`policy.default`) and `html.parser` (no new dependency), producing the format in [Email digest](#email-digest). Define a typed `InvalidEmailError` and raise it when there is no readable text body. Pytest: plain text email; HTML-only email (text extracted, script and style dropped, links listed with visible text and destination); `From` with display name, `Reply-To`, and `Return-Path` lines; `Authentication-Results` parsed; attachment names listed and their content never included; missing optional headers omit their line; body truncated at 20,000 characters; an email without a text body raises `InvalidEmailError`. Depends on #51.
+- #53 AI prompt: add the email indicator types to `IndicatorType` and `INSTRUCTIONS` and document them in the [AI contract](#ai-contract). The prompt describes the digest: only the lines before `Cuerpo:` come from the system, and the email types apply only when the input is a digest. Pytest: the output schema `type` enum has the 11 indicator types.
+- #58 Frontend: email indicators test. Add `tests/senales-correo.spec.ts` for US-4.3 AC1 (mocked `failed_authentication` indicator whose evidence is the `Autenticación:` line). Depends on #56.
+
 ## UI texts
 
 | Where | Text |
@@ -229,6 +284,10 @@ Tasks:
 | Panel error | No se pudo cargar el panel. Intentá de nuevo más tarde. |
 | Panel retry button | Reintentar |
 | Topic titles (set by the backend) | See the topic list in [AI contract](#ai-contract) |
+| Email file field label | Archivo de correo (.eml) |
+| Email submit button | Analizar correo |
+| Email file hint (wrong extension) | Elegí un archivo con extensión .eml. |
+| Unreadable email error | No se pudo leer el correo. Verificá que sea un archivo .eml de hasta 1 MB. |
 
 ## Visual design
 
@@ -287,7 +346,7 @@ export interface MessageAnalysisResponse {
 ```
 
 - `evidence`, `explanation`, and `UNDETERMINED` are new and must be added to `src/types.ts` (task #11) and to the backend models.
-- The frontend reads the backend base URL from `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:8000`). E2E tests mock `**/analysis` and `**/critical-messages`, so no backend needs to run.
+- The frontend reads the backend base URL from `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:8000`). E2E tests mock `**/analysis`, `**/analysis/email`, and `**/critical-messages`, so no backend needs to run.
 - JSON fields are camelCase; backend models use snake_case with camelCase aliases.
 - Errors:
   - `422`: empty or whitespace-only message. The UI cannot send it (the button is disabled), so it is covered by Pytest only.
@@ -329,12 +388,27 @@ export interface CriticalMessagesResponse {
 
 - Errors: `503` when the storage cannot be read. Body: `{ "detail": "No se pudo cargar el panel. Intentá de nuevo más tarde." }`. The frontend ignores the body, as with `POST /analysis`.
 
+`POST /analysis/email`
+
+```ts
+export interface EmailAnalysisRequest {
+  emailContent: string; // Raw .eml file content, read as text by the frontend
+}
+```
+
+- Response: `MessageAnalysisResponse`, the same as `POST /analysis`.
+- The file is sent as text inside JSON, not as `multipart/form-data`, so no new backend dependency is needed.
+- Errors:
+  - `422`: `emailContent` is blank, has more than 1,000,000 characters, or has no readable text body (see [Email digest](#email-digest)). The frontend shows the unreadable email text from [UI texts](#ui-texts), without retry.
+  - `503`: same as `POST /analysis`. Any other non-2xx or network error shows the `POST /analysis` error text with retry.
+- Emails are never shared in the panel: the request has no `shareInPanel`.
+
 ## AI contract
 
 - Model: `gpt-5.4-mini`, deployed on Azure Foundry. Endpoint (the v1 base URL), key, and deployment name come from `.env`.
 - SDK: `openai` Python package, `OpenAI` client with `base_url` set to the Azure v1 endpoint (`https://<resource>.services.ai.azure.com/openai/v1/`), calling the Responses API (`responses.create`). No `api_version` is needed. Structured JSON output uses `text.format` with a JSON schema (see Output schema below).
 - Timeout: 60 seconds, with no SDK retries (`max_retries=0`).
-- Input: the user message.
+- Input: the user message, or the [email digest](#email-digest) built by the backend (Feature 4).
 - Output: JSON with the `AnalysisResult` shape, validated by the backend before returning it. The model output schema restricts `riskLevel` to `LOW | MEDIUM | HIGH`; `UNDETERMINED` is set only by the backend.
 - Evidence check: the backend drops any indicator whose `evidence` does not appear in the submitted message. Comparison is case-insensitive, with consecutive whitespace collapsed to one space and leading/trailing whitespace trimmed on both sides. An indicator whose `evidence` is empty or whitespace-only is dropped.
 - Undetermined risk: if the model returned at least one indicator and the evidence check drops all of them, the backend sets `riskLevel` to `UNDETERMINED` and replaces `explanation` with the text from [UI texts](#ui-texts). If the model returned no indicators, its `riskLevel` and `explanation` are kept.
@@ -356,6 +430,10 @@ export interface CriticalMessagesResponse {
 | `writing_errors` | Spelling or grammar errors |
 | `unrealistic_promise` | Prizes or unrealistic gains |
 | `payment_request` | Asks for transfers or payments |
+| `sender_mismatch` | Emails only: the visible sender, `Reply-To`, or return address do not match |
+| `failed_authentication` | Emails only: SPF, DKIM, or DMARC did not pass |
+| `deceptive_link` | Emails only: a link's visible text shows a different destination than the real one |
+| `dangerous_attachment` | Emails only: attachments that can run code or hide their type (e.g. `.exe`, `.scr`, `.js`, `.html`, `factura.pdf.exe`) |
 
 - Topics (fixed list; the title is shown in the panel):
 
@@ -369,6 +447,34 @@ export interface CriticalMessagesResponse {
 | `investment_offer` | Investments or easy gains | Inversiones y ganancias fáciles |
 | `job_offer` | Job offers | Ofertas de trabajo |
 | `other` | None of the above | Otros engaños |
+
+## Email digest
+
+The backend turns an `.eml` file into one text, the digest, which is the message for the analyzer and the evidence check. Every rule in the [AI contract](#ai-contract) applies to it unchanged.
+
+- Parsing: standard library `email` (`policy.default`, which decodes encoded headers and transfer encodings) and `html.parser`, in `backend/app/services/email_digest.py`. No new dependency.
+- Format: Spanish labels, since quoted lines are shown as evidence. Each line before `Cuerpo:` appears only when its data exists.
+
+```
+De: <From, decoded, with display name and address>
+Responder a: <Reply-To>
+Dirección de retorno: <Return-Path>
+Asunto: <Subject>
+Autenticación: spf=<result> dkim=<result> dmarc=<result>
+Adjuntos: <file names, comma-separated>
+Enlaces:
+- "<visible text>" -> <href>
+Cuerpo:
+<body text>
+```
+
+- `Autenticación`: from the first (topmost) `Authentication-Results` header; only the `spf`, `dkim`, and `dmarc` results present are listed.
+- `Enlaces`: each distinct `<a href>` of the HTML body with its visible text, in order of appearance, up to 20.
+- `Adjuntos`: file names only; attachment content is never read or sent to the model.
+- `Cuerpo`: the `text/plain` part; if there is none, the `text/html` part converted to text (script and style content dropped). Truncated to 20,000 characters.
+- Invalid email: no `text/plain` or `text/html` part, or a blank body after conversion, raises `InvalidEmailError` (`422`).
+- Privacy: the file and the digest exist only during the request; they are never stored, logged, or shared.
+- Known limitation: the body is free text, so a sender could write lines that look like header lines. The prompt tells the model that only lines before `Cuerpo:` come from the system, but the evidence check cannot tell them apart.
 
 ## Critical messages storage
 
@@ -409,4 +515,4 @@ Follow `.github/instructions/*.instructions.md`.
 Each story has tests for the happy path and the most likely failure path, as defined in `AGENTS.md`.
 
 ### NFR-07 Privacy of stored messages
-Only `HIGH` risk messages the user chose to share are stored, always masked, and the panel says so. See [Critical messages storage](#critical-messages-storage).
+Only `HIGH` risk messages the user chose to share are stored, always masked, and the panel says so. See [Critical messages storage](#critical-messages-storage). Email files (Feature 4) are never stored or shared; see [Email digest](#email-digest).

@@ -2,7 +2,7 @@
 
 ## Scope
 - Build a university-ready application for scam/fraud detection.
-- Primary input for the first delivery is text messages; other formats can be considered later only if they do not expand scope.
+- Inputs: text messages (Features 1 to 3) and email files in `.eml` format (Feature 4). Other formats only if they are added to `docs/requirements.md` first.
 - Open scope: the user-facing features are the ones listed in `docs/requirements.md`, with no fixed limit. New features are added there first, as they are requested, before any implementation.
 - Treat the output as decision support, not as a guarantee of fraud detection.
 - Target stack:
