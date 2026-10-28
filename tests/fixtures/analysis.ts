@@ -3,6 +3,8 @@ import type { Page } from '@playwright/test';
 import type { Indicator, MessageAnalysisResponse, RiskLevel } from '../../src/types';
 
 const ANALYSIS_ROUTE = '**/analysis';
+// Does not overlap with ANALYSIS_ROUTE: the glob '**/analysis' never matches '/analysis/email'.
+const EMAIL_ANALYSIS_ROUTE = '**/analysis/email';
 const CORS_HEADERS = { 'Access-Control-Allow-Origin': '*' };
 
 export const analysisResponse: MessageAnalysisResponse = {
@@ -52,13 +54,21 @@ interface MockAnalysisOptions {
   body?: MessageAnalysisResponse;
 }
 
-export async function mockAnalysis(
+async function mockRoute(
   page: Page,
-  { status = 200, body = analysisResponse }: MockAnalysisOptions = {},
+  url: string,
+  { status = 200, body = analysisResponse }: MockAnalysisOptions,
 ): Promise<void> {
-  await page.route(ANALYSIS_ROUTE, (route) =>
-    route.fulfill({ status, json: body, headers: CORS_HEADERS }),
-  );
+  await page.route(url, (route) => route.fulfill({ status, json: body, headers: CORS_HEADERS }));
+}
+
+export async function mockAnalysis(page: Page, options: MockAnalysisOptions = {}): Promise<void> {
+  await mockRoute(page, ANALYSIS_ROUTE, options);
+}
+
+// US-4.2: POST /analysis/email answers with the same response shape as POST /analysis.
+export async function mockEmailAnalysis(page: Page, options: MockAnalysisOptions = {}): Promise<void> {
+  await mockRoute(page, EMAIL_ANALYSIS_ROUTE, options);
 }
 
 export interface PendingAnalysis {
@@ -66,19 +76,34 @@ export interface PendingAnalysis {
 }
 
 // Holds the request open until release() is called, without timeouts.
-export async function mockPendingAnalysis(
+async function mockPendingRoute(
   page: Page,
-  body: MessageAnalysisResponse = analysisResponse,
+  url: string,
+  body: MessageAnalysisResponse,
 ): Promise<PendingAnalysis> {
   let release: () => void = () => undefined;
   const released = new Promise<void>((resolve) => {
     release = resolve;
   });
-  await page.route(ANALYSIS_ROUTE, async (route) => {
+  await page.route(url, async (route) => {
     await released;
     await route.fulfill({ json: body, headers: CORS_HEADERS });
   });
   return { release };
+}
+
+export async function mockPendingAnalysis(
+  page: Page,
+  body: MessageAnalysisResponse = analysisResponse,
+): Promise<PendingAnalysis> {
+  return mockPendingRoute(page, ANALYSIS_ROUTE, body);
+}
+
+export async function mockPendingEmailAnalysis(
+  page: Page,
+  body: MessageAnalysisResponse = analysisResponse,
+): Promise<PendingAnalysis> {
+  return mockPendingRoute(page, EMAIL_ANALYSIS_ROUTE, body);
 }
 
 export type AnalysisMockStatus = 200 | 503;
@@ -92,14 +117,13 @@ export const analysisErrorBody: AnalysisErrorBody = {
   detail: 'Los servidores están ocupados. Intentá de nuevo más tarde.',
 };
 
-// Answers each POST /analysis with the next status; the last status repeats.
-export async function mockAnalysisSequence(
-  page: Page,
-  statuses: readonly [AnalysisMockStatus, ...AnalysisMockStatus[]],
-): Promise<void> {
+type AnalysisStatusSequence = readonly [AnalysisMockStatus, ...AnalysisMockStatus[]];
+
+// Answers each POST to the route with the next status; the last status repeats.
+async function mockRouteSequence(page: Page, url: string, statuses: AnalysisStatusSequence): Promise<void> {
   const [first, ...rest] = statuses;
   let next: AnalysisMockStatus = first;
-  await page.route(ANALYSIS_ROUTE, async (route) => {
+  await page.route(url, async (route) => {
     if (route.request().method() === 'OPTIONS') {
       await route.fulfill({
         status: 204,
@@ -115,4 +139,12 @@ export async function mockAnalysisSequence(
       headers: CORS_HEADERS,
     });
   });
+}
+
+export async function mockAnalysisSequence(page: Page, statuses: AnalysisStatusSequence): Promise<void> {
+  await mockRouteSequence(page, ANALYSIS_ROUTE, statuses);
+}
+
+export async function mockEmailAnalysisSequence(page: Page, statuses: AnalysisStatusSequence): Promise<void> {
+  await mockRouteSequence(page, EMAIL_ANALYSIS_ROUTE, statuses);
 }
