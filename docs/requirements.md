@@ -208,7 +208,7 @@ Primera entrega: solo archivos `.eml` (los exportan Gmail, Outlook web, Apple Ma
 ### US-4.1 Elegir un archivo de correo
 Como usuario quiero elegir un archivo de correo electrónico para analizarlo sin copiar su contenido a mano.
 
-ADO ID: #48 · Status: todo
+ADO ID: #48 · Status: done
 
 Criterios de aceptación:
 1. Al abrir la página, el campo "Archivo de correo (.eml)" está vacío y el botón "Analizar correo" está deshabilitado.
