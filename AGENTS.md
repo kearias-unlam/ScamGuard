@@ -28,6 +28,7 @@
 - The backlog (Features, User Stories, acceptance criteria), API contract, AI contract, and non-functional requirements live in [docs/requirements.md](docs/requirements.md): @docs/requirements.md
 - `docs/requirements.md` is the source of truth; Azure DevOps mirrors it. Change requirements there first, then sync ADO.
 - Implement only what is listed there; if a request is not covered, ask first.
+- When asked to plan or implement a User Story that needs pending tasks from another User Story (through its "Depends on"), say so before starting: name the other User Story and the blocking tasks.
 
 ## Rules
 - Do not add technologies without justification or asking first.
