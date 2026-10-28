@@ -3,12 +3,12 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { AnalysisError } from '@/components/AnalysisError';
+import { ANALYSIS_ERROR_TEXT, AnalysisError, UNREADABLE_EMAIL_ERROR_TEXT } from '@/components/AnalysisError';
 import { AnalysisResultView } from '@/components/AnalysisResultView';
 import { AnalysisStatus, type AnalysisRequestStatus } from '@/components/AnalysisStatus';
 import { EmailAnalysisForm } from '@/components/EmailAnalysisForm';
 import { MessageAnalysisForm } from '@/components/MessageAnalysisForm';
-import { postAnalysis, postEmailAnalysis } from '@/lib/api';
+import { ApiError, postAnalysis, postEmailAnalysis } from '@/lib/api';
 import type { AnalysisResult, MessageAnalysisRequest, MessageAnalysisResponse } from '@/types';
 
 // What "Analizar" sent last, so "Reintentar" resends it (US-4.2). The email keeps the chosen File,
@@ -24,6 +24,11 @@ async function sendRequest(submitted: SubmittedRequest): Promise<MessageAnalysis
   return postEmailAnalysis({ emailContent: await submitted.emailFile.text() });
 }
 
+// US-4.2 AC5: the backend answers 422 when it cannot read the email; any other failure is the busy error.
+function isUnreadableEmail(submitted: SubmittedRequest, error: unknown): boolean {
+  return submitted.kind === 'email' && error instanceof ApiError && error.status === 422;
+}
+
 export default function HomePage() {
   const [message, setMessage] = useState('');
   const [shareInPanel, setShareInPanel] = useState(false);
@@ -31,6 +36,7 @@ export default function HomePage() {
   const [emailFile, setEmailFile] = useState<File | null>(null);
   const [lastSubmittedRequest, setLastSubmittedRequest] = useState<SubmittedRequest | null>(null);
   const [status, setStatus] = useState<AnalysisRequestStatus>('idle');
+  const [isEmailUnreadable, setIsEmailUnreadable] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
 
   function handleMessageChange(nextMessage: string): void {
@@ -69,7 +75,8 @@ export default function HomePage() {
       const response = await sendRequest(submitted);
       setResult(response.result);
       setStatus('success');
-    } catch {
+    } catch (error) {
+      setIsEmailUnreadable(isUnreadableEmail(submitted, error));
       setStatus('error');
     }
   }
@@ -112,7 +119,13 @@ export default function HomePage() {
         onSubmit={handleEmailSubmit}
       />
       <AnalysisStatus status={status} />
-      {status === 'error' ? <AnalysisError onRetry={handleRetry} /> : null}
+      {status === 'error' ? (
+        <AnalysisError
+          message={isEmailUnreadable ? UNREADABLE_EMAIL_ERROR_TEXT : ANALYSIS_ERROR_TEXT}
+          showRetry={!isEmailUnreadable}
+          onRetry={handleRetry}
+        />
+      ) : null}
       <AnalysisResultView result={result} isIdle={status === 'idle'} />
     </main>
   );

@@ -106,7 +106,7 @@ export async function mockPendingEmailAnalysis(
   return mockPendingRoute(page, EMAIL_ANALYSIS_ROUTE, body);
 }
 
-export type AnalysisMockStatus = 200 | 503;
+export type AnalysisMockStatus = 200 | 422 | 503;
 
 interface AnalysisErrorBody {
   detail: string;
@@ -116,6 +116,16 @@ interface AnalysisErrorBody {
 export const analysisErrorBody: AnalysisErrorBody = {
   detail: 'Los servidores están ocupados. Intentá de nuevo más tarde.',
 };
+
+// 422 body (FastAPI validation error); the frontend ignores it and only reads the status.
+const unprocessableBody = { detail: [{ msg: 'Value error, the email has no readable text body' }] };
+
+function bodyForStatus(status: AnalysisMockStatus): unknown {
+  if (status === 200) {
+    return analysisResponse;
+  }
+  return status === 422 ? unprocessableBody : analysisErrorBody;
+}
 
 type AnalysisStatusSequence = readonly [AnalysisMockStatus, ...AnalysisMockStatus[]];
 
@@ -135,7 +145,7 @@ async function mockRouteSequence(page: Page, url: string, statuses: AnalysisStat
     next = rest.shift() ?? status;
     await route.fulfill({
       status,
-      json: status === 200 ? analysisResponse : analysisErrorBody,
+      json: bodyForStatus(status),
       headers: CORS_HEADERS,
     });
   });

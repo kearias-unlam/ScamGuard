@@ -1,10 +1,15 @@
-const ANALYSIS_ERROR_TEXT = 'Los servidores están ocupados. Intentá de nuevo más tarde.';
+// User-visible error texts (docs/requirements.md, UI texts). Defined once here.
+export const ANALYSIS_ERROR_TEXT = 'Los servidores están ocupados. Intentá de nuevo más tarde.';
+export const UNREADABLE_EMAIL_ERROR_TEXT =
+  'No se pudo leer el correo. Verificá que sea un archivo .eml de hasta 1 MB.';
 
 interface AnalysisErrorProps {
+  message: string;
+  showRetry: boolean;
   onRetry: () => void;
 }
 
-export function AnalysisError({ onRetry }: AnalysisErrorProps) {
+export function AnalysisError({ message, showRetry, onRetry }: AnalysisErrorProps) {
   function handleRetryClick(): void {
     onRetry();
   }
@@ -12,16 +17,19 @@ export function AnalysisError({ onRetry }: AnalysisErrorProps) {
   return (
     <div className="analysis-error">
       <p role="alert" data-testid="analysis-error">
-        {ANALYSIS_ERROR_TEXT}
+        {message}
       </p>
-      <button
-        type="button"
-        className="button button--secondary"
-        onClick={handleRetryClick}
-        data-testid="retry-analysis-button"
-      >
-        Reintentar
-      </button>
+      {/* US-4.2 AC5: an unreadable email cannot succeed on retry, so the button is hidden. */}
+      {showRetry ? (
+        <button
+          type="button"
+          className="button button--secondary"
+          onClick={handleRetryClick}
+          data-testid="retry-analysis-button"
+        >
+          Reintentar
+        </button>
+      ) : null}
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { mockEmailAnalysis, mockEmailAnalysisSequence, mockPendingEmailAnalysis 
 const EMAIL_FILE_LABEL = 'Archivo de correo (.eml)';
 const EMAIL_CONTENT = 'From: Banco <soporte@banco-seguro.com>\r\nSubject: Cuenta bloqueada\r\n\r\nIngresá tu clave acá';
 const ERROR_TEXT = 'Los servidores están ocupados. Intentá de nuevo más tarde.';
+const UNREADABLE_EMAIL_TEXT = 'No se pudo leer el correo. Verificá que sea un archivo .eml de hasta 1 MB.';
 
 async function chooseEmailFile(page: Page, name: string, content: string): Promise<void> {
   await page.getByLabel(EMAIL_FILE_LABEL).setInputFiles({
@@ -82,4 +83,16 @@ test('si el análisis del correo falla se muestra el error y al reintentar con �
   expect(retryRequest.postDataJSON()).toEqual({ emailContent: EMAIL_CONTENT });
   await expect(page.getByTestId('analysis-result')).toBeVisible();
   await expect(main.getByRole('alert')).toBeHidden();
+});
+
+test('si el correo no se puede leer se muestra el aviso de correo ilegible sin el botón "Reintentar"', async ({ page }) => {
+  await mockEmailAnalysisSequence(page, [422]);
+  await page.goto('/');
+  const main = page.getByRole('main');
+  await chooseEmailFile(page, 'correo.eml', EMAIL_CONTENT);
+
+  await page.getByRole('button', { name: 'Analizar correo' }).click();
+
+  await expect(main.getByRole('alert')).toHaveText(UNREADABLE_EMAIL_TEXT);
+  await expect(main.getByRole('button', { name: 'Reintentar' })).toBeHidden();
 });
