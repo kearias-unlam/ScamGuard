@@ -1,5 +1,6 @@
 """Business logic for message analysis: run the injected AI analyzer, apply the evidence check and the undetermined
-rule, and save the message to the critical messages panel when the user shared it (US-3.3)."""
+rule, and save the message to the critical messages panel when the user shared it (US-3.3). Emails (US-4.2) are
+analyzed through their digest with the same rules and are never saved."""
 
 import logging
 from collections.abc import Callable
@@ -7,6 +8,7 @@ from collections.abc import Callable
 from app.ai.analyzer import AnalyzedMessage, analyze_with_model
 from app.models import AnalysisResult, Topic
 from app.normalization import normalize_text
+from app.services.email_digest import build_email_digest
 from app.services.masking import mask_personal_data
 from app.storage.critical_messages import StorageError, save_critical_message
 
@@ -73,3 +75,10 @@ def analyze_message(
         _save_if_shared(analyzed, result, sensitive_data, save)
     # topic and masked_message stay internal: only the checked result is returned.
     return result
+
+
+def analyze_email(email_content: str, analyzer: Analyzer) -> AnalysisResult:
+    """US-4.2: analyze the email digest with the same rules as a message. Raises InvalidEmailError (422) when the email
+    has no readable text body. Emails are never shared, so nothing is ever saved."""
+    digest = build_email_digest(email_content)
+    return analyze_message(digest, analyzer, share_in_panel=False)

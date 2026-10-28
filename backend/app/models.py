@@ -20,6 +20,16 @@ Topic = Literal[
 ]
 
 
+# US-4.2: largest accepted .eml content (docs/requirements.md, API contract).
+MAX_EMAIL_CONTENT_CHARS = 1_000_000
+
+
+def _require_non_blank(value: str, field: str) -> str:
+    if not value.strip():
+        raise ValueError(f"{field} must not be empty or whitespace-only")
+    return value
+
+
 class CamelModel(BaseModel):
     """snake_case in Python, camelCase in JSON. Accepts both on input; FastAPI serializes by alias."""
 
@@ -48,13 +58,18 @@ class MessageAnalysisRequest(CamelModel):
     @field_validator("message")
     @classmethod
     def reject_blank(cls, value: str) -> str:
-        if not value.strip():
-            raise ValueError("message must not be empty or whitespace-only")
-        return value  # Keep the original text; the evidence check compares against it.
+        return _require_non_blank(value, "message")  # Keep the original text; the evidence check compares against it.
 
 
 class EmailAnalysisRequest(CamelModel):
-    email_content: str  # US-4.2: raw .eml file content; validated in POST /analysis/email.
+    email_content: str  # US-4.2: raw .eml file content.
+
+    @field_validator("email_content")
+    @classmethod
+    def reject_blank_or_too_large(cls, value: str) -> str:
+        if len(value) > MAX_EMAIL_CONTENT_CHARS:
+            raise ValueError(f"emailContent must have at most {MAX_EMAIL_CONTENT_CHARS} characters")
+        return _require_non_blank(value, "emailContent")
 
 
 class MessageAnalysisResponse(CamelModel):

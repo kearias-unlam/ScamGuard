@@ -2,7 +2,12 @@
 import pytest
 from pydantic import ValidationError
 
-from app.models import CriticalMessagesResponse, MessageAnalysisRequest
+from app.models import (
+    MAX_EMAIL_CONTENT_CHARS,
+    CriticalMessagesResponse,
+    EmailAnalysisRequest,
+    MessageAnalysisRequest,
+)
 
 
 def test_request_without_share_fields_uses_defaults() -> None:
@@ -49,3 +54,16 @@ def test_critical_message_requires_times_shared() -> None:
             "topic": "other", "title": "Otros engaños", "timesShared": 1,
             "messages": [{"id": 1, "text": "Hola"}],
         }]})
+
+
+# US-4.2: emailContent is required, non-blank, and at most 1,000,000 characters.
+def test_email_request_accepts_content_at_the_size_limit() -> None:
+    request = EmailAnalysisRequest.model_validate({"emailContent": "a" * MAX_EMAIL_CONTENT_CHARS})
+
+    assert len(request.email_content) == MAX_EMAIL_CONTENT_CHARS
+
+
+@pytest.mark.parametrize("content", ["a" * (MAX_EMAIL_CONTENT_CHARS + 1), "", "  \n "])
+def test_email_request_rejects_too_large_or_blank_content(content: str) -> None:
+    with pytest.raises(ValidationError):
+        EmailAnalysisRequest.model_validate({"emailContent": content})

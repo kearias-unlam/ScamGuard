@@ -4,8 +4,15 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from app.models import CriticalMessagesResponse, MessageAnalysisRequest, MessageAnalysisResponse
-from app.services.analysis import Analyzer, MessageSaver, analyze_message, get_analyzer, get_message_saver
+from app.models import CriticalMessagesResponse, EmailAnalysisRequest, MessageAnalysisRequest, MessageAnalysisResponse
+from app.services.analysis import (
+    Analyzer,
+    MessageSaver,
+    analyze_email,
+    analyze_message,
+    get_analyzer,
+    get_message_saver,
+)
 from app.services.critical_messages import get_critical_messages
 
 router = APIRouter()
@@ -25,6 +32,15 @@ def post_analysis(
         save=save,
     )
     return MessageAnalysisResponse(result=result)
+
+
+# US-4.2: no saver dependency, so an email can never be stored.
+@router.post("/analysis/email", response_model=MessageAnalysisResponse)
+def post_email_analysis(
+    request: EmailAnalysisRequest,
+    analyzer: Annotated[Analyzer, Depends(get_analyzer)],
+) -> MessageAnalysisResponse:
+    return MessageAnalysisResponse(result=analyze_email(request.email_content, analyzer))
 
 
 @router.get("/critical-messages", response_model=CriticalMessagesResponse)
