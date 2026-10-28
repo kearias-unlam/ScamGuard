@@ -222,7 +222,7 @@ Tasks:
 ### US-4.2 Analizar un correo
 Como usuario quiero analizar el correo elegido para conocer si presenta indicios de fraude o engaño.
 
-ADO ID: #49 · Status: todo
+ADO ID: #49 · Status: done
 
 El resultado se muestra en el mismo lugar y con el mismo formato que el de un mensaje (Features 1 y 2). "Reintentar" reenvía el último pedido, sea un mensaje o un correo.
 
@@ -242,7 +242,7 @@ Tasks:
 ### US-4.3 Ver las señales propias del correo
 Como usuario quiero saber si el remitente, la autenticación, los enlaces o los adjuntos del correo muestran señales de engaño.
 
-ADO ID: #50 · Status: todo
+ADO ID: #50 · Status: done
 
 El backend extrae del correo los datos que el texto no muestra (dirección visible del remitente, "Responder a", dirección de retorno, resultado de SPF/DKIM/DMARC, destino real de los enlaces y nombres de los adjuntos) y se los pasa a la IA junto con el cuerpo (ver [Email digest](#email-digest)). Tipos de indicador nuevos: remitente que no coincide, autenticación fallida, enlaces engañosos y adjuntos peligrosos. Usan la misma cita literal y el mismo chequeo de evidencia que el resto. La extracción se cubre con Pytest.
 
