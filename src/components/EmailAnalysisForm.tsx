@@ -46,7 +46,7 @@ export function EmailAnalysisForm({
       />
       {/* Plain paragraph, no role: a second status/alert inside main would clash with the analysis status. */}
       {showHint ? (
-        <p id="email-file-hint" data-testid="email-file-hint">
+        <p id="email-file-hint" className="muted" data-testid="email-file-hint">
           Elegí un archivo con extensión .eml.
         </p>
       ) : null}
