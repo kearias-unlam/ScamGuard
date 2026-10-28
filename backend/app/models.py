@@ -53,6 +53,10 @@ class MessageAnalysisRequest(CamelModel):
         return value  # Keep the original text; the evidence check compares against it.
 
 
+class EmailAnalysisRequest(CamelModel):
+    email_content: str  # US-4.2: raw .eml file content; validated in POST /analysis/email.
+
+
 class MessageAnalysisResponse(CamelModel):
     result: AnalysisResult
 

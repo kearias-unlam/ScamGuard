@@ -13,6 +13,10 @@ export interface MessageAnalysisRequest {
   sensitiveData?: string; // Comma-separated terms to hide; sent with shareInPanel
 }
 
+export interface EmailAnalysisRequest {
+  emailContent: string; // Raw .eml file content, read as text (US-4.2)
+}
+
 export interface AnalysisResult {
   riskLevel: RiskLevel;
   summary: string;
