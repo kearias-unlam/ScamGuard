@@ -263,7 +263,7 @@ Rediseño de la página principal y del panel a partir del mockup de Figma (carp
 ### US-5.1 Ver la página con el nuevo diseño
 Como usuario quiero una página clara y ordenada para analizar un mensaje y leer el resultado sin perderme.
 
-ADO ID: #61 · Status: pending
+ADO ID: #61 · Status: done
 
 La página tiene un encabezado con el logo y "ScamGuard", una presentación ("Detector de estafas", el título y una introducción) con el enlace "Ver mensajes críticos", y dos columnas en pantallas anchas: a la izquierda la carga del mensaje y a la derecha la columna "Resultado del análisis" (estado de carga, error, estado vacío o resultado). En pantallas angostas las columnas quedan una debajo de la otra. Cada indicador muestra un ícono decorativo según su `type`.
 
@@ -279,7 +279,7 @@ Tasks:
 ### US-5.2 Elegir cómo cargar el mensaje
 Como usuario quiero elegir entre pegar un mensaje o subir un correo para ver solo el formulario que necesito.
 
-ADO ID: #62 · Status: pending
+ADO ID: #62 · Status: done
 
 La carga tiene dos pestañas: "Pegar mensaje" (formulario de mensaje, US-1.1 y US-3.3) y "Subir archivo .eml" (formulario de correo, US-4.1). Cambiar de pestaña no borra lo cargado en la otra ni el resultado; "Reintentar" sigue reenviando el último pedido.
 
@@ -294,7 +294,7 @@ Tasks:
 ### US-5.3 Arrastrar un correo
 Como usuario quiero arrastrar el archivo del correo hasta la página para no tener que buscarlo en el selector de archivos.
 
-ADO ID: #63 · Status: pending
+ADO ID: #63 · Status: done
 
 La pestaña "Subir archivo .eml" muestra una zona con "Arrastrá tu correo hasta acá", "o seleccioná un archivo descargado de tu casilla", el botón "Elegir archivo .eml" y "Máximo 1 MB". Un archivo soltado se trata igual que uno elegido (US-4.1): solo un `.eml` habilita "Analizar correo". Con un archivo elegido, la zona muestra su nombre, "Archivo listo para analizar" (solo si es `.eml`) y el botón pasa a decir "Cambiar archivo".
 
@@ -309,7 +309,7 @@ Tasks:
 ### US-5.4 Limpiar el formulario y contar caracteres
 Como usuario quiero ver cuántos caracteres tiene el mensaje y poder vaciar el formulario de un clic.
 
-ADO ID: #64 · Status: pending
+ADO ID: #64 · Status: done
 
 "Limpiar" vacía solo la pestaña activa: en "Pegar mensaje", el mensaje, la casilla de compartir y los datos a ocultar; en "Subir archivo .eml", el archivo elegido. No borra el resultado ni cambia lo que reenvía "Reintentar", y sigue habilitado durante un análisis en curso (el pedido ya se envió).
 
