@@ -38,6 +38,7 @@ def test_indicator_type_enum_matches_documented_list() -> None:
         "urgency", "personal_data_request", "suspicious_link", "impersonation",
         "writing_errors", "unrealistic_promise", "payment_request",
         "sender_mismatch", "failed_authentication", "deceptive_link", "dangerous_attachment",
+        "lookalike_domain", "obfuscated_link",
     ]
 
 
@@ -66,3 +67,10 @@ def test_instructions_describe_the_email_digest() -> None:
     assert "Cuerpo:" in INSTRUCTIONS
     assert "use them only when the message is an email digest" in INSTRUCTIONS
     assert "For an email digest, return an empty string" in INSTRUCTIONS
+
+
+# US-6.3: the prompt describes the URL digest built by the backend.
+def test_instructions_describe_the_url_digest() -> None:
+    assert "Enlace:" in INSTRUCTIONS
+    assert "use them only when the message is a URL digest" in INSTRUCTIONS
+    assert "For a URL digest, return an empty string" in INSTRUCTIONS
