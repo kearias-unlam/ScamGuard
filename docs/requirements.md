@@ -331,7 +331,7 @@ El usuario pega un link que recibió para saber si presenta indicios de estafa. 
 ### US-6.1 Ingresar un link
 Como usuario quiero pegar un link que recibí para analizarlo sin tener que abrirlo.
 
-ADO ID: #71 · Status: pending
+ADO ID: #71 · Status: done
 
 La carga tiene una tercera pestaña, "Pegar link", después de "Subir archivo .eml". Cambiar de pestaña no borra el link escrito (US-5.2). "Limpiar" vacía el link (US-5.4).
 
@@ -347,7 +347,7 @@ Tasks:
 ### US-6.2 Analizar un link
 Como usuario quiero analizar el link para conocer si presenta indicios de fraude o engaño.
 
-ADO ID: #72 · Status: pending
+ADO ID: #72 · Status: done
 
 El resultado se muestra en el mismo lugar y con el mismo formato que el de un mensaje. "Reintentar" reenvía el último pedido, sea un mensaje, un correo o un link.
 
@@ -366,7 +366,7 @@ Tasks:
 ### US-6.3 Ver las señales del link
 Como usuario quiero saber qué partes del link muestran señales de engaño.
 
-ADO ID: #73 · Status: pending
+ADO ID: #73 · Status: done
 
 El backend separa el link en sus partes (protocolo, dominio, si es una dirección IP, si usa un acortador conocido, si incluye un usuario antes de `@`, ruta y parámetros) y se las pasa a la IA (ver [URL digest](#url-digest)). Tipos de indicador nuevos: dominio que imita a una marca y link disfrazado. También aplican los existentes enlaces sospechosos (acortadores, dominios raros) y suplantación de identidad. Usan la misma cita literal y el mismo chequeo de evidencia que el resto.
 
