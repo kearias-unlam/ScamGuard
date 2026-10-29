@@ -4,9 +4,11 @@ from pydantic import ValidationError
 
 from app.models import (
     MAX_EMAIL_CONTENT_CHARS,
+    MAX_URL_CHARS,
     CriticalMessagesResponse,
     EmailAnalysisRequest,
     MessageAnalysisRequest,
+    UrlAnalysisRequest,
 )
 
 
@@ -67,3 +69,16 @@ def test_email_request_accepts_content_at_the_size_limit() -> None:
 def test_email_request_rejects_too_large_or_blank_content(content: str) -> None:
     with pytest.raises(ValidationError):
         EmailAnalysisRequest.model_validate({"emailContent": content})
+
+
+# US-6.2: url is required, non-blank, and at most 2,000 characters.
+def test_url_request_accepts_a_link_at_the_size_limit() -> None:
+    request = UrlAnalysisRequest.model_validate({"url": "a" * MAX_URL_CHARS})
+
+    assert len(request.url) == MAX_URL_CHARS
+
+
+@pytest.mark.parametrize("url", ["a" * (MAX_URL_CHARS + 1), "", "  	 "])
+def test_url_request_rejects_too_long_or_blank_links(url: str) -> None:
+    with pytest.raises(ValidationError):
+        UrlAnalysisRequest.model_validate({"url": url})

@@ -1,4 +1,5 @@
-"""Pydantic request/response models for POST /analysis and GET /critical-messages (mirror of src/types.ts)."""
+"""Pydantic request/response models for POST /analysis, POST /analysis/email, POST /analysis/url, and
+GET /critical-messages (mirror of src/types.ts)."""
 
 from typing import Literal
 
@@ -22,6 +23,9 @@ Topic = Literal[
 
 # US-4.2: largest accepted .eml content (docs/requirements.md, API contract).
 MAX_EMAIL_CONTENT_CHARS = 1_000_000
+
+# US-6.2: longest accepted link (docs/requirements.md, API contract).
+MAX_URL_CHARS = 2_000
 
 
 def _require_non_blank(value: str, field: str) -> str:
@@ -70,6 +74,17 @@ class EmailAnalysisRequest(CamelModel):
         if len(value) > MAX_EMAIL_CONTENT_CHARS:
             raise ValueError(f"emailContent must have at most {MAX_EMAIL_CONTENT_CHARS} characters")
         return _require_non_blank(value, "emailContent")
+
+
+class UrlAnalysisRequest(CamelModel):
+    url: str  # US-6.2: one link as pasted by the user.
+
+    @field_validator("url")
+    @classmethod
+    def reject_blank_or_too_long(cls, value: str) -> str:
+        if len(value) > MAX_URL_CHARS:
+            raise ValueError(f"url must have at most {MAX_URL_CHARS} characters")
+        return _require_non_blank(value, "url")
 
 
 class MessageAnalysisResponse(CamelModel):

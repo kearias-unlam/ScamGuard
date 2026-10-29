@@ -17,6 +17,10 @@ export interface EmailAnalysisRequest {
   emailContent: string; // Raw .eml file content, read as text (US-4.2)
 }
 
+export interface UrlAnalysisRequest {
+  url: string; // One link as pasted by the user (US-6.2)
+}
+
 export interface AnalysisResult {
   riskLevel: RiskLevel;
   summary: string;
