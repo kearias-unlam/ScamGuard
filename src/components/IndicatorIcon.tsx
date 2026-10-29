@@ -69,6 +69,19 @@ const ICON_PATHS: Record<string, ReactNode> = {
       <path d="M14 3v4h4M12 11v4M12 18v.1" />
     </>
   ),
+  // US-6.3: link-only types.
+  lookalike_domain: (
+    <>
+      <path d="M3 11.5V4h7.5L21 14.5 14.5 21 3 11.5Z" />
+      <circle cx="7.5" cy="8.5" r="1.5" />
+    </>
+  ),
+  obfuscated_link: (
+    <>
+      <path d="M10.6 5.6A9.9 9.9 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.6 3.4M6.5 7.6A16.6 16.6 0 0 0 2.5 12S6 18.5 12 18.5a9.6 9.6 0 0 0 4.5-1.1" />
+      <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2M3 3l18 18" />
+    </>
+  ),
 };
 
 // Generic alert for any type outside the fixed list.
