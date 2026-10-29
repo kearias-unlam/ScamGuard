@@ -7,9 +7,16 @@ export async function openEmailTab(page: Page): Promise<void> {
   await page.getByRole('tab', { name: 'Subir archivo .eml' }).click();
 }
 
+// US-6.1: the link form lives in its own tab too.
+export async function openUrlTab(page: Page): Promise<void> {
+  await page.getByRole('tab', { name: 'Pegar link' }).click();
+}
+
 const ANALYSIS_ROUTE = '**/analysis';
 // Does not overlap with ANALYSIS_ROUTE: the glob '**/analysis' never matches '/analysis/email'.
 const EMAIL_ANALYSIS_ROUTE = '**/analysis/email';
+// US-6.2: likewise, '**/analysis' never matches '/analysis/url'.
+const URL_ANALYSIS_ROUTE = '**/analysis/url';
 const CORS_HEADERS = { 'Access-Control-Allow-Origin': '*' };
 
 export const analysisResponse: MessageAnalysisResponse = {
@@ -76,6 +83,11 @@ export async function mockEmailAnalysis(page: Page, options: MockAnalysisOptions
   await mockRoute(page, EMAIL_ANALYSIS_ROUTE, options);
 }
 
+// US-6.2: POST /analysis/url answers with the same response shape as POST /analysis.
+export async function mockUrlAnalysis(page: Page, options: MockAnalysisOptions = {}): Promise<void> {
+  await mockRoute(page, URL_ANALYSIS_ROUTE, options);
+}
+
 export interface PendingAnalysis {
   release: () => void;
 }
@@ -111,6 +123,13 @@ export async function mockPendingEmailAnalysis(
   return mockPendingRoute(page, EMAIL_ANALYSIS_ROUTE, body);
 }
 
+export async function mockPendingUrlAnalysis(
+  page: Page,
+  body: MessageAnalysisResponse = analysisResponse,
+): Promise<PendingAnalysis> {
+  return mockPendingRoute(page, URL_ANALYSIS_ROUTE, body);
+}
+
 export type AnalysisMockStatus = 200 | 422 | 503;
 
 interface AnalysisErrorBody {
@@ -123,7 +142,7 @@ export const analysisErrorBody: AnalysisErrorBody = {
 };
 
 // 422 body (FastAPI validation error); the frontend ignores it and only reads the status.
-const unprocessableBody = { detail: [{ msg: 'Value error, the email has no readable text body' }] };
+const unprocessableBody = { detail: [{ msg: 'Value error, the input could not be read' }] };
 
 function bodyForStatus(status: AnalysisMockStatus): unknown {
   if (status === 200) {
@@ -162,4 +181,8 @@ export async function mockAnalysisSequence(page: Page, statuses: AnalysisStatusS
 
 export async function mockEmailAnalysisSequence(page: Page, statuses: AnalysisStatusSequence): Promise<void> {
   await mockRouteSequence(page, EMAIL_ANALYSIS_ROUTE, statuses);
+}
+
+export async function mockUrlAnalysisSequence(page: Page, statuses: AnalysisStatusSequence): Promise<void> {
+  await mockRouteSequence(page, URL_ANALYSIS_ROUTE, statuses);
 }

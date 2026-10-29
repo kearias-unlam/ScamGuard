@@ -153,7 +153,8 @@ h1 {
 
 .tablist {
   display: flex;
-  gap: 1.75rem;
+  flex-wrap: wrap;
+  gap: 0 1.75rem;
   padding: 1.25rem 1.5rem 0;
   border-bottom: 1px solid var(--color-border);
 }
@@ -249,21 +250,24 @@ p {
   padding: 1.5rem;
 }
 
-/* Message form; the email form (US-4.1) shares its layout and field styles. */
+/* Message form; the email form (US-4.1) and the link form (US-6.1) share its layout and field styles. */
 .message-form,
-.email-form {
+.email-form,
+.url-form {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
 .message-form label,
-.email-form label {
+.email-form label,
+.url-form label {
   font-weight: bold;
 }
 
 .message-form textarea,
-.message-form input[type='text'] {
+.message-form input[type='text'],
+.url-form input[type='text'] {
   width: 100%;
   box-sizing: border-box;
   padding: 0.75rem;
@@ -280,7 +284,8 @@ p {
 }
 
 /* Muted token instead of the browser default, so the example text meets WCAG AA. */
-.message-form textarea::placeholder {
+.message-form textarea::placeholder,
+.url-form input::placeholder {
   color: var(--color-muted);
 }
 

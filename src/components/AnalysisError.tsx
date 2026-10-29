@@ -2,6 +2,8 @@
 export const ANALYSIS_ERROR_TEXT = 'Los servidores están ocupados. Intentá de nuevo más tarde.';
 export const UNREADABLE_EMAIL_ERROR_TEXT =
   'No se pudo leer el correo. Verificá que sea un archivo .eml de hasta 1 MB.';
+export const UNREADABLE_URL_ERROR_TEXT =
+  'No se pudo leer el link. Verificá que sea una dirección completa, por ejemplo https://ejemplo.com.';
 
 interface AnalysisErrorProps {
   message: string;
@@ -19,7 +21,7 @@ export function AnalysisError({ message, showRetry, onRetry }: AnalysisErrorProp
       <p role="alert" data-testid="analysis-error">
         {message}
       </p>
-      {/* US-4.2 AC5: an unreadable email cannot succeed on retry, so the button is hidden. */}
+      {/* US-4.2 AC5, US-6.2 AC5: an unreadable email or link cannot succeed on retry, so the button is hidden. */}
       {showRetry ? (
         <button
           type="button"

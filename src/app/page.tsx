@@ -3,31 +3,49 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { ANALYSIS_ERROR_TEXT, AnalysisError, UNREADABLE_EMAIL_ERROR_TEXT } from '@/components/AnalysisError';
+import {
+  ANALYSIS_ERROR_TEXT,
+  AnalysisError,
+  UNREADABLE_EMAIL_ERROR_TEXT,
+  UNREADABLE_URL_ERROR_TEXT,
+} from '@/components/AnalysisError';
 import { AnalysisInputTabs, type AnalysisInputTab } from '@/components/AnalysisInputTabs';
 import { AnalysisResultView } from '@/components/AnalysisResultView';
 import { AnalysisStatus, type AnalysisRequestStatus } from '@/components/AnalysisStatus';
 import { EmailAnalysisForm } from '@/components/EmailAnalysisForm';
 import { MessageAnalysisForm } from '@/components/MessageAnalysisForm';
-import { ApiError, postAnalysis, postEmailAnalysis } from '@/lib/api';
+import { UrlAnalysisForm } from '@/components/UrlAnalysisForm';
+import { ApiError, postAnalysis, postEmailAnalysis, postUrlAnalysis } from '@/lib/api';
 import type { AnalysisResult, MessageAnalysisRequest, MessageAnalysisResponse } from '@/types';
 
-// What "Analizar" sent last, so "Reintentar" resends it (US-4.2). The email keeps the chosen File,
-// so a retry resends the same email even if another file was picked since.
+// What "Analizar" sent last, so "Reintentar" resends it (US-4.2, US-6.2). The email keeps the chosen File and the
+// link its submitted text, so a retry resends them even if the form changed since.
 type SubmittedRequest =
   | { kind: 'message'; request: MessageAnalysisRequest }
-  | { kind: 'email'; emailFile: File };
+  | { kind: 'email'; emailFile: File }
+  | { kind: 'url'; url: string };
 
 async function sendRequest(submitted: SubmittedRequest): Promise<MessageAnalysisResponse> {
-  if (submitted.kind === 'message') {
-    return postAnalysis(submitted.request);
+  switch (submitted.kind) {
+    case 'message':
+      return postAnalysis(submitted.request);
+    case 'email':
+      return postEmailAnalysis({ emailContent: await submitted.emailFile.text() });
+    case 'url':
+      return postUrlAnalysis({ url: submitted.url });
   }
-  return postEmailAnalysis({ emailContent: await submitted.emailFile.text() });
 }
 
-// US-4.2 AC5: the backend answers 422 when it cannot read the email; any other failure is the busy error.
-function isUnreadableEmail(submitted: SubmittedRequest, error: unknown): boolean {
-  return submitted.kind === 'email' && error instanceof ApiError && error.status === 422;
+// US-4.2 AC5, US-6.2 AC5: a 422 means the backend could not read the email or the link, so retrying cannot help.
+// A message has no such error: any failure is the busy error.
+const UNREADABLE_ERROR_TEXTS: Record<SubmittedRequest['kind'], string | null> = {
+  message: null,
+  email: UNREADABLE_EMAIL_ERROR_TEXT,
+  url: UNREADABLE_URL_ERROR_TEXT,
+};
+
+function unreadableErrorText(submitted: SubmittedRequest, error: unknown): string | null {
+  return error instanceof ApiError && error.status === 422 ? UNREADABLE_ERROR_TEXTS[submitted.kind] : null;
 }
 
 export default function HomePage() {
@@ -36,9 +54,11 @@ export default function HomePage() {
   const [shareInPanel, setShareInPanel] = useState(false);
   const [sensitiveData, setSensitiveData] = useState('');
   const [emailFile, setEmailFile] = useState<File | null>(null);
+  const [url, setUrl] = useState('');
   const [lastSubmittedRequest, setLastSubmittedRequest] = useState<SubmittedRequest | null>(null);
   const [status, setStatus] = useState<AnalysisRequestStatus>('idle');
-  const [isEmailUnreadable, setIsEmailUnreadable] = useState(false);
+  // Text of the unreadable email or link error (shown without retry), or null for the busy error.
+  const [unreadableText, setUnreadableText] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
 
   // US-5.2: the form state lives here, so changing tabs clears nothing.
@@ -66,6 +86,10 @@ export default function HomePage() {
     setEmailFile(nextEmailFile);
   }
 
+  function handleUrlChange(nextUrl: string): void {
+    setUrl(nextUrl);
+  }
+
   // US-5.4: "Limpiar" empties only the form; the result and the last request for "Reintentar" stay.
   function handleClearMessage(): void {
     setMessage('');
@@ -74,6 +98,14 @@ export default function HomePage() {
 
   function handleClearEmail(): void {
     setEmailFile(null);
+  }
+
+  function handleClearUrl(): void {
+    setUrl('');
+  }
+
+  function handleUrlSubmit(): void {
+    void runAnalysis({ kind: 'url', url });
   }
 
   function handleEmailSubmit(): void {
@@ -93,7 +125,7 @@ export default function HomePage() {
       setResult(response.result);
       setStatus('success');
     } catch (error) {
-      setIsEmailUnreadable(isUnreadableEmail(submitted, error));
+      setUnreadableText(unreadableErrorText(submitted, error));
       setStatus('error');
     }
   }
@@ -106,7 +138,7 @@ export default function HomePage() {
     });
   }
 
-  // Resends the last submitted request (message with its share fields, or email), not the current form content.
+  // Resends the last submitted request (message with its share fields, email, or link), not the current form content.
   function handleRetry(): void {
     if (lastSubmittedRequest !== null) {
       void runAnalysis(lastSubmittedRequest);
@@ -119,7 +151,8 @@ export default function HomePage() {
         <p className="hero__eyebrow">Detector de estafas</p>
         <h1>¿Ese mensaje te genera dudas?</h1>
         <p className="hero__intro">
-          Pegá el texto o subí el correo completo. Analizamos las señales de alerta y te explicamos qué encontramos.
+          Pegá un texto o un link, o subí el correo completo. Analizamos las señales de alerta y te explicamos qué
+          encontramos.
         </p>
         <Link href="/panel" className="button button--secondary" data-testid="panel-link">
           Ver mensajes críticos
@@ -138,7 +171,8 @@ export default function HomePage() {
             onSubmit={handleSubmit}
             onClear={handleClearMessage}
           />
-        ) : (
+        ) : null}
+        {activeTab === 'email' ? (
           <EmailAnalysisForm
             emailFile={emailFile}
             isSubmitting={status === 'loading'}
@@ -146,7 +180,16 @@ export default function HomePage() {
             onSubmit={handleEmailSubmit}
             onClear={handleClearEmail}
           />
-        )}
+        ) : null}
+        {activeTab === 'url' ? (
+          <UrlAnalysisForm
+            url={url}
+            isSubmitting={status === 'loading'}
+            onUrlChange={handleUrlChange}
+            onSubmit={handleUrlSubmit}
+            onClear={handleClearUrl}
+          />
+        ) : null}
       </AnalysisInputTabs>
       {/* US-5.1: named by its heading so it is exposed as a complementary landmark. */}
       <aside className="card result-column" aria-labelledby="result-heading">
@@ -157,8 +200,8 @@ export default function HomePage() {
         <AnalysisStatus status={status} />
         {status === 'error' ? (
           <AnalysisError
-            message={isEmailUnreadable ? UNREADABLE_EMAIL_ERROR_TEXT : ANALYSIS_ERROR_TEXT}
-            showRetry={!isEmailUnreadable}
+            message={unreadableText ?? ANALYSIS_ERROR_TEXT}
+            showRetry={unreadableText === null}
             onRetry={handleRetry}
           />
         ) : null}

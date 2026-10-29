@@ -3,9 +3,10 @@ import type {
   EmailAnalysisRequest,
   MessageAnalysisRequest,
   MessageAnalysisResponse,
+  UrlAnalysisRequest,
 } from '@/types';
 
-// Carries the HTTP status so callers can tell an unreadable email (422) from other failures (US-4.2).
+// Carries the HTTP status so callers can tell an unreadable email or link (422) from other failures (US-4.2, US-6.2).
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -27,6 +28,10 @@ export function getAnalysisEndpoint(): string {
 
 export function getEmailAnalysisEndpoint(): string {
   return buildBackendUrl('/analysis/email');
+}
+
+export function getUrlAnalysisEndpoint(): string {
+  return buildBackendUrl('/analysis/url');
 }
 
 async function postJson<TResponse>(endpoint: string, body: unknown): Promise<TResponse> {
@@ -51,6 +56,10 @@ export async function postEmailAnalysis(
   request: EmailAnalysisRequest,
 ): Promise<MessageAnalysisResponse> {
   return postJson<MessageAnalysisResponse>(getEmailAnalysisEndpoint(), request);
+}
+
+export async function postUrlAnalysis(request: UrlAnalysisRequest): Promise<MessageAnalysisResponse> {
+  return postJson<MessageAnalysisResponse>(getUrlAnalysisEndpoint(), request);
 }
 
 export function getCriticalMessagesEndpoint(): string {
