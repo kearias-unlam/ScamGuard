@@ -18,10 +18,18 @@ export function AnalysisResultView({ result, isIdle }: AnalysisResultViewProps) 
   }
 
   return (
-    <section className="card analysis-result" data-testid="analysis-result">
+    // No card class: the result column around it is the card (US-5.1).
+    <section className="analysis-result" data-testid="analysis-result">
       <RiskLevelView riskLevel={result.riskLevel} />
       <p data-testid="analysis-explanation">{result.explanation}</p>
       <p data-testid="analysis-summary">{result.summary}</p>
+      {/* The count is outside the heading so its accessible name stays "Indicadores detectados". */}
+      <div className="indicators-header">
+        <h2>Indicadores detectados</h2>
+        <span className="count-badge" data-testid="analysis-indicators-count">
+          {result.indicators.length}
+        </span>
+      </div>
       <IndicatorList indicators={result.indicators} />
       <p role="note" className="disclaimer" data-testid="analysis-disclaimer">
         {DISCLAIMER_TEXT}

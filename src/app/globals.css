@@ -1,12 +1,15 @@
 /* Palette tokens (docs/requirements.md, Visual design). */
 :root {
-  --color-bg: #f6f7fb;
+  --color-bg: #f5f7fb;
   --color-surface: #ffffff;
+  --color-surface-soft: #f9fafc;
   --color-text: #111827;
   --color-muted: #4b5563;
   --color-border: #d1d5db;
   --color-primary: #1d4ed8;
   --color-primary-hover: #1e40af;
+  --color-primary-soft: #e8eefc;
+  --shadow-card: 0 16px 50px rgba(15, 23, 42, 0.07);
   --color-disabled-bg: #e5e7eb;
   --color-error-text: #b91c1c;
   --color-error-bg: #fef2f2;
@@ -24,28 +27,207 @@ html,
 body {
   margin: 0;
   padding: 0;
-  font-family: Arial, Helvetica, sans-serif;
+  /* --font-manrope is set by next/font in layout.tsx (Feature 5). */
+  font-family: var(--font-manrope), system-ui, sans-serif;
   background: var(--color-bg);
   color: var(--color-text);
 }
 
-/* Page layout: single left-aligned column, centered on the page. */
+/* Page layout: centered column below the full-width header. */
 main {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  max-width: 48rem;
+  max-width: 77.5rem;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 2.5rem 1.25rem 3rem;
 }
 
 h1 {
   margin: 0;
   font-size: 2rem;
-  text-decoration: underline;
-  text-decoration-color: var(--color-primary);
-  text-decoration-thickness: 3px;
-  text-underline-offset: 0.3em;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+/* Site header (US-5.1): logo and brand on every page. */
+.site-header {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.site-header__inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 77.5rem;
+  height: 4.5rem;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+.site-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--color-surface);
+  background: var(--color-primary);
+  border-radius: 0.75rem;
+}
+
+.site-logo svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.site-brand {
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+@media (min-width: 40rem) {
+  main {
+    padding: 3.5rem 2rem 3rem;
+  }
+
+  .site-header__inner {
+    padding: 0 2rem;
+  }
+}
+
+/* Hero (US-5.1): eyebrow, heading, intro, and the link to the panel. */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  max-width: 47.5rem;
+}
+
+.hero__eyebrow {
+  display: inline-flex;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+  border-radius: 999px;
+}
+
+.hero h1 {
+  font-size: 2.4rem;
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+}
+
+.hero__intro {
+  max-width: 40rem;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: var(--color-muted);
+}
+
+@media (min-width: 40rem) {
+  .hero h1 {
+    font-size: 3.25rem;
+  }
+}
+
+/* Home layout (US-5.1): hero on top, form column and result column side by side on wide screens. */
+.home {
+  display: grid;
+  gap: 1.5rem;
+}
+
+/* Input card with tabs (US-5.2): the tab list sits on top, the active form below. */
+/* Two classes so the padding wins over .card, defined further down. */
+.card.input-card {
+  min-width: 0;
+  padding: 0;
+}
+
+.tablist {
+  display: flex;
+  gap: 1.75rem;
+  padding: 1.25rem 1.5rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0 1rem;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.tab svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.tab:hover {
+  color: var(--color-text);
+}
+
+/* Active tab: primary text and an underline drawn without extra text. */
+.tab[aria-selected='true'] {
+  color: var(--color-primary);
+  box-shadow: inset 0 -2px 0 var(--color-primary);
+}
+
+.tabpanel {
+  padding: 1.5rem;
+}
+
+.result-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.result-column__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.result-column__header h2 {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.result-column__header p {
+  font-size: 0.875rem;
+}
+
+@media (min-width: 64rem) {
+  .home {
+    grid-template-columns: minmax(0, 1.08fr) minmax(24rem, 0.92fr);
+    align-items: start;
+  }
+
+  .hero {
+    grid-column: 1 / -1;
+  }
 }
 
 p {
@@ -62,7 +244,8 @@ p {
 .card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
+  border-radius: 1.5rem;
+  box-shadow: var(--shadow-card);
   padding: 1.5rem;
 }
 
@@ -80,8 +263,7 @@ p {
 }
 
 .message-form textarea,
-.message-form input[type='text'],
-.email-form input[type='file'] {
+.message-form input[type='text'] {
   width: 100%;
   box-sizing: border-box;
   padding: 0.75rem;
@@ -97,26 +279,108 @@ p {
   resize: vertical;
 }
 
-/* Email file input (US-4.1): the browser's "choose file" button looks like a secondary button. */
-.email-form input[type='file'] {
-  background: var(--color-surface);
-  cursor: pointer;
+/* Muted token instead of the browser default, so the example text meets WCAG AA. */
+.message-form textarea::placeholder {
+  color: var(--color-muted);
 }
 
-.email-form input[type='file']::file-selector-button {
-  margin-right: 0.75rem;
-  padding: 0.375rem 0.875rem;
-  font: inherit;
-  font-weight: bold;
+/* US-5.4: label and character count on one line. */
+.field-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.char-count {
+  font-size: 0.75rem;
+}
+
+/* US-5.4: "Limpiar" on the left, the submit button on the right. */
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+/* Hidden from view but still focusable and reachable by assistive technology. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Email drop zone (US-5.3): the native file input is hidden inside it. */
+.drop-zone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 18rem;
+  padding: 1.5rem;
+  text-align: center;
+  background: var(--color-surface-soft);
+  border: 2px dashed var(--color-border);
+  border-radius: 1rem;
+}
+
+.drop-zone[data-dragging='true'] {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+}
+
+/* On the tinted zone, the tinted icon and button switch to the plain surface to stay visible. */
+.drop-zone[data-dragging='true'] .drop-zone__icon,
+.drop-zone[data-dragging='true'] .button--soft {
+  background: var(--color-surface);
+}
+
+/* Focus on the hidden input is shown on the zone (only when reached by keyboard). */
+.drop-zone:has(input:focus-visible) {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.drop-zone__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  margin-bottom: 0.75rem;
   color: var(--color-primary);
-  background: var(--color-surface);
-  border: 1px solid var(--color-primary);
-  border-radius: 0.375rem;
-  cursor: pointer;
+  background: var(--color-primary-soft);
+  border-radius: 1rem;
 }
 
-.email-form input[type='file']::file-selector-button:hover {
-  background: var(--color-bg);
+.drop-zone__icon svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+.drop-zone__title {
+  font-weight: 700;
+}
+
+.drop-zone__file-name {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.drop-zone .button {
+  align-self: center;
+  margin-top: 0.75rem;
+}
+
+.drop-zone__note {
+  font-size: 0.75rem;
 }
 
 /* Share option (US-3.3): checkbox and its label on one line, regular weight. */
@@ -143,7 +407,7 @@ p {
   padding: 0.625rem 1.25rem;
   font: inherit;
   font-weight: bold;
-  border-radius: 0.375rem;
+  border-radius: 0.75rem;
   cursor: pointer;
 }
 
@@ -166,6 +430,36 @@ p {
 
 .button--secondary:hover {
   background: var(--color-bg);
+}
+
+/* Ghost button (US-5.4): "Limpiar", text only, turns to the error color on hover. */
+.button--ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-muted);
+  background: none;
+  border: 1px solid transparent;
+}
+
+.button--ghost:hover {
+  color: var(--color-error-text);
+}
+
+.button__icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Soft button (US-5.3): tinted background, used inside the drop zone. */
+.button--soft {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary-soft);
+}
+
+.button--soft:hover {
+  border-color: var(--color-primary);
 }
 
 /* Links that look like buttons (navigation between the home and the panel). */
@@ -266,22 +560,69 @@ a.button {
   list-style: none;
 }
 
+/* Indicators heading with its count badge (US-5.1). */
+.indicators-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.indicators-header h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.count-badge {
+  min-width: 1.5rem;
+  padding: 0.125rem 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--color-muted);
+  background: var(--color-disabled-bg);
+  border-radius: 999px;
+}
+
 .indicator {
+  display: flex;
+  gap: 0.875rem;
+  padding: 1rem;
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+}
+
+.indicator__body {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding: 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
+  min-width: 0;
+}
+
+/* Decorative icon by indicator type; an indicator has no level, so it uses the primary tint. */
+.indicator-icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+  border-radius: 0.75rem;
+}
+
+.indicator-icon svg {
+  width: 1.125rem;
+  height: 1.125rem;
 }
 
 .indicator h3 {
   margin: 0;
-  font-size: 1.125rem;
-  text-decoration: underline;
-  text-decoration-color: var(--color-primary);
-  text-decoration-thickness: 2px;
-  text-underline-offset: 0.25em;
+  font-size: 1rem;
+  font-weight: 800;
 }
 
 /* Evidence: literal quote from the message, visually distinct from the model's description. */
@@ -292,6 +633,12 @@ a.button {
   background: var(--color-bg);
   border-left: 4px solid var(--color-muted);
   border-radius: 0.25rem;
+  overflow-wrap: anywhere;
+}
+
+/* Indicators sit on the soft surface, so their quote uses the plain surface to stand out. */
+.indicator .evidence {
+  background: var(--color-surface);
 }
 
 /* Decision-support disclaimer; also the panel privacy notice. */

@@ -2,6 +2,13 @@
 
 import type { FormEvent, ChangeEvent } from 'react';
 
+import { TrashIcon } from '@/components/TrashIcon';
+
+// Display mapping only (US-5.4).
+function formatCharCount(count: number): string {
+  return count === 1 ? '1 carácter' : `${count} caracteres`;
+}
+
 interface MessageAnalysisFormProps {
   message: string;
   shareInPanel: boolean;
@@ -11,6 +18,7 @@ interface MessageAnalysisFormProps {
   onShareInPanelChange: (shareInPanel: boolean) => void;
   onSensitiveDataChange: (sensitiveData: string) => void;
   onSubmit: () => void;
+  onClear: () => void;
 }
 
 export function MessageAnalysisForm({
@@ -22,6 +30,7 @@ export function MessageAnalysisForm({
   onShareInPanelChange,
   onSensitiveDataChange,
   onSubmit,
+  onClear,
 }: MessageAnalysisFormProps) {
   // Whitespace-only input counts as empty.
   const isMessageEmpty = message.trim().length === 0;
@@ -38,6 +47,10 @@ export function MessageAnalysisForm({
     onSensitiveDataChange(event.target.value);
   }
 
+  function handleClearClick(): void {
+    onClear();
+  }
+
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
     if (isMessageEmpty || isSubmitting) {
@@ -47,12 +60,19 @@ export function MessageAnalysisForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="card message-form">
-      <label htmlFor="message">Mensaje</label>
+    <form onSubmit={handleSubmit} className="message-form">
+      {/* The count stays outside the label so the field's accessible name is just "Mensaje". */}
+      <div className="field-header">
+        <label htmlFor="message">Mensaje</label>
+        <span className="char-count muted" data-testid="message-char-count">
+          {formatCharCount(message.length)}
+        </span>
+      </div>
       <textarea
         id="message"
         name="message"
         rows={6}
+        placeholder="Pegá acá el mensaje, SMS o correo que querés analizar..."
         value={message}
         onChange={handleMessageChange}
         data-testid="message-input"
@@ -82,14 +102,25 @@ export function MessageAnalysisForm({
           />
         </>
       ) : null}
-      <button
-        type="submit"
-        className="button button--primary"
-        disabled={isMessageEmpty || isSubmitting}
-        data-testid="submit-analysis-button"
-      >
-        Analizar mensaje
-      </button>
+      <div className="form-actions">
+        <button
+          type="button"
+          className="button button--ghost"
+          onClick={handleClearClick}
+          data-testid="clear-message-button"
+        >
+          <TrashIcon />
+          Limpiar
+        </button>
+        <button
+          type="submit"
+          className="button button--primary"
+          disabled={isMessageEmpty || isSubmitting}
+          data-testid="submit-analysis-button"
+        >
+          Analizar mensaje
+        </button>
+      </div>
     </form>
   );
 }

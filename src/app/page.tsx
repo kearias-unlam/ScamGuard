@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 import { ANALYSIS_ERROR_TEXT, AnalysisError, UNREADABLE_EMAIL_ERROR_TEXT } from '@/components/AnalysisError';
+import { AnalysisInputTabs, type AnalysisInputTab } from '@/components/AnalysisInputTabs';
 import { AnalysisResultView } from '@/components/AnalysisResultView';
 import { AnalysisStatus, type AnalysisRequestStatus } from '@/components/AnalysisStatus';
 import { EmailAnalysisForm } from '@/components/EmailAnalysisForm';
@@ -30,6 +31,7 @@ function isUnreadableEmail(submitted: SubmittedRequest, error: unknown): boolean
 }
 
 export default function HomePage() {
+  const [activeTab, setActiveTab] = useState<AnalysisInputTab>('message');
   const [message, setMessage] = useState('');
   const [shareInPanel, setShareInPanel] = useState(false);
   const [sensitiveData, setSensitiveData] = useState('');
@@ -38,6 +40,11 @@ export default function HomePage() {
   const [status, setStatus] = useState<AnalysisRequestStatus>('idle');
   const [isEmailUnreadable, setIsEmailUnreadable] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
+
+  // US-5.2: the form state lives here, so changing tabs clears nothing.
+  function handleTabChange(nextTab: AnalysisInputTab): void {
+    setActiveTab(nextTab);
+  }
 
   function handleMessageChange(nextMessage: string): void {
     setMessage(nextMessage);
@@ -57,6 +64,16 @@ export default function HomePage() {
 
   function handleEmailFileChange(nextEmailFile: File | null): void {
     setEmailFile(nextEmailFile);
+  }
+
+  // US-5.4: "Limpiar" empties only the form; the result and the last request for "Reintentar" stay.
+  function handleClearMessage(): void {
+    setMessage('');
+    handleShareInPanelChange(false);
+  }
+
+  function handleClearEmail(): void {
+    setEmailFile(null);
   }
 
   function handleEmailSubmit(): void {
@@ -97,36 +114,56 @@ export default function HomePage() {
   }
 
   return (
-    <main>
-      <h1>ScamGuard</h1>
-      <Link href="/panel" className="button button--secondary" data-testid="panel-link">
-        Ver mensajes críticos
-      </Link>
-      <MessageAnalysisForm
-        message={message}
-        shareInPanel={shareInPanel}
-        sensitiveData={sensitiveData}
-        isSubmitting={status === 'loading'}
-        onMessageChange={handleMessageChange}
-        onShareInPanelChange={handleShareInPanelChange}
-        onSensitiveDataChange={handleSensitiveDataChange}
-        onSubmit={handleSubmit}
-      />
-      <EmailAnalysisForm
-        emailFile={emailFile}
-        isSubmitting={status === 'loading'}
-        onEmailFileChange={handleEmailFileChange}
-        onSubmit={handleEmailSubmit}
-      />
-      <AnalysisStatus status={status} />
-      {status === 'error' ? (
-        <AnalysisError
-          message={isEmailUnreadable ? UNREADABLE_EMAIL_ERROR_TEXT : ANALYSIS_ERROR_TEXT}
-          showRetry={!isEmailUnreadable}
-          onRetry={handleRetry}
-        />
-      ) : null}
-      <AnalysisResultView result={result} isIdle={status === 'idle'} />
+    <main className="home">
+      <section className="hero">
+        <p className="hero__eyebrow">Detector de estafas</p>
+        <h1>¿Ese mensaje te genera dudas?</h1>
+        <p className="hero__intro">
+          Pegá el texto o subí el correo completo. Analizamos las señales de alerta y te explicamos qué encontramos.
+        </p>
+        <Link href="/panel" className="button button--secondary" data-testid="panel-link">
+          Ver mensajes críticos
+        </Link>
+      </section>
+      <AnalysisInputTabs activeTab={activeTab} onTabChange={handleTabChange}>
+        {activeTab === 'message' ? (
+          <MessageAnalysisForm
+            message={message}
+            shareInPanel={shareInPanel}
+            sensitiveData={sensitiveData}
+            isSubmitting={status === 'loading'}
+            onMessageChange={handleMessageChange}
+            onShareInPanelChange={handleShareInPanelChange}
+            onSensitiveDataChange={handleSensitiveDataChange}
+            onSubmit={handleSubmit}
+            onClear={handleClearMessage}
+          />
+        ) : (
+          <EmailAnalysisForm
+            emailFile={emailFile}
+            isSubmitting={status === 'loading'}
+            onEmailFileChange={handleEmailFileChange}
+            onSubmit={handleEmailSubmit}
+            onClear={handleClearEmail}
+          />
+        )}
+      </AnalysisInputTabs>
+      {/* US-5.1: named by its heading so it is exposed as a complementary landmark. */}
+      <aside className="card result-column" aria-labelledby="result-heading">
+        <div className="result-column__header">
+          <h2 id="result-heading">Resultado del análisis</h2>
+          <p className="muted">Evaluación orientativa</p>
+        </div>
+        <AnalysisStatus status={status} />
+        {status === 'error' ? (
+          <AnalysisError
+            message={isEmailUnreadable ? UNREADABLE_EMAIL_ERROR_TEXT : ANALYSIS_ERROR_TEXT}
+            showRetry={!isEmailUnreadable}
+            onRetry={handleRetry}
+          />
+        ) : null}
+        <AnalysisResultView result={result} isIdle={status === 'idle'} />
+      </aside>
     </main>
   );
 }

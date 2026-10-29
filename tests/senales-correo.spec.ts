@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 import type { Indicator } from '../src/types';
-import { analysisResponseWithIndicators, mockEmailAnalysis } from './fixtures/analysis';
+import { analysisResponseWithIndicators, mockEmailAnalysis, openEmailTab } from './fixtures/analysis';
 
 // US-4.3: see the email's own signs (sender, authentication, links, attachments).
 
@@ -24,6 +24,7 @@ const failedAuthentication: Indicator = {
 test('un indicador propio del correo se muestra con su título, su descripción y la línea citada del correo', async ({ page }) => {
   await mockEmailAnalysis(page, { body: analysisResponseWithIndicators([failedAuthentication]) });
   await page.goto('/');
+  await openEmailTab(page);
   await page.getByLabel('Archivo de correo (.eml)').setInputFiles({
     name: 'correo.eml',
     mimeType: 'message/rfc822',

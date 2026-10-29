@@ -2,6 +2,11 @@ import type { Page } from '@playwright/test';
 
 import type { Indicator, MessageAnalysisResponse, RiskLevel } from '../../src/types';
 
+// US-5.2: the email form lives in its own tab, so email tests open it first.
+export async function openEmailTab(page: Page): Promise<void> {
+  await page.getByRole('tab', { name: 'Subir archivo .eml' }).click();
+}
+
 const ANALYSIS_ROUTE = '**/analysis';
 // Does not overlap with ANALYSIS_ROUTE: the glob '**/analysis' never matches '/analysis/email'.
 const EMAIL_ANALYSIS_ROUTE = '**/analysis/email';
