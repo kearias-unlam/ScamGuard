@@ -211,7 +211,7 @@ Como usuario quiero elegir un archivo de correo electrónico para analizarlo sin
 ADO ID: #48 · Status: done
 
 Criterios de aceptación:
-1. Al abrir la página, el campo "Archivo de correo (.eml)" está vacío y el botón "Analizar correo" está deshabilitado.
+1. Al abrir la página, el campo "Archivo de correo (.eml)" está vacío y el botón "Analizar correo" está deshabilitado. Desde US-5.2 el campo está en la pestaña "Subir archivo .eml", que se abre antes de comprobarlo.
 2. Al elegir un archivo `.eml`, el botón se habilita.
 3. Al elegir un archivo con otra extensión, el botón sigue deshabilitado y se muestra "Elegí un archivo con extensión .eml." (`email-file-hint`).
 
@@ -228,7 +228,7 @@ El resultado se muestra en el mismo lugar y con el mismo formato que el de un me
 
 Criterios de aceptación:
 1. Al hacer clic en "Analizar correo", se envía `POST /analysis/email` con el cuerpo `{ "emailContent": "<contenido del archivo>" }`.
-2. Mientras el análisis está en curso, se muestra "Analizando mensaje..." (`role="status"`) y los botones "Analizar mensaje" y "Analizar correo" están deshabilitados.
+2. Mientras el análisis está en curso, se muestra "Analizando mensaje..." (`role="status"`) y los botones "Analizar mensaje" y "Analizar correo" están deshabilitados. Desde US-5.2 cada botón está en su pestaña: el de la pestaña visible está deshabilitado y, al cambiar de pestaña, el otro también.
 3. Con un resultado, se muestra en `analysis-result`.
 4. Si el análisis falla, se muestra "Los servidores están ocupados. Intentá de nuevo más tarde." (`analysis-error`) y "Reintentar"; al reintentar con éxito se reenvía el mismo correo y se muestra el resultado.
 5. Si el correo no se puede leer, se muestra "No se pudo leer el correo. Verificá que sea un archivo .eml de hasta 1 MB." (`analysis-error`) sin el botón "Reintentar".
@@ -253,6 +253,74 @@ Tasks:
 - #52 Backend: email digest. `build_email_digest(raw: str) -> str` in `backend/app/services/email_digest.py` with the standard library `email` (`policy.default`) and `html.parser` (no new dependency), producing the format in [Email digest](#email-digest). Define a typed `InvalidEmailError` and raise it when there is no readable text body. Pytest: plain text email; HTML-only email (text extracted, script and style dropped, links listed with visible text and destination); `From` with display name, `Reply-To`, and `Return-Path` lines; `Authentication-Results` parsed; attachment names listed and their content never included; missing optional headers omit their line; body truncated at 20,000 characters; an email without a text body raises `InvalidEmailError`. Depends on #51.
 - #53 AI prompt: add the email indicator types to `IndicatorType` and `INSTRUCTIONS` and document them in the [AI contract](#ai-contract). The prompt describes the digest: only the lines before `Cuerpo:` come from the system, the email types apply only when the input is a digest, and `maskedMessage` is `""` for a digest. Pytest: the output schema `type` enum has the 11 indicator types.
 - #58 Frontend: email indicators test. Add `tests/senales-correo.spec.ts` for US-4.3 AC1 (mocked `failed_authentication` indicator whose evidence is the `Autenticación:` line). Depends on #56.
+
+## Feature 5 - Nuevo diseño de la interfaz
+
+ADO ID: #60
+
+Rediseño de la página principal y del panel a partir del mockup de Figma (carpeta local `NO SUBIR/mockup`, fuera del repositorio), con la paleta azul de [Visual design](#visual-design). El mockup es una guía general, no una copia exacta. Quedan fuera: el porcentaje de riesgo (el backend no calcula un puntaje; se muestra solo el nivel), el aviso de privacidad de la página principal y Tailwind (se sigue con CSS plano). Todo lo que ya existe se conserva (compartir en el panel, datos a ocultar, resumen, explicación, evidencia, aviso, error y "Reintentar"). El backend y la API no cambian.
+
+### US-5.1 Ver la página con el nuevo diseño
+Como usuario quiero una página clara y ordenada para analizar un mensaje y leer el resultado sin perderme.
+
+ADO ID: #61 · Status: pending
+
+La página tiene un encabezado con el logo y "ScamGuard", una presentación ("Detector de estafas", el título y una introducción) con el enlace "Ver mensajes críticos", y dos columnas en pantallas anchas: a la izquierda la carga del mensaje y a la derecha la columna "Resultado del análisis" (estado de carga, error, estado vacío o resultado). En pantallas angostas las columnas quedan una debajo de la otra. Cada indicador muestra un ícono decorativo según su `type`.
+
+Criterios de aceptación:
+1. La página muestra el encabezado "ScamGuard" y el título "¿Ese mensaje te genera dudas?".
+2. Antes de cualquier análisis, la columna "Resultado del análisis" muestra "Todavía no se analizó ningún mensaje." (`analysis-result-empty`).
+3. Con un resultado, junto a "Indicadores detectados" se muestra la cantidad de indicadores (`analysis-indicators-count`), también cuando es 0.
+
+Tasks:
+- #65 Frontend: palette, font, header, and hero. Replace the tokens in `src/app/globals.css` with the ones in [Visual design](#visual-design); load Manrope with `next/font/google` in `src/app/layout.tsx` (built into Next.js, no new dependency; the font files are downloaded at build time and served by the app, so the browser never calls Google). Add a `SiteHeader` component (inline SVG shield logo with `aria-hidden`, and "ScamGuard" as text, not a heading) rendered by the layout on every page. In `page.tsx`, the `h1` becomes "¿Ese mensaje te genera dudas?", preceded by the "Detector de estafas" eyebrow and followed by the intro text and the `panel-link`. The panel page uses the same header, cards, and buttons. Add `tests/nuevo-diseno.spec.ts` for AC1; the rest of the suite stays green. Attach screenshots of the home page and of the panel.
+- #66 Frontend: two-column layout and result column. `main` becomes a grid with the hero (spanning both columns), the form column, and an `aside` named by its heading (two columns from 64rem, one below). The `aside` has the `h2` "Resultado del análisis", the muted subtitle "Evaluación orientativa", and holds `AnalysisStatus`, `AnalysisError`, and `AnalysisResultView`. Inside `analysis-result`: the risk badge first, then explanation, summary, the `h2` "Indicadores detectados" **(new)** with the count badge `analysis-indicators-count` **(new)**, the indicators, and the disclaimer. Indicator titles stay `h3`. An `IndicatorIcon` component maps each of the 11 indicator types to an inline SVG with `aria-hidden` (display mapping only; an unknown type shows a generic alert icon). No changes to existing texts or `data-testid` values. Add the AC2 and AC3 tests to `tests/nuevo-diseno.spec.ts`. Attach screenshots of the empty state, loading, error, and a result for each risk level. Depends on #65.
+
+### US-5.2 Elegir cómo cargar el mensaje
+Como usuario quiero elegir entre pegar un mensaje o subir un correo para ver solo el formulario que necesito.
+
+ADO ID: #62 · Status: pending
+
+La carga tiene dos pestañas: "Pegar mensaje" (formulario de mensaje, US-1.1 y US-3.3) y "Subir archivo .eml" (formulario de correo, US-4.1). Cambiar de pestaña no borra lo cargado en la otra ni el resultado; "Reintentar" sigue reenviando el último pedido.
+
+Criterios de aceptación:
+1. Al abrir la página, la pestaña "Pegar mensaje" está seleccionada y se muestra el campo "Mensaje"; el campo "Archivo de correo (.eml)" no se muestra.
+2. Al elegir la pestaña "Subir archivo .eml", se muestra el campo "Archivo de correo (.eml)" y no el campo "Mensaje".
+3. Al volver a "Pegar mensaje", se muestra el mensaje que se había escrito.
+
+Tasks:
+- #67 Frontend: input tabs. An `AnalysisInputTabs` component with a `role="tablist"` (`aria-label="Método de carga"`) and two `role="tab"` buttons (`aria-selected`, `aria-controls`) "Pegar mensaje" (`message-tab`) and "Subir archivo .eml" (`email-tab`) **(new)**, each with a decorative icon; the active form is rendered inside a `role="tabpanel"`. `page.tsx` keeps the active tab in state and renders only the active form; the message, share fields, and chosen file stay in `page.tsx` state, so they survive a tab change. The file input itself is re-created empty on each tab change; the "Analizar correo" state comes from `page.tsx`. Update US-4.1 AC1 tests and every email test (`ingreso-correo`, `analisis-correo`, `senales-correo`) to open the email tab first through a shared `openEmailTab(page)` helper in `tests/fixtures/analysis.ts`. Add `tests/pestanas-carga.spec.ts` for AC1 to AC3. Depends on #66.
+
+### US-5.3 Arrastrar un correo
+Como usuario quiero arrastrar el archivo del correo hasta la página para no tener que buscarlo en el selector de archivos.
+
+ADO ID: #63 · Status: pending
+
+La pestaña "Subir archivo .eml" muestra una zona con "Arrastrá tu correo hasta acá", "o seleccioná un archivo descargado de tu casilla", el botón "Elegir archivo .eml" y "Máximo 1 MB". Un archivo soltado se trata igual que uno elegido (US-4.1): solo un `.eml` habilita "Analizar correo". Con un archivo elegido, la zona muestra su nombre, "Archivo listo para analizar" (solo si es `.eml`) y el botón pasa a decir "Cambiar archivo".
+
+Criterios de aceptación:
+1. Al soltar un archivo `.eml` en la zona, se muestra su nombre (`email-file-name`) y "Analizar correo" se habilita.
+2. Al soltar un archivo con otra extensión, se muestra su nombre y "Elegí un archivo con extensión .eml." (`email-file-hint`), y "Analizar correo" sigue deshabilitado.
+3. El botón "Elegir archivo .eml" abre el selector de archivos.
+
+Tasks:
+- #68 Frontend: drop zone. In `EmailAnalysisForm`, the drop zone (`email-drop-zone` **(new)**) handles `dragenter`, `dragover`, `dragleave`, and `drop` (highlighted while dragging) and passes the first dropped file to `onEmailFileChange`. The label "Archivo de correo (.eml)" stays visible above the zone. The native file input is visually hidden but still focusable (the zone shows the shared focus outline while the input has keyboard focus, `:has(input:focus-visible)`, so focusing the button inside does not draw two outlines); the "Elegir archivo .eml" / "Cambiar archivo" button (`choose-email-file-button` **(new)**) opens it through a ref. `email-file-name` **(new)** shows the chosen file name, also when returning to the email tab (from `page.tsx` state). While dragging, the zone has `data-dragging="true"` (styling only). Add `tests/arrastrar-correo.spec.ts` for AC1 to AC3 (drop through a `DataTransfer` built in the page, file chooser through `page.waitForEvent('filechooser')`). Depends on #67.
+
+### US-5.4 Limpiar el formulario y contar caracteres
+Como usuario quiero ver cuántos caracteres tiene el mensaje y poder vaciar el formulario de un clic.
+
+ADO ID: #64 · Status: pending
+
+"Limpiar" vacía solo la pestaña activa: en "Pegar mensaje", el mensaje, la casilla de compartir y los datos a ocultar; en "Subir archivo .eml", el archivo elegido. No borra el resultado ni cambia lo que reenvía "Reintentar", y sigue habilitado durante un análisis en curso (el pedido ya se envió).
+
+Criterios de aceptación:
+1. Al abrir la página, se muestra "0 caracteres" (`message-char-count`) y el campo "Mensaje" muestra el texto de ejemplo "Pegá acá el mensaje, SMS o correo que querés analizar...".
+2. Al escribir, el contador muestra la cantidad de caracteres del mensaje, con "1 carácter" cuando es uno solo.
+3. En "Pegar mensaje", al hacer clic en "Limpiar" (`clear-message-button`), el campo "Mensaje" queda vacío, la casilla de compartir se desmarca y "Analizar mensaje" se deshabilita.
+4. En "Subir archivo .eml", al hacer clic en "Limpiar" (`clear-email-button`), deja de mostrarse el archivo elegido y "Analizar correo" se deshabilita.
+
+Tasks:
+- #69 Frontend: character count, placeholder, and clear buttons. `message-char-count` **(new)** next to the "Mensaje" label shows `message.length` ("N caracteres" / "1 carácter"; display mapping only); the textarea gets the placeholder. Each form has a "Limpiar" button with a decorative trash icon (`clear-message-button` and `clear-email-button` **(new)**, `type="button"`); the email one also resets the file input value through its ref. `page.tsx` handles both, reusing the existing state setters. Add `tests/limpiar-contador.spec.ts` for AC1 to AC4. Depends on #67 (AC4 also on #68, which owns the file input ref).
 
 ## UI texts
 
@@ -288,20 +356,43 @@ Tasks:
 | Email submit button | Analizar correo |
 | Email file hint (wrong extension) | Elegí un archivo con extensión .eml. |
 | Unreadable email error | No se pudo leer el correo. Verificá que sea un archivo .eml de hasta 1 MB. |
+| Header brand (US-5.1) | ScamGuard |
+| Hero eyebrow | Detector de estafas |
+| Home heading (`h1`, replaces "ScamGuard") | ¿Ese mensaje te genera dudas? |
+| Hero intro | Pegá el texto o subí el correo completo. Analizamos las señales de alerta y te explicamos qué encontramos. |
+| Result column heading | Resultado del análisis |
+| Result column subtitle | Evaluación orientativa |
+| Indicators heading | Indicadores detectados |
+| Message tab (US-5.2) | Pegar mensaje |
+| Email tab | Subir archivo .eml |
+| Tab list accessible name (`aria-label`) | Método de carga |
+| Drop zone (US-5.3) | Arrastrá tu correo hasta acá / o seleccioná un archivo descargado de tu casilla / Máximo 1 MB |
+| Choose file button | Elegir archivo .eml / Cambiar archivo (with a file chosen) |
+| File ready | Archivo listo para analizar |
+| Message placeholder (US-5.4) | Pegá acá el mensaje, SMS o correo que querés analizar... |
+| Character count | N caracteres / 1 carácter |
+| Clear button | Limpiar |
 
 ## Visual design
 
-Plain CSS in `src/app/globals.css` (built into Next.js; no CSS framework). Colors are CSS variables in `:root`; components use class names, never `data-testid` selectors, for styling. Styling never adds or changes visible text, roles, or `data-testid` values.
+Plain CSS in `src/app/globals.css` (built into Next.js; no CSS framework). Colors are CSS variables in `:root`; components use class names, never `data-testid` selectors, for styling. Styling never adds or changes visible text, roles, or `data-testid` values. Since Feature 5 the look follows the Figma mockup with a blue palette instead of its green one.
+
+- Font (Feature 5): Manrope (weights 400 to 800) through `next/font/google`, with `system-ui, sans-serif` as fallback.
+- Shape (Feature 5): cards have a 1.5rem radius, a 1px `--color-border` border, and a soft `--shadow-card`; inner blocks (textarea, drop zone, indicators) have a 1rem radius; badges are pills. The accent underlines of the `h1` (#24) and of the indicator `h3` titles (#25) are dropped.
+- The drop zone highlight is selected with `[data-dragging="true"]`, like the risk badge with `[data-risk-level]`.
 
 | Token | Value | Use |
 |---|---|---|
-| `--color-bg` | `#f6f7fb` | Page background, evidence background |
-| `--color-surface` | `#ffffff` | Cards (form, result, indicators) |
+| `--color-bg` | `#f5f7fb` | Page background, evidence background |
+| `--color-surface` | `#ffffff` | Cards (form, result, indicators), header |
+| `--color-surface-soft` | `#f9fafc` | Textarea, drop zone, and indicator background |
 | `--color-text` | `#111827` | Body text |
-| `--color-muted` | `#4b5563` | Empty state, empty indicators, disclaimer, status text, textarea border, evidence border, disabled button text |
-| `--color-border` | `#d1d5db` | Card, indicator, disclaimer, and disabled button borders |
-| `--color-primary` | `#1d4ed8` | Primary button, heading underline, focus outline |
+| `--color-muted` | `#4b5563` | Empty state, empty indicators, disclaimer, status text, subtitles, inactive tabs, character count, textarea border, evidence border, disabled button text |
+| `--color-border` | `#d1d5db` | Card, indicator, disclaimer, header, and disabled button borders |
+| `--color-primary` | `#1d4ed8` | Primary button, active tab underline, logo background, brand accent, focus outline |
 | `--color-primary-hover` | `#1e40af` | Primary button hover |
+| `--color-primary-soft` | `#e8eefc` | Eyebrow, logo-tinted icon backgrounds, drop zone while dragging, secondary soft buttons (text in `--color-primary`) |
+| `--shadow-card` | `0 16px 50px rgba(15, 23, 42, 0.07)` | Card shadow |
 | `--color-disabled-bg` | `#e5e7eb` | Disabled button background |
 | `--color-error-text` / `--color-error-bg` | `#b91c1c` / `#fef2f2` | Error block |
 | `--color-risk-low` / `-bg` | `#166534` / `#dcfce7` | Risk badge "Bajo" |
@@ -311,7 +402,8 @@ Plain CSS in `src/app/globals.css` (built into Next.js; no CSS framework). Color
 
 - The risk badge color is selected with `[data-risk-level="..."]` on the `dd`; the Spanish label is always shown, so color is never the only signal.
 - All text/background pairs meet WCAG AA (4.5:1); focus is always visible (`:focus-visible` outline, 2px `--color-primary`, 2px offset).
-- Layout: single column, max-width 48rem, centered.
+- Layout (Feature 5): full-width header with an inner max-width of 77.5rem; `main` with the same max-width, centered, with 1.25rem side padding (2rem from 40rem). The home page has two columns from 64rem (form about 54%, result column at least 24rem) and one column below; the panel stays a single column.
+- Risk badge colors keep the `--color-risk-*` tokens; the indicator icon backgrounds use `--color-primary-soft`, since an indicator has no level of its own.
 
 ## API contract
 
