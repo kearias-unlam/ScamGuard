@@ -4,12 +4,19 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from app.models import CriticalMessagesResponse, EmailAnalysisRequest, MessageAnalysisRequest, MessageAnalysisResponse
+from app.models import (
+    CriticalMessagesResponse,
+    EmailAnalysisRequest,
+    MessageAnalysisRequest,
+    MessageAnalysisResponse,
+    UrlAnalysisRequest,
+)
 from app.services.analysis import (
     Analyzer,
     MessageSaver,
     analyze_email,
     analyze_message,
+    analyze_url,
     get_analyzer,
     get_message_saver,
 )
@@ -41,6 +48,15 @@ def post_email_analysis(
     analyzer: Annotated[Analyzer, Depends(get_analyzer)],
 ) -> MessageAnalysisResponse:
     return MessageAnalysisResponse(result=analyze_email(request.email_content, analyzer))
+
+
+# US-6.2: no saver dependency, so a link can never be stored.
+@router.post("/analysis/url", response_model=MessageAnalysisResponse)
+def post_url_analysis(
+    request: UrlAnalysisRequest,
+    analyzer: Annotated[Analyzer, Depends(get_analyzer)],
+) -> MessageAnalysisResponse:
+    return MessageAnalysisResponse(result=analyze_url(request.url, analyzer))
 
 
 @router.get("/critical-messages", response_model=CriticalMessagesResponse)

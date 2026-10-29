@@ -1,6 +1,6 @@
 """Business logic for message analysis: run the injected AI analyzer, apply the evidence check and the undetermined
-rule, and save the message to the critical messages panel when the user shared it (US-3.3). Emails (US-4.2) are
-analyzed through their digest with the same rules and are never saved."""
+rule, and save the message to the critical messages panel when the user shared it (US-3.3). Emails (US-4.2) and links
+(US-6.2) are analyzed through their digest with the same rules and are never saved."""
 
 import logging
 from collections.abc import Callable
@@ -10,6 +10,7 @@ from app.models import AnalysisResult, Topic
 from app.normalization import normalize_text
 from app.services.email_digest import build_email_digest
 from app.services.masking import mask_personal_data
+from app.services.url_digest import build_url_digest
 from app.storage.critical_messages import StorageError, save_critical_message
 
 logger = logging.getLogger(__name__)
@@ -81,4 +82,11 @@ def analyze_email(email_content: str, analyzer: Analyzer) -> AnalysisResult:
     """US-4.2: analyze the email digest with the same rules as a message. Raises InvalidEmailError (422) when the email
     has no readable text body. Emails are never shared, so nothing is ever saved."""
     digest = build_email_digest(email_content)
+    return analyze_message(digest, analyzer, share_in_panel=False)
+
+
+def analyze_url(url: str, analyzer: Analyzer) -> AnalysisResult:
+    """US-6.2: analyze the URL digest with the same rules as a message. Raises InvalidUrlError (422) when the text is
+    not a valid http or https link. Links are never opened or shared, so nothing is ever saved."""
+    digest = build_url_digest(url)
     return analyze_message(digest, analyzer, share_in_panel=False)

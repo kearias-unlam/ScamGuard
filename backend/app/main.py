@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from app.ai.errors import AIServiceError
 from app.routes import router
 from app.services.email_digest import InvalidEmailError
+from app.services.url_digest import InvalidUrlError
 from app.storage.critical_messages import StorageError
 
 FRONTEND_ORIGIN = "http://localhost:3000"
@@ -17,6 +18,8 @@ AI_UNAVAILABLE_DETAIL = "Los servidores están ocupados. Intentá de nuevo más 
 PANEL_UNAVAILABLE_DETAIL = "No se pudo cargar el panel. Intentá de nuevo más tarde."
 # User-visible 422 text for an unreadable email (US-4.2); the same text the frontend shows.
 EMAIL_UNREADABLE_DETAIL = "No se pudo leer el correo. Verificá que sea un archivo .eml de hasta 1 MB."
+# User-visible 422 text for an invalid link (US-6.2); the same text the frontend shows.
+URL_UNREADABLE_DETAIL = "No se pudo leer el link. Verificá que sea una dirección completa, por ejemplo https://ejemplo.com."
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +50,12 @@ async def handle_storage_error(request: Request, error: StorageError) -> JSONRes
 async def handle_invalid_email_error(request: Request, error: InvalidEmailError) -> JSONResponse:
     logger.info("Unreadable email: %s", error)  # Fixed cause only; email content is never logged.
     return JSONResponse(status_code=422, content={"detail": EMAIL_UNREADABLE_DETAIL})
+
+
+@app.exception_handler(InvalidUrlError)
+async def handle_invalid_url_error(request: Request, error: InvalidUrlError) -> JSONResponse:
+    logger.info("Invalid link: %s", error)  # Fixed cause only; the link is never logged.
+    return JSONResponse(status_code=422, content={"detail": URL_UNREADABLE_DETAIL})
 
 
 app.include_router(router)
