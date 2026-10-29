@@ -6,7 +6,7 @@ Single source of truth for what ScamGuard must do. Implement only what is listed
 - Each User Story is loaded into Azure DevOps with the `ado-work-items` skill. Record the ADO ID next to each Feature, User Story, and Task once created.
 - Reference story IDs in commits and tests (e.g. `// US-1.2`). Each acceptance criterion maps to one Playwright test.
 - Every task ships with the tests it adds or breaks; no task leaves the suite failing.
-- E2E tests mock `POST /analysis` and `POST /analysis/email` with `page.route` through the shared helper `tests/fixtures/analysis.ts`, and `GET /critical-messages` through `tests/fixtures/critical-messages.ts`; Pytest covers the backend with the AI client stubbed and SQLite on a temporary file.
+- E2E tests mock `POST /analysis`, `POST /analysis/email`, and `POST /analysis/url` with `page.route` through the shared helper `tests/fixtures/analysis.ts`, and `GET /critical-messages` through `tests/fixtures/critical-messages.ts`; Pytest covers the backend with the AI client stubbed and SQLite on a temporary file.
 - Selectors marked **(new)** do not exist yet; confirm them with a page snapshot after implementation.
 - Task dependencies are listed as "Depends on"; do not start a task before its dependencies are done.
 
@@ -281,7 +281,7 @@ Como usuario quiero elegir entre pegar un mensaje o subir un correo para ver sol
 
 ADO ID: #62 · Status: done
 
-La carga tiene dos pestañas: "Pegar mensaje" (formulario de mensaje, US-1.1 y US-3.3) y "Subir archivo .eml" (formulario de correo, US-4.1). Cambiar de pestaña no borra lo cargado en la otra ni el resultado; "Reintentar" sigue reenviando el último pedido.
+La carga tiene dos pestañas: "Pegar mensaje" (formulario de mensaje, US-1.1 y US-3.3) y "Subir archivo .eml" (formulario de correo, US-4.1). Desde US-6.1 hay una tercera, "Pegar link". Cambiar de pestaña no borra lo cargado en la otra ni el resultado; "Reintentar" sigue reenviando el último pedido.
 
 Criterios de aceptación:
 1. Al abrir la página, la pestaña "Pegar mensaje" está seleccionada y se muestra el campo "Mensaje"; el campo "Archivo de correo (.eml)" no se muestra.
@@ -311,7 +311,7 @@ Como usuario quiero ver cuántos caracteres tiene el mensaje y poder vaciar el f
 
 ADO ID: #64 · Status: done
 
-"Limpiar" vacía solo la pestaña activa: en "Pegar mensaje", el mensaje, la casilla de compartir y los datos a ocultar; en "Subir archivo .eml", el archivo elegido. No borra el resultado ni cambia lo que reenvía "Reintentar", y sigue habilitado durante un análisis en curso (el pedido ya se envió).
+"Limpiar" vacía solo la pestaña activa: en "Pegar mensaje", el mensaje, la casilla de compartir y los datos a ocultar; en "Subir archivo .eml", el archivo elegido; en "Pegar link" (US-6.1), el link. No borra el resultado ni cambia lo que reenvía "Reintentar", y sigue habilitado durante un análisis en curso (el pedido ya se envió).
 
 Criterios de aceptación:
 1. Al abrir la página, se muestra "0 caracteres" (`message-char-count`) y el campo "Mensaje" muestra el texto de ejemplo "Pegá acá el mensaje, SMS o correo que querés analizar...".
@@ -321,6 +321,62 @@ Criterios de aceptación:
 
 Tasks:
 - #69 Frontend: character count, placeholder, and clear buttons. `message-char-count` **(new)** next to the "Mensaje" label shows `message.length` ("N caracteres" / "1 carácter"; display mapping only); the textarea gets the placeholder. Each form has a "Limpiar" button with a decorative trash icon (`clear-message-button` and `clear-email-button` **(new)**, `type="button"`); the email one also resets the file input value through its ref. `page.tsx` handles both, reusing the existing state setters. Add `tests/limpiar-contador.spec.ts` for AC1 to AC4. Depends on #67 (AC4 also on #68, which owns the file input ref).
+
+## Feature 6 - Análisis de links
+
+ADO ID: #70
+
+El usuario pega un link que recibió para saber si presenta indicios de estafa. ScamGuard analiza solo la dirección: el backend la separa en sus partes (ver [URL digest](#url-digest)) y la IA la evalúa. Nunca abre el link ni descarga la página, así que no ve su contenido ni a dónde redirige un acortador. Un solo link por análisis; para textos con varios links está la pestaña "Pegar mensaje". Los links no se guardan ni se comparten en el panel de mensajes críticos.
+
+### US-6.1 Ingresar un link
+Como usuario quiero pegar un link que recibí para analizarlo sin tener que abrirlo.
+
+ADO ID: #71 · Status: pending
+
+La carga tiene una tercera pestaña, "Pegar link", después de "Subir archivo .eml". Cambiar de pestaña no borra el link escrito (US-5.2). "Limpiar" vacía el link (US-5.4).
+
+Criterios de aceptación:
+1. Al elegir la pestaña "Pegar link", el campo "Link" está vacío y el botón "Analizar link" está deshabilitado.
+2. Si el link contiene solo espacios, el botón sigue deshabilitado.
+3. Al ingresar texto en "Link", el botón se habilita.
+4. Al hacer clic en "Limpiar" (`clear-url-button`), el campo "Link" queda vacío y "Analizar link" se deshabilita.
+
+Tasks:
+- #78 Frontend: link tab and form. Add `'url'` to `AnalysisInputTab` and a third tab "Pegar link" (`url-tab` **(new)**, decorative link icon) to `AnalysisInputTabs`; the arrow keys cycle through the three tabs. A `UrlAnalysisForm` component with the label "Link", a single-line `<input type="text" inputMode="url" autoComplete="off" spellCheck={false}>` (`url-input` **(new)**; not `type="url"`, whose browser validation would block links without `http://`), the placeholder "https://ejemplo.com/...", "Limpiar" (`clear-url-button` **(new)**) and "Analizar link" (`analyze-url-button` **(new)**), enabled while the trimmed value is not empty. The link lives in `page.tsx` state; the submit is wired in #79 (#78 and #79 are delivered together, so the button never does nothing). The hero intro changes to the text in [UI texts](#ui-texts). Add an `openUrlTab(page)` helper to `tests/fixtures/analysis.ts` and `tests/ingreso-link.spec.ts` for AC1 to AC4. Depends on #74.
+
+### US-6.2 Analizar un link
+Como usuario quiero analizar el link para conocer si presenta indicios de fraude o engaño.
+
+ADO ID: #72 · Status: pending
+
+El resultado se muestra en el mismo lugar y con el mismo formato que el de un mensaje. "Reintentar" reenvía el último pedido, sea un mensaje, un correo o un link.
+
+Criterios de aceptación:
+1. Al hacer clic en "Analizar link", se envía `POST /analysis/url` con el cuerpo `{ "url": "<link>" }`.
+2. Mientras el análisis está en curso, se muestra "Analizando mensaje..." (`role="status"`) y "Analizar link" está deshabilitado.
+3. Con un resultado, se muestra en `analysis-result`.
+4. Si el análisis falla, se muestra "Los servidores están ocupados. Intentá de nuevo más tarde." (`analysis-error`) y "Reintentar"; al reintentar con éxito se reenvía el mismo link y se muestra el resultado.
+5. Si el link no es una dirección válida, se muestra "No se pudo leer el link. Verificá que sea una dirección completa, por ejemplo https://ejemplo.com." (`analysis-error`) sin el botón "Reintentar".
+
+Tasks:
+- #74 Contract: add `UrlAnalysisRequest` (`url`) to `src/types.ts` and the matching Pydantic model to `backend/app/models.py` (blank or more than 2,000 characters returns 422). Nothing is sent or served yet.
+- #77 Backend: `POST /analysis/url` endpoint. Thin router; the service builds the digest (`InvalidUrlError` becomes 422 with the documented body) and calls `analyze_message` with it, so the evidence check runs against the digest; links are never saved (no saver dependency). The typed AI error becomes the 503 error. Pytest: happy path (the stubbed analyzer receives the digest), an indicator quoting a digest line is kept, a quote not in the digest is dropped, blank, too long, invalid link, AI error, the response has neither `topic` nor `maskedMessage`, and nothing is saved. Depends on #74, #75, and #76.
+- #79 Frontend: link request, loading, retry, and unreadable link error. Add `postUrlAnalysis` to `src/lib/api.ts` (throws `ApiError` with the status on non-2xx). `page.tsx` adds `{ kind: 'url'; url: string }` to the last request union, so "Reintentar" resends the submitted link; the busy state disables "Analizar link" like the other buttons. On an `ApiError` with status 422 from `postUrlAnalysis`, `analysis-error` shows the unreadable link text from `AnalysisError` and no "Reintentar" (same mechanism as US-4.2 AC5). Add `mockUrlAnalysis`, `mockPendingUrlAnalysis`, and `mockUrlAnalysisSequence` (route `**/analysis/url`) to `tests/fixtures/analysis.ts` and `tests/analisis-link.spec.ts` for AC1 to AC5. Depends on #78.
+
+### US-6.3 Ver las señales del link
+Como usuario quiero saber qué partes del link muestran señales de engaño.
+
+ADO ID: #73 · Status: pending
+
+El backend separa el link en sus partes (protocolo, dominio, si es una dirección IP, si usa un acortador conocido, si incluye un usuario antes de `@`, ruta y parámetros) y se las pasa a la IA (ver [URL digest](#url-digest)). Tipos de indicador nuevos: dominio que imita a una marca y link disfrazado. También aplican los existentes enlaces sospechosos (acortadores, dominios raros) y suplantación de identidad. Usan la misma cita literal y el mismo chequeo de evidencia que el resto.
+
+Criterios de aceptación:
+1. Un indicador del link se muestra en `analysis-indicator` con su título y descripción, y la línea citada del análisis del link en `analysis-indicator-evidence`.
+
+Tasks:
+- #75 Backend: URL digest. `build_url_digest(raw: str) -> str` in `backend/app/services/url_digest.py` with the standard library (`urllib.parse`, `ipaddress`, and the `idna` codec; no new dependency), producing the format in [URL digest](#url-digest). Define a typed `InvalidUrlError` and raise it for the invalid cases listed there. Pytest: full `https` link; link without scheme (`Protocolo: ninguno`); `http`; IPv4 and IPv6 hosts; userinfo before `@`; explicit port; punycode host shown decoded with its ASCII form; known shortener; path and query listed; empty path and query omit their lines; invalid cases (spaces, other scheme, no host, host without a dot) raise `InvalidUrlError`.
+- #76 AI prompt: add `lookalike_domain` and `obfuscated_link` to `IndicatorType` and `INSTRUCTIONS`, and document them in the [AI contract](#ai-contract). The prompt describes the URL digest: only the `Enlace:` line comes from the user; the model judges only the address (it never saw the page), `suspicious_link` and `impersonation` also apply, the email-only types do not, and `maskedMessage` is `""` for a URL digest. Pytest: the output schema `type` enum has the 13 indicator types.
+- #80 Frontend: link indicators. `IndicatorIcon` gets icons for `lookalike_domain` and `obfuscated_link`. Add `tests/senales-link.spec.ts` for AC1 (mocked `lookalike_domain` indicator whose evidence is the `Dominio:` line). Depends on #79.
 
 ## UI texts
 
@@ -359,7 +415,7 @@ Tasks:
 | Header brand (US-5.1) | ScamGuard |
 | Hero eyebrow | Detector de estafas |
 | Home heading (`h1`, replaces "ScamGuard") | ¿Ese mensaje te genera dudas? |
-| Hero intro | Pegá el texto o subí el correo completo. Analizamos las señales de alerta y te explicamos qué encontramos. |
+| Hero intro (updated in US-6.1) | Pegá un texto o un link, o subí el correo completo. Analizamos las señales de alerta y te explicamos qué encontramos. |
 | Result column heading | Resultado del análisis |
 | Result column subtitle | Evaluación orientativa |
 | Indicators heading | Indicadores detectados |
@@ -372,6 +428,11 @@ Tasks:
 | Message placeholder (US-5.4) | Pegá acá el mensaje, SMS o correo que querés analizar... |
 | Character count | N caracteres / 1 carácter |
 | Clear button | Limpiar |
+| Link tab (US-6.1) | Pegar link |
+| Link field label | Link |
+| Link placeholder | https://ejemplo.com/... |
+| Link submit button | Analizar link |
+| Unreadable link error | No se pudo leer el link. Verificá que sea una dirección completa, por ejemplo https://ejemplo.com. |
 
 ## Visual design
 
@@ -438,7 +499,7 @@ export interface MessageAnalysisResponse {
 ```
 
 - `evidence`, `explanation`, and `UNDETERMINED` are new and must be added to `src/types.ts` (task #11) and to the backend models.
-- The frontend reads the backend base URL from `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:8000`). E2E tests mock `**/analysis`, `**/analysis/email`, and `**/critical-messages`, so no backend needs to run.
+- The frontend reads the backend base URL from `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:8000`). E2E tests mock `**/analysis`, `**/analysis/email`, `**/analysis/url`, and `**/critical-messages`, so no backend needs to run.
 - JSON fields are camelCase; backend models use snake_case with camelCase aliases.
 - Errors:
   - `422`: empty or whitespace-only message. The UI cannot send it (the button is disabled), so it is covered by Pytest only.
@@ -495,21 +556,35 @@ export interface EmailAnalysisRequest {
   - `503`: same as `POST /analysis`. Any other non-2xx or network error shows the `POST /analysis` error text with retry.
 - Emails are never shared in the panel: the request has no `shareInPanel`.
 
+`POST /analysis/url` (Feature 6)
+
+```ts
+export interface UrlAnalysisRequest {
+  url: string; // One link as pasted by the user
+}
+```
+
+- Response: `MessageAnalysisResponse`, the same as `POST /analysis`.
+- Errors:
+  - `422`: `url` is blank, has more than 2,000 characters, or is not a valid link (see [URL digest](#url-digest)). For an invalid link the body is `{ "detail": "No se pudo leer el link. Verificá que sea una dirección completa, por ejemplo https://ejemplo.com." }`; blank or too long keeps FastAPI's default validation body. The frontend ignores the body and shows the unreadable link text from [UI texts](#ui-texts), without retry.
+  - `503`: same as `POST /analysis`. Any other non-2xx or network error shows the `POST /analysis` error text with retry.
+- Links are never fetched, stored, or shared in the panel: the request has no `shareInPanel`.
+
 ## AI contract
 
 - Model: `gpt-5.4-mini`, deployed on Azure Foundry. Endpoint (the v1 base URL), key, and deployment name come from `.env`.
 - SDK: `openai` Python package, `OpenAI` client with `base_url` set to the Azure v1 endpoint (`https://<resource>.services.ai.azure.com/openai/v1/`), calling the Responses API (`responses.create`). No `api_version` is needed. Structured JSON output uses `text.format` with a JSON schema (see Output schema below).
 - Timeout: 60 seconds, with no SDK retries (`max_retries=0`).
-- Input: the user message, or the [email digest](#email-digest) built by the backend (Feature 4).
+- Input: the user message, the [email digest](#email-digest) built by the backend (Feature 4), or the [URL digest](#url-digest) built by the backend (Feature 6).
 - Output: JSON with the `AnalysisResult` shape, validated by the backend before returning it. The model output schema restricts `riskLevel` to `LOW | MEDIUM | HIGH`; `UNDETERMINED` is set only by the backend.
 - Evidence check: the backend drops any indicator whose `evidence` does not appear in the submitted message. Comparison is case-insensitive, with consecutive whitespace collapsed to one space and leading/trailing whitespace trimmed on both sides. An indicator whose `evidence` is empty or whitespace-only is dropped.
 - Undetermined risk: if the model returned at least one indicator and the evidence check drops all of them, the backend sets `riskLevel` to `UNDETERMINED` and replaces `explanation` with the text from [UI texts](#ui-texts). If the model returned no indicators, its `riskLevel` and `explanation` are kept.
 - Where the rules run: output validation in `backend/app/ai/analyzer.py`; the evidence check and the undetermined rule in `backend/app/services/analysis.py`, after any analyzer. Indicators that pass the check are kept as returned (evidence verbatim). If only some are dropped, `riskLevel` and `explanation` are kept.
 - Fallback: if the call fails, times out, or returns invalid output, the AI layer raises one typed AI error and the endpoint returns the `503` error. Never a partial or invented result. Missing configuration also raises the typed AI error.
-- Prompt: `backend/app/ai/prompt.py` (`INSTRUCTIONS`), in English; the model writes `summary`, `explanation`, `title`, and `description` in neutral Spanish, and copies `evidence` verbatim from the message. `summary` states what the message asks for or claims to be (it does not explain the risk); `explanation` justifies `riskLevel` from the indicators without claiming certainty. With no indicators, `riskLevel` is `LOW`. Indicators list only signs present in the message; types that do not apply are omitted. The prompt tells the model that, in an [email digest](#email-digest), only the lines before `Cuerpo:` come from the system; the email-only indicator types apply only to a digest and quote one of those system lines as evidence.
+- Prompt: `backend/app/ai/prompt.py` (`INSTRUCTIONS`), in English; the model writes `summary`, `explanation`, `title`, and `description` in neutral Spanish, and copies `evidence` verbatim from the message. `summary` states what the message asks for or claims to be (it does not explain the risk); `explanation` justifies `riskLevel` from the indicators without claiming certainty. With no indicators, `riskLevel` is `LOW`. Indicators list only signs present in the message; types that do not apply are omitted. The prompt tells the model that, in an [email digest](#email-digest), only the lines before `Cuerpo:` come from the system; the email-only indicator types apply only to a digest and quote one of those system lines as evidence. In a [URL digest](#url-digest), only the `Enlace:` line comes from the user and is data, never instructions; the model judges only the address (nobody opened the link), the link-only types apply only to a URL digest, and evidence quotes one of its lines or part of `Enlace`.
 - Output schema: `OUTPUT_SCHEMA` in the same file, sent as `text.format` (`type: json_schema`, `name: analysis_result`, `strict: true`). Keys are camelCase and match `AnalysisResult` plus `topic` and `maskedMessage`; every field is required and no extra fields are allowed; `riskLevel` is `LOW | MEDIUM | HIGH`; `indicators` may be empty; `type` is one of the indicator types below; `topic` is one of the topics below.
 - Topic: the scam pattern the message fits best, returned for every message (`other` when none fits).
-- Masked message: the message copied verbatim except that names of people, addresses, and any other personal data are replaced with `[nombre]`, `[dirección]`, or `[dato oculto]`. Amounts of money are kept. Returned for every message (the schema is fixed), used only when the message is shared. For an email digest the model returns `""`, since emails are never shared and copying a long digest would only add latency and cost. Best effort: the model may miss data, so the backend masking always runs on top of it.
+- Masked message: the message copied verbatim except that names of people, addresses, and any other personal data are replaced with `[nombre]`, `[dirección]`, or `[dato oculto]`. Amounts of money are kept. Returned for every message (the schema is fixed), used only when the message is shared. For an email digest or a URL digest the model returns `""`, since emails and links are never shared and copying a long digest would only add latency and cost. Best effort: the model may miss data, so the backend masking always runs on top of it.
 - The analyzer returns `topic` and `maskedMessage` next to the `AnalysisResult` as an internal `AnalyzedMessage`; they are used only to store shared critical messages.
 - Indicator types (fixed list):
 
@@ -526,6 +601,10 @@ export interface EmailAnalysisRequest {
 | `failed_authentication` | Emails only: SPF, DKIM, or DMARC did not pass |
 | `deceptive_link` | Emails only: a link's visible text shows a different destination than the real one |
 | `dangerous_attachment` | Emails only: attachments that can run code or hide their type (e.g. `.exe`, `.scr`, `.js`, `.html`, `factura.pdf.exe`) |
+| `lookalike_domain` | Links only: the domain imitates a known brand or entity (misspellings, extra words, swapped letters, unusual extensions, e.g. `mercadopago-seguridad.com`, `paypa1.com`) |
+| `obfuscated_link` | Links only: the address hides where it leads (IP address instead of a domain, a user name before `@`, punycode, many subdomains, encoded characters) |
+
+- In a [URL digest](#url-digest), `suspicious_link` (shorteners, odd domains) and `impersonation` also apply; the email-only types do not.
 
 - Topics (fixed list; the title is shown in the panel):
 
@@ -569,6 +648,35 @@ Cuerpo:
 - Privacy: the file and the digest exist only during the request; they are never stored, logged, or shared.
 - Known limitation: the body is free text, so a sender could write lines that look like header lines. The prompt tells the model that only lines before `Cuerpo:` come from the system, but the evidence check cannot tell them apart.
 
+## URL digest
+
+The backend turns the pasted link into one text, the URL digest, which is the message for the analyzer and the evidence check (Feature 6). Every rule in the [AI contract](#ai-contract) applies to it unchanged. The link is never opened, fetched, or resolved.
+
+- Parsing: standard library `urllib.parse`, `ipaddress`, and the `idna` codec, in `backend/app/services/url_digest.py`. No new dependency.
+- Format: Spanish labels, since quoted lines are shown as evidence. Optional lines appear only when their data exists.
+
+```
+Enlace: <the link as pasted, trimmed>
+Protocolo: <https, http, or ninguno>
+Dominio: <host in lowercase; a punycode host is shown decoded>
+Dominio en punycode: <ASCII form, only when it differs from Dominio>
+Dirección IP: sí                       (only when the host is an IPv4 or IPv6 address)
+Usuario antes de @: <text>             (only when the link has a user name before the host)
+Puerto: <port>                         (only when explicit)
+Acortador de enlaces: sí               (only for a known shortener)
+Ruta: <path>                           (only when not empty or "/")
+Parámetros: <query string>             (only when not empty)
+```
+
+- Only `Enlace:` comes from the user; the other lines come from the system. The fragment (`#...`) is ignored. `Ruta` and `Parámetros` are shown raw (percent-encoding is not decoded), so they stay quotable and encoded characters stay visible.
+- Known shorteners (fixed list, defined once in the backend): `bit.ly`, `tinyurl.com`, `t.co`, `goo.gl`, `ow.ly`, `is.gd`, `cutt.ly`, `rebrand.ly`, `shorturl.at`, `acortar.link`, `rb.gy`, `t.ly`. A host matches when it equals one of them or ends with `.` plus one of them (`www.bit.ly` matches, `notbit.ly` and `bit.ly.example.com` do not).
+- Scheme: a link starting with `<scheme>://` uses that scheme (case-insensitive). Without `://`, a leading `<letters>:` not followed by a digit is another scheme (`javascript:`, `mailto:`) and is invalid; otherwise the link is parsed as if it started with `http://` and `Protocolo` is `ninguno` (so `ejemplo.com:8080` is a host and a port).
+- `Dominio`: one trailing dot is removed (`ejemplo.com.` → `ejemplo.com`). If the host cannot be converted to or from punycode, `Dominio` shows it as is and the `Dominio en punycode` line is omitted; it is not an invalid link.
+- Invalid link (`InvalidUrlError`, `422`): after trimming the ends, it contains whitespace; it has a scheme other than `http` or `https`; the port is not a number from 0 to 65535; it has no host; or the host is neither an IP address nor contains a dot. The error never includes the link.
+- Privacy: the link and the digest exist only during the request; they are never stored, logged, or shared.
+- Known limitation: ScamGuard does not see the page or where a shortener redirects, so a clean-looking address is not proof that the link is safe; the disclaimer (NFR-01) still applies.
+- Known limitation: text pasted in "Pegar mensaje" could imitate a URL or email digest. The prompt tells the model which lines come from the system, but the evidence check cannot tell them apart.
+
 ## Critical messages storage
 
 - Engine: SQLite through the Python standard library `sqlite3` (no new dependency), in `backend/app/storage/`. File path from `SCAMGUARD_DB_PATH` (default `backend/data/scamguard.db`, resolved relative to the backend package, not the working directory; ignored by git).
@@ -608,4 +716,4 @@ Follow `.github/instructions/*.instructions.md`.
 Each story has tests for the happy path and the most likely failure path, as defined in `AGENTS.md`.
 
 ### NFR-07 Privacy of stored messages
-Only `HIGH` risk messages the user chose to share are stored, always masked, and the panel says so. See [Critical messages storage](#critical-messages-storage). Email files (Feature 4) are never stored or shared; see [Email digest](#email-digest).
+Only `HIGH` risk messages the user chose to share are stored, always masked, and the panel says so. See [Critical messages storage](#critical-messages-storage). Email files (Feature 4) are never stored or shared; see [Email digest](#email-digest). Links (Feature 6) are never fetched, stored, or shared; see [URL digest](#url-digest).
