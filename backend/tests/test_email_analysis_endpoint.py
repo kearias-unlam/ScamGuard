@@ -10,10 +10,15 @@ from app.ai.errors import AIServiceError
 from app.main import app
 from app.models import AnalysisResult, Indicator
 from app.services.analysis import get_analyzer, get_message_saver
+from app.services.recommendations import RECOMMENDATION_TEXTS
 from app.services.email_digest import build_email_digest
 from app.storage.critical_messages import list_critical_topics
 
 BUSY_DETAIL = "Los servidores están ocupados. Intentá de nuevo más tarde."
+# US-7.1: every stubbed result is HIGH, so these are the recommendations it gets.
+HIGH_RECOMMENDATIONS = [
+    {"type": type_, "text": RECOMMENDATION_TEXTS[type_]} for type_ in ("do_not_follow", "if_already_acted")
+]
 UNREADABLE_DETAIL = "No se pudo leer el correo. Verificá que sea un archivo .eml de hasta 1 MB."
 AUTH_LINE = "Autenticación: spf=fail dkim=fail dmarc=fail"
 
@@ -68,7 +73,7 @@ def test_happy_path_analyzer_receives_the_digest(client: TestClient) -> None:
     assert received[0].startswith("De: Banco <soporte@banco-seguro.com>")
     assert response.json() == {"result": {
         "riskLevel": "HIGH", "summary": "Pide la clave.", "explanation": "Podría ser un engaño.", "indicators": [],
-    }}
+    }, "recommendations": HIGH_RECOMMENDATIONS}
 
 
 def test_indicator_quoting_a_header_line_is_kept(client: TestClient) -> None:
@@ -139,7 +144,7 @@ def test_response_has_neither_topic_nor_masked_message(client: TestClient) -> No
 
     body = client.post("/analysis/email", json={"emailContent": RAW_EMAIL}).json()
 
-    assert set(body) == {"result"}
+    assert set(body) == {"result", "recommendations"}
     assert set(body["result"]) == {"riskLevel", "summary", "explanation", "indicators"}
 
 

@@ -17,6 +17,7 @@ from app.services.analysis import (
     analyze_email,
     analyze_message,
     analyze_url,
+    build_analysis_response,
     get_analyzer,
     get_message_saver,
 )
@@ -38,7 +39,7 @@ def post_analysis(
         sensitive_data=request.sensitive_data,
         save=save,
     )
-    return MessageAnalysisResponse(result=result)
+    return build_analysis_response(result)
 
 
 # US-4.2: no saver dependency, so an email can never be stored.
@@ -47,7 +48,7 @@ def post_email_analysis(
     request: EmailAnalysisRequest,
     analyzer: Annotated[Analyzer, Depends(get_analyzer)],
 ) -> MessageAnalysisResponse:
-    return MessageAnalysisResponse(result=analyze_email(request.email_content, analyzer))
+    return build_analysis_response(analyze_email(request.email_content, analyzer))
 
 
 # US-6.2: no saver dependency, so a link can never be stored.
@@ -56,7 +57,7 @@ def post_url_analysis(
     request: UrlAnalysisRequest,
     analyzer: Annotated[Analyzer, Depends(get_analyzer)],
 ) -> MessageAnalysisResponse:
-    return MessageAnalysisResponse(result=analyze_url(request.url, analyzer))
+    return build_analysis_response(analyze_url(request.url, analyzer))
 
 
 @router.get("/critical-messages", response_model=CriticalMessagesResponse)

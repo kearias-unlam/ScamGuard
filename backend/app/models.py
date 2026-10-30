@@ -20,6 +20,20 @@ Topic = Literal[
     "other",
 ]
 
+# US-7.1: fixed recommendation catalog (docs/requirements.md, Recommendations).
+RecommendationType = Literal[
+    "do_not_follow",
+    "do_not_share_data",
+    "do_not_pay",
+    "verify_official_channel",
+    "do_not_open_link",
+    "do_not_open_attachments",
+    "take_your_time",
+    "distrust_prizes",
+    "if_already_acted",
+    "stay_alert",
+]
+
 
 # US-4.2: largest accepted .eml content (docs/requirements.md, API contract).
 MAX_EMAIL_CONTENT_CHARS = 1_000_000
@@ -87,8 +101,16 @@ class UrlAnalysisRequest(CamelModel):
         return _require_non_blank(value, "url")
 
 
+class Recommendation(CamelModel):
+    type: RecommendationType
+    text: str  # Spanish text, set by the backend.
+
+
 class MessageAnalysisResponse(CamelModel):
     result: AnalysisResult
+    # US-7.1: next to result, not inside it, since AnalysisResult is also the model output shape. Required, so every
+    # endpoint sets it explicitly.
+    recommendations: list[Recommendation]
 
 
 class CriticalMessage(CamelModel):

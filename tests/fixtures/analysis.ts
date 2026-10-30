@@ -33,16 +33,17 @@ export const analysisResponse: MessageAnalysisResponse = {
       },
     ],
   },
+  recommendations: [],
 };
 
 // Same response as analysisResponse with a different risk level.
 export function analysisResponseWithRisk(riskLevel: RiskLevel): MessageAnalysisResponse {
-  return { result: { ...analysisResponse.result, riskLevel } };
+  return { ...analysisResponse, result: { ...analysisResponse.result, riskLevel } };
 }
 
 // Same response as analysisResponse with a different list of indicators.
 export function analysisResponseWithIndicators(indicators: Indicator[]): MessageAnalysisResponse {
-  return { result: { ...analysisResponse.result, indicators } };
+  return { ...analysisResponse, result: { ...analysisResponse.result, indicators } };
 }
 
 // Two indicators sharing a type, as returned by the real model.

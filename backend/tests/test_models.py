@@ -8,6 +8,7 @@ from app.models import (
     CriticalMessagesResponse,
     EmailAnalysisRequest,
     MessageAnalysisRequest,
+    MessageAnalysisResponse,
     UrlAnalysisRequest,
 )
 
@@ -82,3 +83,21 @@ def test_url_request_accepts_a_link_at_the_size_limit() -> None:
 def test_url_request_rejects_too_long_or_blank_links(url: str) -> None:
     with pytest.raises(ValidationError):
         UrlAnalysisRequest.model_validate({"url": url})
+
+
+# US-7.1: recommendations sit next to result, in camelCase, with a type from the fixed catalog.
+def test_analysis_response_serializes_recommendations_next_to_result() -> None:
+    result = {"riskLevel": "LOW", "summary": "Saludo.", "explanation": "Sin señales.", "indicators": []}
+    recommendation = {"type": "stay_alert", "text": "Desconfiá si te piden datos."}
+
+    response = MessageAnalysisResponse.model_validate({"result": result, "recommendations": [recommendation]})
+
+    assert response.model_dump(by_alias=True) == {"result": result, "recommendations": [recommendation]}
+
+
+def test_analysis_response_rejects_unknown_recommendation_type() -> None:
+    with pytest.raises(ValidationError):
+        MessageAnalysisResponse.model_validate({
+            "result": {"riskLevel": "LOW", "summary": "", "explanation": "", "indicators": []},
+            "recommendations": [{"type": "unknown", "text": "x"}],
+        })

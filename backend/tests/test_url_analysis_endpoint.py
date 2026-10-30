@@ -9,10 +9,15 @@ from app.ai.errors import AIServiceError
 from app.main import app
 from app.models import AnalysisResult, Indicator
 from app.services.analysis import get_analyzer, get_message_saver
+from app.services.recommendations import RECOMMENDATION_TEXTS
 from app.services.url_digest import build_url_digest
 from app.storage.critical_messages import list_critical_topics
 
 BUSY_DETAIL = "Los servidores están ocupados. Intentá de nuevo más tarde."
+# US-7.1: every stubbed result is HIGH, so these are the recommendations it gets.
+HIGH_RECOMMENDATIONS = [
+    {"type": type_, "text": RECOMMENDATION_TEXTS[type_]} for type_ in ("do_not_follow", "if_already_acted")
+]
 UNREADABLE_DETAIL = "No se pudo leer el link. Verificá que sea una dirección completa, por ejemplo https://ejemplo.com."
 URL = "https://mercadopago-seguridad.com/login?cuenta=suspendida"
 DOMAIN_LINE = "Dominio: mercadopago-seguridad.com"
@@ -58,7 +63,7 @@ def test_happy_path_analyzer_receives_the_digest(client: TestClient) -> None:
     assert response.json() == {"result": {
         "riskLevel": "HIGH", "summary": "Imita a una billetera.", "explanation": "Podría ser un engaño.",
         "indicators": [],
-    }}
+    }, "recommendations": HIGH_RECOMMENDATIONS}
 
 
 def test_indicator_quoting_a_digest_line_is_kept(client: TestClient) -> None:
@@ -127,7 +132,7 @@ def test_response_has_neither_topic_nor_masked_message(client: TestClient) -> No
 
     body = client.post("/analysis/url", json={"url": URL}).json()
 
-    assert set(body) == {"result"}
+    assert set(body) == {"result", "recommendations"}
     assert set(body["result"]) == {"riskLevel", "summary", "explanation", "indicators"}
 
 

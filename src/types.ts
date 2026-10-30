@@ -28,8 +28,27 @@ export interface AnalysisResult {
   indicators: Indicator[];
 }
 
+// US-7.1: chosen by the backend from a fixed catalog; never written by the AI.
+export type RecommendationType =
+  | 'do_not_follow'
+  | 'do_not_share_data'
+  | 'do_not_pay'
+  | 'verify_official_channel'
+  | 'do_not_open_link'
+  | 'do_not_open_attachments'
+  | 'take_your_time'
+  | 'distrust_prizes'
+  | 'if_already_acted'
+  | 'stay_alert';
+
+export interface Recommendation {
+  type: RecommendationType;
+  text: string; // Spanish text, set by the backend
+}
+
 export interface MessageAnalysisResponse {
   result: AnalysisResult;
+  recommendations: Recommendation[]; // US-7.1: next to result, since AnalysisResult is also the model output shape
 }
 
 export type Topic =
