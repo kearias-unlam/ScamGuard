@@ -17,6 +17,10 @@ BUSY_DETAIL = "Los servidores están ocupados. Intentá de nuevo más tarde."
 HIGH_RECOMMENDATIONS = [
     {"type": type_, "text": RECOMMENDATION_TEXTS[type_]} for type_ in ("do_not_follow", "if_already_acted")
 ]
+# US-7.1: the rules run on the checked result: all quotes dropped makes it UNDETERMINED.
+UNDETERMINED_RECOMMENDATIONS = [
+    {"type": "verify_official_channel", "text": RECOMMENDATION_TEXTS["verify_official_channel"]},
+]
 
 
 @pytest.fixture(autouse=True)
@@ -147,3 +151,16 @@ def test_request_without_share_fields_saves_nothing(client: TestClient) -> None:
 
     assert response.status_code == 200
     assert saved == []
+
+
+def test_recommendations_follow_the_checked_result(client: TestClient) -> None:
+    def stub(message: str) -> AnalyzedMessage:
+        indicator = Indicator(type="urgency", title="Urgencia", description="Presiona.", evidence="no está en el mensaje")
+        result = AnalysisResult(risk_level="HIGH", summary="Saludo.", explanation="Urgencia.", indicators=[indicator])
+        return AnalyzedMessage(result=result, topic="other", masked_message="Hola")
+
+    app.dependency_overrides[get_analyzer] = lambda: stub
+    body = client.post("/analysis", json={"message": "Hola"}).json()
+
+    assert body["result"]["riskLevel"] == "UNDETERMINED"
+    assert body["recommendations"] == UNDETERMINED_RECOMMENDATIONS

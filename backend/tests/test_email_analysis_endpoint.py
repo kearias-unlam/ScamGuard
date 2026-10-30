@@ -19,6 +19,10 @@ BUSY_DETAIL = "Los servidores están ocupados. Intentá de nuevo más tarde."
 HIGH_RECOMMENDATIONS = [
     {"type": type_, "text": RECOMMENDATION_TEXTS[type_]} for type_ in ("do_not_follow", "if_already_acted")
 ]
+# US-7.1: the rules run on the checked result: all quotes dropped makes it UNDETERMINED.
+UNDETERMINED_RECOMMENDATIONS = [
+    {"type": "verify_official_channel", "text": RECOMMENDATION_TEXTS["verify_official_channel"]},
+]
 UNREADABLE_DETAIL = "No se pudo leer el correo. Verificá que sea un archivo .eml de hasta 1 MB."
 AUTH_LINE = "Autenticación: spf=fail dkim=fail dmarc=fail"
 
@@ -158,3 +162,12 @@ def test_nothing_is_saved(client: TestClient) -> None:
     assert response.status_code == 200
     assert saved == []
     assert list_critical_topics() == []
+
+
+def test_recommendations_follow_the_checked_result(client: TestClient) -> None:
+    app.dependency_overrides[get_analyzer] = lambda: _stub([_indicator("sender_mismatch", "Responder a: otro@gmail.com")])
+
+    body = client.post("/analysis/email", json={"emailContent": RAW_EMAIL}).json()
+
+    assert body["result"]["riskLevel"] == "UNDETERMINED"
+    assert body["recommendations"] == UNDETERMINED_RECOMMENDATIONS

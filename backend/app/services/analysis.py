@@ -1,15 +1,17 @@
 """Business logic for message analysis: run the injected AI analyzer, apply the evidence check and the undetermined
 rule, and save the message to the critical messages panel when the user shared it (US-3.3). Emails (US-4.2) and links
-(US-6.2) are analyzed through their digest with the same rules and are never saved."""
+(US-6.2) are analyzed through their digest with the same rules and are never saved. Every response carries the
+recommendations for its checked result (US-7.1)."""
 
 import logging
 from collections.abc import Callable
 
 from app.ai.analyzer import AnalyzedMessage, analyze_with_model
-from app.models import AnalysisResult, Topic
+from app.models import AnalysisResult, MessageAnalysisResponse, Topic
 from app.normalization import normalize_text
 from app.services.email_digest import build_email_digest
 from app.services.masking import mask_personal_data
+from app.services.recommendations import build_recommendations
 from app.services.url_digest import build_url_digest
 from app.storage.critical_messages import StorageError, save_critical_message
 
@@ -90,3 +92,8 @@ def analyze_url(url: str, analyzer: Analyzer) -> AnalysisResult:
     not a valid http or https link. Links are never opened or shared, so nothing is ever saved."""
     digest = build_url_digest(url)
     return analyze_message(digest, analyzer, share_in_panel=False)
+
+
+def build_analysis_response(result: AnalysisResult) -> MessageAnalysisResponse:
+    """US-7.1: the response of the three analysis endpoints, with the recommendations for the checked result."""
+    return MessageAnalysisResponse(result=result, recommendations=build_recommendations(result))
