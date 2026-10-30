@@ -419,14 +419,14 @@ Tasks:
 
 ## Feature 8 - Carga y resultado en una columna centrada
 
-ADO ID: pending
+ADO ID: #91
 
 La página principal deja las dos columnas de Feature 5: la carga del mensaje y la columna "Resultado del análisis" quedan una debajo de la otra, centradas y angostas, para leer de arriba hacia abajo sin recorrer toda la pantalla. En pantallas anchas la columna ocupa como máximo un tercio del ancho; en pantallas medianas tiene un mínimo para que las pestañas y el formulario se puedan usar, y en pantallas angostas ocupa todo el ancho disponible (ver [Visual design](#visual-design)). Solo cambia la disposición: los textos, los roles, los `data-testid`, el panel, el backend y la API no cambian.
 
 ### US-8.1 Ver el resultado debajo de la carga
 Como usuario quiero ver el resultado del análisis debajo de lo que cargué para leer la página de arriba hacia abajo.
 
-ADO ID: pending · Status: pending
+ADO ID: #92 · Status: pending
 
 Vale para cualquier ancho de pantalla y para todos los estados de la columna "Resultado del análisis" (vacío, cargando, error o resultado).
 
@@ -435,12 +435,12 @@ Criterios de aceptación:
 2. En una pantalla de 375 px de ancho, la carga y la columna "Resultado del análisis" ocupan el mismo ancho, una debajo de la otra.
 
 Tasks:
-- #T1 Frontend: stack the input card and the result column. In `src/app/globals.css`, `.home` stops being a two-column grid from 64rem: the hero, the input card (`.input-card`), and the result column (`.result-column`) are one column at every width, in that order (the DOM order does not change). Drop the `@media (min-width: 64rem)` rules for `.home` and `.hero`. No text, role, element type, or `data-testid` changes. Add `tests/columna-centrada.spec.ts` for AC1 and AC2, measuring with `boundingBox()` the tab list (`getByRole('tablist', { name: 'Método de carga' })`, which spans the input card) and the result column (`getByRole('complementary', { name: 'Resultado del análisis' })`), with `page.setViewportSize`; confirm both locators with a page snapshot first. The rest of the suite stays green.
+- #94 Frontend: stack the input card and the result column. In `src/app/globals.css`, `.home` stops being a two-column grid from 64rem: the hero, the input card (`.input-card`), and the result column (`.result-column`) are one column at every width, in that order (the DOM order does not change). Drop the `@media (min-width: 64rem)` rules for `.home` and `.hero`. No text, role, element type, or `data-testid` changes. Add `tests/columna-centrada.spec.ts` for AC1 and AC2, measuring with `boundingBox()` the tab list (`getByRole('tablist', { name: 'Método de carga' })`, which spans the input card) and the result column (`getByRole('complementary', { name: 'Resultado del análisis' })`), with `page.setViewportSize`; confirm both locators with a page snapshot first. The rest of the suite stays green.
 
 ### US-8.2 Leer la carga y el resultado en una columna angosta y centrada
 Como usuario quiero que la carga y el resultado ocupen como máximo un tercio de la pantalla y estén centrados, para leerlos sin mover la vista de un lado a otro.
 
-ADO ID: pending · Status: pending
+ADO ID: #93 · Status: pending
 
 La presentación ("Detector de estafas", el título, la introducción y "Ver mensajes críticos") también queda centrada sobre la columna.
 
@@ -450,7 +450,7 @@ Criterios de aceptación:
 3. En una pantalla de 375 px de ancho, la carga y la columna "Resultado del análisis" ocupan todo el ancho disponible.
 
 Tasks:
-- #T2 Frontend: narrow centered column and centered hero. In `src/app/globals.css`, `.home` centers its children horizontally; `.input-card` and `.result-column` get `width: min(100%, max(33.333vw, 30rem))`, as documented in [Visual design](#visual-design); the hero centers its text, eyebrow, and `panel-link`. No text, role, element type, or `data-testid` changes. WCAG AA unchanged. Add the US-8.2 AC1 to AC3 tests to `tests/columna-centrada.spec.ts` (same locators as #T1; AC2 compares the left gap with the right gap within 1 px; AC3 compares the width with the page width minus the `main` side padding). Verification: the full Playwright suite stays green; attach screenshots of the home page at 1920, 1280, and 375 px wide, empty and with a result. Depends on #T1.
+- #95 Frontend: narrow centered column and centered hero. In `src/app/globals.css`, `.home` centers its children horizontally; `.input-card` and `.result-column` get `width: min(100%, max(33.333vw, 30rem))`, as documented in [Visual design](#visual-design); the hero centers its text, eyebrow, and `panel-link`. No text, role, element type, or `data-testid` changes. WCAG AA unchanged. Add the US-8.2 AC1 to AC3 tests to `tests/columna-centrada.spec.ts` (same locators as #94; AC2 compares the left gap with the right gap within 1 px; AC3 compares the width with the page width minus the `main` side padding). Verification: the full Playwright suite stays green; attach screenshots of the home page at 1920, 1280, and 375 px wide, empty and with a result. Depends on #94.
 
 ## UI texts
 
