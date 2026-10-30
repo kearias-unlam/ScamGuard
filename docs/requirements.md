@@ -265,7 +265,7 @@ Como usuario quiero una página clara y ordenada para analizar un mensaje y leer
 
 ADO ID: #61 · Status: done
 
-La página tiene un encabezado con el logo y "ScamGuard", una presentación ("Detector de estafas", el título y una introducción) con el enlace "Ver mensajes críticos", y dos columnas en pantallas anchas: a la izquierda la carga del mensaje y a la derecha la columna "Resultado del análisis" (estado de carga, error, estado vacío o resultado). En pantallas angostas las columnas quedan una debajo de la otra. Cada indicador muestra un ícono decorativo según su `type`.
+La página tiene un encabezado con el logo y "ScamGuard", una presentación ("Detector de estafas", el título y una introducción) con el enlace "Ver mensajes críticos", y dos columnas en pantallas anchas: a la izquierda la carga del mensaje y a la derecha la columna "Resultado del análisis" (estado de carga, error, estado vacío o resultado). En pantallas angostas las columnas quedan una debajo de la otra. Desde US-8.1 la carga y el resultado van siempre uno debajo del otro, en una columna centrada (Feature 8). Cada indicador muestra un ícono decorativo según su `type`.
 
 Criterios de aceptación:
 1. La página muestra el encabezado "ScamGuard" y el título "¿Ese mensaje te genera dudas?".
@@ -376,7 +376,7 @@ Criterios de aceptación:
 Tasks:
 - #75 Backend: URL digest. `build_url_digest(raw: str) -> str` in `backend/app/services/url_digest.py` with the standard library (`urllib.parse`, `ipaddress`, and the `idna` codec; no new dependency), producing the format in [URL digest](#url-digest). Define a typed `InvalidUrlError` and raise it for the invalid cases listed there. Pytest: full `https` link; link without scheme (`Protocolo: ninguno`); `http`; IPv4 and IPv6 hosts; userinfo before `@`; explicit port; punycode host shown decoded with its ASCII form; known shortener; path and query listed; empty path and query omit their lines; invalid cases (spaces, other scheme, no host, host without a dot) raise `InvalidUrlError`.
 - #76 AI prompt: add `lookalike_domain` and `obfuscated_link` to `IndicatorType` and `INSTRUCTIONS`, and document them in the [AI contract](#ai-contract). The prompt describes the URL digest: only the `Enlace:` line comes from the user; the model judges only the address (it never saw the page), `suspicious_link` and `impersonation` also apply, the email-only types do not, and `maskedMessage` is `""` for a URL digest. Pytest: the output schema `type` enum has the 13 indicator types.
-- #T7 AI prompt: risk level by severity. Add the [risk level criteria](#ai-contract) to `INSTRUCTIONS`, so a link with one or two strong indicators can be `HIGH` instead of defaulting to `MEDIUM`. The criteria apply to every input (message, email digest, URL digest). Pytest: the prompt states that the level follows severity, not count, and that caution never lowers it.
+- #90 AI prompt: risk level by severity. Add the [risk level criteria](#ai-contract) to `INSTRUCTIONS`, so a link with one or two strong indicators can be `HIGH` instead of defaulting to `MEDIUM`. The criteria apply to every input (message, email digest, URL digest). Pytest: the prompt states that the level follows severity, not count, and that caution never lowers it.
 - #80 Frontend: link indicators. `IndicatorIcon` gets icons for `lookalike_domain` and `obfuscated_link`. Add `tests/senales-link.spec.ts` for AC1 (mocked `lookalike_domain` indicator whose evidence is the `Dominio:` line). Depends on #79.
 
 ## Feature 7 - Recomendaciones de acción
@@ -416,6 +416,41 @@ Criterios de aceptación:
 Tasks:
 - #88 Backend: recommendations by indicator type. Extend `build_recommendations` with the indicator rules in [Recommendations](#recommendations): each recommendation appears once, in catalog order, whatever the number of indicators that trigger it. Pytest: `personal_data_request` adds `do_not_share_data`; `suspicious_link`, `lookalike_domain`, `obfuscated_link`, and `deceptive_link` together add `do_not_open_link` once; `impersonation` with `MEDIUM` adds `verify_official_channel` once; `writing_errors` adds nothing; dropped indicators (evidence check) add nothing. Depends on #85.
 - #89 Frontend: indicator recommendations test. Add `tests/recomendaciones-indicadores.spec.ts` for AC1 (mocked `personal_data_request` indicator with `HIGH` and the matching recommendations). Depends on #86.
+
+## Feature 8 - Carga y resultado en una columna centrada
+
+ADO ID: pending
+
+La página principal deja las dos columnas de Feature 5: la carga del mensaje y la columna "Resultado del análisis" quedan una debajo de la otra, centradas y angostas, para leer de arriba hacia abajo sin recorrer toda la pantalla. En pantallas anchas la columna ocupa como máximo un tercio del ancho; en pantallas medianas tiene un mínimo para que las pestañas y el formulario se puedan usar, y en pantallas angostas ocupa todo el ancho disponible (ver [Visual design](#visual-design)). Solo cambia la disposición: los textos, los roles, los `data-testid`, el panel, el backend y la API no cambian.
+
+### US-8.1 Ver el resultado debajo de la carga
+Como usuario quiero ver el resultado del análisis debajo de lo que cargué para leer la página de arriba hacia abajo.
+
+ADO ID: pending · Status: pending
+
+Vale para cualquier ancho de pantalla y para todos los estados de la columna "Resultado del análisis" (vacío, cargando, error o resultado).
+
+Criterios de aceptación:
+1. En una pantalla de 1920 px de ancho, la columna "Resultado del análisis" se muestra debajo de la carga del mensaje, sin superponerse.
+2. En una pantalla de 375 px de ancho, la carga y la columna "Resultado del análisis" ocupan el mismo ancho, una debajo de la otra.
+
+Tasks:
+- #T1 Frontend: stack the input card and the result column. In `src/app/globals.css`, `.home` stops being a two-column grid from 64rem: the hero, the input card (`.input-card`), and the result column (`.result-column`) are one column at every width, in that order (the DOM order does not change). Drop the `@media (min-width: 64rem)` rules for `.home` and `.hero`. No text, role, element type, or `data-testid` changes. Add `tests/columna-centrada.spec.ts` for AC1 and AC2, measuring with `boundingBox()` the tab list (`getByRole('tablist', { name: 'Método de carga' })`, which spans the input card) and the result column (`getByRole('complementary', { name: 'Resultado del análisis' })`), with `page.setViewportSize`; confirm both locators with a page snapshot first. The rest of the suite stays green.
+
+### US-8.2 Leer la carga y el resultado en una columna angosta y centrada
+Como usuario quiero que la carga y el resultado ocupen como máximo un tercio de la pantalla y estén centrados, para leerlos sin mover la vista de un lado a otro.
+
+ADO ID: pending · Status: pending
+
+La presentación ("Detector de estafas", el título, la introducción y "Ver mensajes críticos") también queda centrada sobre la columna.
+
+Criterios de aceptación:
+1. En una pantalla de 1920 px de ancho, la carga y la columna "Resultado del análisis" tienen el mismo ancho, de como máximo un tercio de la pantalla (640 px).
+2. En una pantalla de 1920 px de ancho, la carga y la columna "Resultado del análisis" están centradas: el espacio libre a la izquierda y a la derecha es el mismo.
+3. En una pantalla de 375 px de ancho, la carga y la columna "Resultado del análisis" ocupan todo el ancho disponible.
+
+Tasks:
+- #T2 Frontend: narrow centered column and centered hero. In `src/app/globals.css`, `.home` centers its children horizontally; `.input-card` and `.result-column` get `width: min(100%, max(33.333vw, 30rem))`, as documented in [Visual design](#visual-design); the hero centers its text, eyebrow, and `panel-link`. No text, role, element type, or `data-testid` changes. WCAG AA unchanged. Add the US-8.2 AC1 to AC3 tests to `tests/columna-centrada.spec.ts` (same locators as #T1; AC2 compares the left gap with the right gap within 1 px; AC3 compares the width with the page width minus the `main` side padding). Verification: the full Playwright suite stays green; attach screenshots of the home page at 1920, 1280, and 375 px wide, empty and with a result. Depends on #T1.
 
 ## UI texts
 
@@ -504,7 +539,8 @@ Plain CSS in `src/app/globals.css` (built into Next.js; no CSS framework). Color
 
 - The risk badge color is selected with `[data-risk-level="..."]` on the `dd`; the Spanish label is always shown, so color is never the only signal.
 - All text/background pairs meet WCAG AA (4.5:1); focus is always visible (`:focus-visible` outline, 2px `--color-primary`, 2px offset).
-- Layout (Feature 5): full-width header with an inner max-width of 77.5rem; `main` with the same max-width, centered, with 1.25rem side padding (2rem from 40rem). The home page has two columns from 64rem (form about 54%, result column at least 24rem) and one column below; the panel stays a single column.
+- Layout (Feature 5): full-width header with an inner max-width of 77.5rem; `main` with the same max-width, centered, with 1.25rem side padding (2rem from 40rem). The panel stays a single column.
+- Home layout (Feature 8, replaces the two columns of Feature 5): the hero, the input card, and the result column are stacked in one column, centered horizontally, with the result below the input card at every screen width. The input card and the result column share the same width, `min(100%, max(33.333vw, 30rem))`: one third of the viewport on wide screens, never narrower than 30rem so the tabs and the form stay usable (so below a 90rem, 1440 px, viewport the column is 30rem, wider than one third), and the full available width when the screen is narrower than that. The hero text, eyebrow, and `panel-link` are centered above the column.
 - Risk badge colors keep the `--color-risk-*` tokens; the indicator icon backgrounds use `--color-primary-soft`, since an indicator has no level of its own.
 
 ## API contract
