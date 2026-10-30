@@ -440,7 +440,7 @@ Tasks:
 ### US-8.2 Leer la carga y el resultado en una columna angosta y centrada
 Como usuario quiero que la carga y el resultado ocupen como máximo un tercio de la pantalla y estén centrados, para leerlos sin mover la vista de un lado a otro.
 
-ADO ID: #93 · Status: pending
+ADO ID: #93 · Status: done
 
 La presentación ("Detector de estafas", el título, la introducción y "Ver mensajes críticos") también queda centrada sobre la columna.
 
