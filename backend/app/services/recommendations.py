@@ -1,5 +1,6 @@
-"""US-7.1: recommendations chosen from a fixed catalog (docs/requirements.md, Recommendations). Never written by the
-AI, so they never repeat data from the message. They run on the checked result, after the evidence check."""
+"""US-7.1, US-7.2: recommendations chosen from a fixed catalog (docs/requirements.md, Recommendations) by risk level
+and indicator type. Never written by the AI, so they never repeat data from the message. They run on the checked
+result, after the evidence check, so a dropped indicator never adds one."""
 
 from app.models import AnalysisResult, Recommendation, RecommendationType, RiskLevel
 
@@ -37,8 +38,31 @@ _RISK_LEVEL_RULES: dict[RiskLevel, frozenset[RecommendationType]] = {
 }
 
 
+# US-7.2: one recommendation per indicator type. Keyed by plain str like Indicator.type, so services do not depend on
+# the AI layer; an unknown type adds nothing. writing_errors has none: a weak sign, covered by the risk level.
+_INDICATOR_RULES: dict[str, RecommendationType] = {
+    "personal_data_request": "do_not_share_data",
+    "payment_request": "do_not_pay",
+    "impersonation": "verify_official_channel",
+    "sender_mismatch": "verify_official_channel",
+    "failed_authentication": "verify_official_channel",
+    "suspicious_link": "do_not_open_link",
+    "lookalike_domain": "do_not_open_link",
+    "obfuscated_link": "do_not_open_link",
+    "deceptive_link": "do_not_open_link",
+    "dangerous_attachment": "do_not_open_attachments",
+    "urgency": "take_your_time",
+    "unrealistic_promise": "distrust_prizes",
+}
+
+
 def _triggered_types(result: AnalysisResult) -> set[RecommendationType]:
-    return set(_RISK_LEVEL_RULES[result.risk_level])
+    """Union of the risk level rule and the indicator rules; build_recommendations keeps each type once."""
+    triggered = set(_RISK_LEVEL_RULES[result.risk_level])
+    for indicator in result.indicators:
+        if (type_ := _INDICATOR_RULES.get(indicator.type)) is not None:
+            triggered.add(type_)
+    return triggered
 
 
 def build_recommendations(result: AnalysisResult) -> list[Recommendation]:

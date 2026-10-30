@@ -8,19 +8,20 @@ from app.ai import analyzer as ai_analyzer
 from app.ai.analyzer import AnalyzedMessage, analyze_with_model
 from app.ai.errors import AIServiceError
 from app.main import app
-from app.models import AnalysisResult, Indicator
+from app.models import AnalysisResult, Indicator, RecommendationType
 from app.services.analysis import get_analyzer, get_message_saver
 from app.services.recommendations import RECOMMENDATION_TEXTS
 
 BUSY_DETAIL = "Los servidores están ocupados. Intentá de nuevo más tarde."
-# US-7.1: every stubbed result is HIGH, so these are the recommendations it gets.
-HIGH_RECOMMENDATIONS = [
-    {"type": type_, "text": RECOMMENDATION_TEXTS[type_]} for type_ in ("do_not_follow", "if_already_acted")
-]
 # US-7.1: the rules run on the checked result: all quotes dropped makes it UNDETERMINED.
 UNDETERMINED_RECOMMENDATIONS = [
     {"type": "verify_official_channel", "text": RECOMMENDATION_TEXTS["verify_official_channel"]},
 ]
+
+
+def _recommendations(*types: RecommendationType) -> list[dict[str, str]]:
+    """US-7.2: expected recommendations in catalog order, with their catalog texts."""
+    return [{"type": type_, "text": RECOMMENDATION_TEXTS[type_]} for type_ in types]
 
 
 @pytest.fixture(autouse=True)
@@ -51,7 +52,7 @@ def test_returns_camel_case_result_from_analyzer(client: TestClient) -> None:
         "summary": "Pide transferir dinero.",
         "explanation": "Urgencia y pedido de pago.",
         "indicators": [{"type": "urgency", "title": "Urgencia", "description": "Presiona al usuario.", "evidence": "hoy mismo"}],
-    }, "recommendations": HIGH_RECOMMENDATIONS}
+    }, "recommendations": _recommendations("do_not_follow", "take_your_time", "if_already_acted")}
     assert received == ["Transferí hoy mismo"]
 
 
@@ -103,7 +104,7 @@ def test_default_dependency_returns_checked_camel_case_result(client: TestClient
         "explanation": "Podría ser un intento de robo de cuenta.",
         "indicators": [{"type": "personal_data_request", "title": "Pedido de código",
                         "description": "Solicita un código de verificación.", "evidence": "Pasame el CÓDIGO"}],
-    }, "recommendations": HIGH_RECOMMENDATIONS}
+    }, "recommendations": _recommendations("do_not_follow", "do_not_share_data", "if_already_acted")}
 
 
 def test_default_dependency_invalid_model_output_returns_503(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
