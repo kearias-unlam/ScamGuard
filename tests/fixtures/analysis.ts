@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 
-import type { Indicator, MessageAnalysisResponse, RiskLevel } from '../../src/types';
+import type { Indicator, MessageAnalysisResponse, Recommendation, RiskLevel } from '../../src/types';
 
 // US-5.2: the email form lives in its own tab, so email tests open it first.
 export async function openEmailTab(page: Page): Promise<void> {
@@ -44,6 +44,26 @@ export function analysisResponseWithRisk(riskLevel: RiskLevel): MessageAnalysisR
 // Same response as analysisResponse with a different list of indicators.
 export function analysisResponseWithIndicators(indicators: Indicator[]): MessageAnalysisResponse {
   return { ...analysisResponse, result: { ...analysisResponse.result, indicators } };
+}
+
+// US-7.1: two recommendations from the catalog, in catalog order, as sent for a HIGH result.
+export const sampleRecommendations: Recommendation[] = [
+  {
+    type: 'do_not_follow',
+    text: 'No respondas, no hagas clic y no sigas las instrucciones del mensaje.',
+  },
+  {
+    type: 'if_already_acted',
+    text: 'Si ya compartiste datos o hiciste un pago, comunicate cuanto antes con tu banco y cambiá tus claves.',
+  },
+];
+
+// Same response as analysisResponse with the given recommendations and, optionally, indicators.
+export function analysisResponseWithRecommendations(
+  recommendations: Recommendation[],
+  indicators: Indicator[] = analysisResponse.result.indicators,
+): MessageAnalysisResponse {
+  return { result: { ...analysisResponse.result, indicators }, recommendations };
 }
 
 // Two indicators sharing a type, as returned by the real model.

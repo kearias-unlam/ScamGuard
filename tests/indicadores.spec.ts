@@ -28,7 +28,7 @@ test('cada indicador se muestra en analysis-indicator con su título y descripci
 
   await analyzeWithIndicators(page, sameTypeIndicators);
 
-  const items = page.getByTestId('analysis-result').getByRole('listitem');
+  const items = page.getByTestId('analysis-indicators').getByRole('listitem');
   await expect(items).toHaveCount(sameTypeIndicators.length);
   for (const [index, indicator] of sameTypeIndicators.entries()) {
     const item = items.nth(index);
@@ -44,5 +44,5 @@ test('si no se detectan indicadores se muestra "No se detectaron indicadores."',
 
   const result = page.getByTestId('analysis-result');
   await expect(result.getByTestId('analysis-indicators-empty')).toHaveText(EMPTY_TEXT);
-  await expect(result.getByRole('list')).toHaveCount(0);
+  await expect(result.getByTestId('analysis-indicators')).toHaveCount(0);
 });

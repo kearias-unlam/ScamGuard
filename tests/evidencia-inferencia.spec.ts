@@ -22,7 +22,7 @@ async function analyzeWithIndicators(page: Page, indicators: Indicator[]): Promi
 test('cada indicador muestra la cita del mensaje en analysis-indicator-evidence, separada de la descripción', async ({ page }) => {
   await analyzeWithIndicators(page, sameTypeIndicators);
 
-  const items = page.getByTestId('analysis-result').getByRole('listitem');
+  const items = page.getByTestId('analysis-indicators').getByRole('listitem');
   await expect(items).toHaveCount(sameTypeIndicators.length);
   for (const [index, indicator] of sameTypeIndicators.entries()) {
     const evidence = items.nth(index).getByTestId('analysis-indicator-evidence');

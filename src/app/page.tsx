@@ -16,7 +16,7 @@ import { EmailAnalysisForm } from '@/components/EmailAnalysisForm';
 import { MessageAnalysisForm } from '@/components/MessageAnalysisForm';
 import { UrlAnalysisForm } from '@/components/UrlAnalysisForm';
 import { ApiError, postAnalysis, postEmailAnalysis, postUrlAnalysis } from '@/lib/api';
-import type { AnalysisResult, MessageAnalysisRequest, MessageAnalysisResponse } from '@/types';
+import type { MessageAnalysisRequest, MessageAnalysisResponse } from '@/types';
 
 // What "Analizar" sent last, so "Reintentar" resends it (US-4.2, US-6.2). The email keeps the chosen File and the
 // link its submitted text, so a retry resends them even if the form changed since.
@@ -59,7 +59,8 @@ export default function HomePage() {
   const [status, setStatus] = useState<AnalysisRequestStatus>('idle');
   // Text of the unreadable email or link error (shown without retry), or null for the busy error.
   const [unreadableText, setUnreadableText] = useState<string | null>(null);
-  const [result, setResult] = useState<AnalysisResult | null>(null);
+  // The whole response, so the result and its recommendations (US-7.1) are always set and cleared together.
+  const [analysis, setAnalysis] = useState<MessageAnalysisResponse | null>(null);
 
   // US-5.2: the form state lives here, so changing tabs clears nothing.
   function handleTabChange(nextTab: AnalysisInputTab): void {
@@ -118,11 +119,11 @@ export default function HomePage() {
   // Shared by submit and retry; clears the previous result so a failure never shows stale data.
   async function runAnalysis(submitted: SubmittedRequest): Promise<void> {
     setLastSubmittedRequest(submitted);
-    setResult(null);
+    setAnalysis(null);
     setStatus('loading');
     try {
       const response = await sendRequest(submitted);
-      setResult(response.result);
+      setAnalysis(response);
       setStatus('success');
     } catch (error) {
       setUnreadableText(unreadableErrorText(submitted, error));
@@ -205,7 +206,11 @@ export default function HomePage() {
             onRetry={handleRetry}
           />
         ) : null}
-        <AnalysisResultView result={result} isIdle={status === 'idle'} />
+        <AnalysisResultView
+          result={analysis?.result ?? null}
+          recommendations={analysis?.recommendations ?? []}
+          isIdle={status === 'idle'}
+        />
       </aside>
     </main>
   );

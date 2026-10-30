@@ -1,17 +1,19 @@
 import { EmptyState } from '@/components/EmptyState';
 import { IndicatorList } from '@/components/IndicatorList';
+import { RecommendationList } from '@/components/RecommendationList';
 import { RiskLevelView } from '@/components/RiskLevelView';
-import type { AnalysisResult } from '@/types';
+import type { AnalysisResult, Recommendation } from '@/types';
 
 // NFR-01: the result is decision support, not a fraud confirmation.
 const DISCLAIMER_TEXT = 'Este resultado es una ayuda para decidir, no una confirmación de fraude.';
 
 interface AnalysisResultViewProps {
   result: AnalysisResult | null;
+  recommendations: Recommendation[];
   isIdle: boolean;
 }
 
-export function AnalysisResultView({ result, isIdle }: AnalysisResultViewProps) {
+export function AnalysisResultView({ result, recommendations, isIdle }: AnalysisResultViewProps) {
   if (result === null) {
     // The empty state is shown only before the first analysis.
     return isIdle ? <EmptyState /> : null;
@@ -31,6 +33,7 @@ export function AnalysisResultView({ result, isIdle }: AnalysisResultViewProps) 
         </span>
       </div>
       <IndicatorList indicators={result.indicators} />
+      <RecommendationList recommendations={recommendations} />
       <p role="note" className="disclaimer" data-testid="analysis-disclaimer">
         {DISCLAIMER_TEXT}
       </p>
