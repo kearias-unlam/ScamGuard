@@ -555,8 +555,9 @@ a.button {
   background: var(--color-risk-undetermined-bg);
 }
 
-/* Indicators */
-.indicator-list {
+/* Indicators; the recommendations list (US-7.1) is spaced the same way. */
+.indicator-list,
+.recommendation-list {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -573,7 +574,8 @@ a.button {
   gap: 0.75rem;
 }
 
-.indicators-header h2 {
+.indicators-header h2,
+.recommendations-heading {
   margin: 0;
   font-size: 1rem;
   font-weight: 800;
@@ -644,6 +646,28 @@ a.button {
 /* Indicators sit on the soft surface, so their quote uses the plain surface to stand out. */
 .indicator .evidence {
   background: var(--color-surface);
+}
+
+/* Recommendations (US-7.1): a soft block per item with a decorative check, like the indicators. */
+.recommendation {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  color: var(--color-text);
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+}
+
+.recommendation__icon {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0.25rem;
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+  border-radius: 999px;
 }
 
 /* Decision-support disclaimer; also the panel privacy notice. */

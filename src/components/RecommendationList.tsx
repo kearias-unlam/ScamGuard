@@ -1,3 +1,4 @@
+import { CheckIcon } from '@/components/CheckIcon';
 import type { Recommendation } from '@/types';
 
 interface RecommendationListProps {
@@ -16,6 +17,7 @@ export function RecommendationList({ recommendations }: RecommendationListProps)
       <ul className="recommendation-list" data-testid="analysis-recommendations">
         {recommendations.map((recommendation, index) => (
           <li key={`${recommendation.type}-${index}`} className="recommendation" data-testid="analysis-recommendation">
+            <CheckIcon />
             <span>{recommendation.text}</span>
           </li>
         ))}
