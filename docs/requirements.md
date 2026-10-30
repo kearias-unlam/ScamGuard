@@ -388,7 +388,7 @@ Además del resultado, ScamGuard sugiere qué hacer: por ejemplo, no compartir c
 ### US-7.1 Ver qué hacer con el resultado
 Como usuario quiero ver recomendaciones concretas según el resultado del análisis para saber cómo actuar.
 
-ADO ID: #82 · Status: pending
+ADO ID: #82 · Status: done
 
 La sección "Qué podés hacer" está dentro de `analysis-result`, después de los indicadores y antes del aviso. Todo resultado tiene al menos una recomendación, también el de riesgo bajo o indeterminado.
 
