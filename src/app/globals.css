@@ -138,7 +138,7 @@ h1 {
   }
 }
 
-/* Home layout (US-5.1): hero on top, form column and result column side by side on wide screens. */
+/* Home layout (US-8.1): hero, input card, and result column stacked in one column at every width. */
 .home {
   display: grid;
   gap: 1.5rem;
@@ -218,17 +218,6 @@ h1 {
 
 .result-column__header p {
   font-size: 0.875rem;
-}
-
-@media (min-width: 64rem) {
-  .home {
-    grid-template-columns: minmax(0, 1.08fr) minmax(24rem, 0.92fr);
-    align-items: start;
-  }
-
-  .hero {
-    grid-column: 1 / -1;
-  }
 }
 
 p {
