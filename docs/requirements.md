@@ -426,7 +426,7 @@ La página principal deja las dos columnas de Feature 5: la carga del mensaje y 
 ### US-8.1 Ver el resultado debajo de la carga
 Como usuario quiero ver el resultado del análisis debajo de lo que cargué para leer la página de arriba hacia abajo.
 
-ADO ID: #92 · Status: pending
+ADO ID: #92 · Status: done
 
 Vale para cualquier ancho de pantalla y para todos los estados de la columna "Resultado del análisis" (vacío, cargando, error o resultado).
 
