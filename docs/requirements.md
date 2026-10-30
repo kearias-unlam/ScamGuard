@@ -406,7 +406,7 @@ Tasks:
 ### US-7.2 Recibir recomendaciones según las señales detectadas
 Como usuario quiero que las recomendaciones respondan a las señales que se encontraron para saber qué evitar en mi caso.
 
-ADO ID: #83 · Status: pending
+ADO ID: #83 · Status: done
 
 Cada tipo de indicador puede sumar una recomendación propia (por ejemplo, un pedido de datos suma "No compartas claves, códigos ni datos de tarjeta o de cuenta..."). Si varias señales llevan a la misma recomendación, se muestra una sola vez. La selección ocurre en el backend y se cubre con Pytest.
 
