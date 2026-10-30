@@ -74,3 +74,12 @@ def test_instructions_describe_the_url_digest() -> None:
     assert "Enlace:" in INSTRUCTIONS
     assert "use them only when the message is a URL digest" in INSTRUCTIONS
     assert "For a URL digest, return an empty string" in INSTRUCTIONS
+
+
+# US-6.3: the risk level follows the severity of the indicators, not their count.
+def test_instructions_define_risk_level_by_severity() -> None:
+    assert "based on how severe the indicators are, not on how many there are" in INSTRUCTIONS
+    assert "One strong sign is enough for HIGH" in INSTRUCTIONS
+    assert "never lower riskLevel to hedge" in INSTRUCTIONS
+    for level in ("  - HIGH:", "  - MEDIUM:", "  - LOW:"):
+        assert level in INSTRUCTIONS

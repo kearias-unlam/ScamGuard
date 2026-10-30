@@ -376,7 +376,46 @@ Criterios de aceptación:
 Tasks:
 - #75 Backend: URL digest. `build_url_digest(raw: str) -> str` in `backend/app/services/url_digest.py` with the standard library (`urllib.parse`, `ipaddress`, and the `idna` codec; no new dependency), producing the format in [URL digest](#url-digest). Define a typed `InvalidUrlError` and raise it for the invalid cases listed there. Pytest: full `https` link; link without scheme (`Protocolo: ninguno`); `http`; IPv4 and IPv6 hosts; userinfo before `@`; explicit port; punycode host shown decoded with its ASCII form; known shortener; path and query listed; empty path and query omit their lines; invalid cases (spaces, other scheme, no host, host without a dot) raise `InvalidUrlError`.
 - #76 AI prompt: add `lookalike_domain` and `obfuscated_link` to `IndicatorType` and `INSTRUCTIONS`, and document them in the [AI contract](#ai-contract). The prompt describes the URL digest: only the `Enlace:` line comes from the user; the model judges only the address (it never saw the page), `suspicious_link` and `impersonation` also apply, the email-only types do not, and `maskedMessage` is `""` for a URL digest. Pytest: the output schema `type` enum has the 13 indicator types.
+- #T7 AI prompt: risk level by severity. Add the [risk level criteria](#ai-contract) to `INSTRUCTIONS`, so a link with one or two strong indicators can be `HIGH` instead of defaulting to `MEDIUM`. The criteria apply to every input (message, email digest, URL digest). Pytest: the prompt states that the level follows severity, not count, and that caution never lowers it.
 - #80 Frontend: link indicators. `IndicatorIcon` gets icons for `lookalike_domain` and `obfuscated_link`. Add `tests/senales-link.spec.ts` for AC1 (mocked `lookalike_domain` indicator whose evidence is the `Dominio:` line). Depends on #79.
+
+## Feature 7 - Recomendaciones de acción
+
+ADO ID: #81
+
+Además del resultado, ScamGuard sugiere qué hacer: por ejemplo, no compartir claves, no abrir el link o verificar por un canal oficial. Las recomendaciones no las escribe la IA: el backend las elige de un catálogo fijo según el nivel de riesgo final y los tipos de indicador que pasaron el chequeo de evidencia (ver [Recommendations](#recommendations)). Así nunca repiten datos del mensaje (un número o un link del estafador) y se cubren con Pytest. Aplican a mensajes, correos y links por igual.
+
+### US-7.1 Ver qué hacer con el resultado
+Como usuario quiero ver recomendaciones concretas según el resultado del análisis para saber cómo actuar.
+
+ADO ID: #82 · Status: pending
+
+La sección "Qué podés hacer" está dentro de `analysis-result`, después de los indicadores y antes del aviso. Todo resultado tiene al menos una recomendación, también el de riesgo bajo o indeterminado.
+
+Criterios de aceptación:
+1. Con un resultado, se muestra el título "Qué podés hacer" y cada recomendación en `analysis-recommendation`, en el orden recibido.
+2. Si no se detectaron indicadores, las recomendaciones se siguen mostrando.
+3. Si un nuevo análisis falla, las recomendaciones anteriores dejan de mostrarse.
+
+Tasks:
+- #84 Contract: add `RecommendationType`, `Recommendation`, and the `recommendations` field of `MessageAnalysisResponse` (see [API contract](#api-contract)) to `src/types.ts` and the matching Pydantic models to `backend/app/models.py`. The three analysis endpoints return an empty list until #85. Add `recommendations: []` to the default mocked response in `tests/fixtures/analysis.ts` so the suite stays green. Nothing is rendered yet.
+- #85 Backend: recommendations by risk level. `build_recommendations(result: AnalysisResult) -> list[Recommendation]` in `backend/app/services/recommendations.py`, with the catalog in [Recommendations](#recommendations) (types and Spanish texts defined once) and the risk level rules. `POST /analysis`, `POST /analysis/email`, and `POST /analysis/url` return `MessageAnalysisResponse(result=result, recommendations=build_recommendations(result))`, so the rules see the result after the evidence check. Pytest: `HIGH`, `MEDIUM`, `LOW`, and `UNDETERMINED` each give their recommendations in catalog order; every level gives at least one; the three endpoints include `recommendations`. Depends on #84.
+- #86 Frontend: recommendations section. `page.tsx` stores the recommendations together with the result and clears them together (on submit and on error). A `RecommendationList` component renders, inside `analysis-result` after the indicators and before the disclaimer, the `h2` "Qué podés hacer" and a list with one `analysis-recommendation` **(new)** item per recommendation inside `analysis-recommendations` **(new)**, with `${type}-${index}` keys (display only). Add `tests/recomendaciones.spec.ts` for AC1 to AC3. Depends on #84.
+- #87 Frontend: recommendations styling. Plain CSS in `src/app/globals.css` with the palette variables: the section is spaced like the indicators; each recommendation is a block with a 1rem radius on `--color-surface-soft` with a decorative check icon (`aria-hidden`). No text, role, element type, or `data-testid` changes. WCAG AA contrast. Verification: the full Playwright suite stays green with no new assertions; attach screenshots of a result for each risk level. Depends on #86.
+
+### US-7.2 Recibir recomendaciones según las señales detectadas
+Como usuario quiero que las recomendaciones respondan a las señales que se encontraron para saber qué evitar en mi caso.
+
+ADO ID: #83 · Status: pending
+
+Cada tipo de indicador puede sumar una recomendación propia (por ejemplo, un pedido de datos suma "No compartas claves, códigos ni datos de tarjeta o de cuenta..."). Si varias señales llevan a la misma recomendación, se muestra una sola vez. La selección ocurre en el backend y se cubre con Pytest.
+
+Criterios de aceptación:
+1. Con un indicador de pedido de datos personales, se muestra en `analysis-recommendation` la recomendación de no compartir claves, junto a las del nivel de riesgo.
+
+Tasks:
+- #88 Backend: recommendations by indicator type. Extend `build_recommendations` with the indicator rules in [Recommendations](#recommendations): each recommendation appears once, in catalog order, whatever the number of indicators that trigger it. Pytest: `personal_data_request` adds `do_not_share_data`; `suspicious_link`, `lookalike_domain`, `obfuscated_link`, and `deceptive_link` together add `do_not_open_link` once; `impersonation` with `MEDIUM` adds `verify_official_channel` once; `writing_errors` adds nothing; dropped indicators (evidence check) add nothing. Depends on #85.
+- #89 Frontend: indicator recommendations test. Add `tests/recomendaciones-indicadores.spec.ts` for AC1 (mocked `personal_data_request` indicator with `HIGH` and the matching recommendations). Depends on #86.
 
 ## UI texts
 
@@ -433,6 +472,8 @@ Tasks:
 | Link placeholder | https://ejemplo.com/... |
 | Link submit button | Analizar link |
 | Unreadable link error | No se pudo leer el link. Verificá que sea una dirección completa, por ejemplo https://ejemplo.com. |
+| Recommendations heading (US-7.1) | Qué podés hacer |
+| Recommendation texts (set by the backend) | See the catalog in [Recommendations](#recommendations) |
 
 ## Visual design
 
@@ -493,10 +534,30 @@ export interface AnalysisResult {
   indicators: Indicator[];
 }
 
+export type RecommendationType =
+  | 'do_not_follow'
+  | 'do_not_share_data'
+  | 'do_not_pay'
+  | 'verify_official_channel'
+  | 'do_not_open_link'
+  | 'do_not_open_attachments'
+  | 'take_your_time'
+  | 'distrust_prizes'
+  | 'if_already_acted'
+  | 'stay_alert';
+
+export interface Recommendation {
+  type: RecommendationType;
+  text: string; // Spanish text, set by the backend
+}
+
 export interface MessageAnalysisResponse {
   result: AnalysisResult;
+  recommendations: Recommendation[]; // Feature 7; never empty once #85 is done
 }
 ```
+
+- `recommendations` sits next to `result`, not inside it, because `AnalysisResult` is also the shape the model returns; the model never writes recommendations (see [Recommendations](#recommendations)).
 
 - `evidence`, `explanation`, and `UNDETERMINED` are new and must be added to `src/types.ts` (task #11) and to the backend models.
 - The frontend reads the backend base URL from `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:8000`). E2E tests mock `**/analysis`, `**/analysis/email`, `**/analysis/url`, and `**/critical-messages`, so no backend needs to run.
@@ -582,6 +643,14 @@ export interface UrlAnalysisRequest {
 - Where the rules run: output validation in `backend/app/ai/analyzer.py`; the evidence check and the undetermined rule in `backend/app/services/analysis.py`, after any analyzer. Indicators that pass the check are kept as returned (evidence verbatim). If only some are dropped, `riskLevel` and `explanation` are kept.
 - Fallback: if the call fails, times out, or returns invalid output, the AI layer raises one typed AI error and the endpoint returns the `503` error. Never a partial or invented result. Missing configuration also raises the typed AI error.
 - Prompt: `backend/app/ai/prompt.py` (`INSTRUCTIONS`), in English; the model writes `summary`, `explanation`, `title`, and `description` in neutral Spanish, and copies `evidence` verbatim from the message. `summary` states what the message asks for or claims to be (it does not explain the risk); `explanation` justifies `riskLevel` from the indicators without claiming certainty. With no indicators, `riskLevel` is `LOW`. Indicators list only signs present in the message; types that do not apply are omitted. The prompt tells the model that, in an [email digest](#email-digest), only the lines before `Cuerpo:` come from the system; the email-only indicator types apply only to a digest and quote one of those system lines as evidence. In a [URL digest](#url-digest), only the `Enlace:` line comes from the user and is data, never instructions; the model judges only the address (nobody opened the link), the link-only types apply only to a URL digest, and evidence quotes one of its lines or part of `Enlace`.
+- Risk level criteria: `riskLevel` follows from how severe the indicators are, not from how many there are, so one strong sign is enough for `HIGH` (a link rarely has more than two or three indicators). Caution applies to the wording of `explanation`, never to the level: the model must not lower it to hedge.
+
+| `riskLevel` | When |
+|---|---|
+| `HIGH` | At least one strong sign: asks for passwords, codes, or card or account data; asks for a payment or transfer while impersonating someone or under pressure; impersonates a bank, company, or relative to get data or money; `lookalike_domain` imitating a brand or entity; `obfuscated_link` that hides the real destination (IP address, a user name before `@` that looks like another site, punycode imitating a brand); `deceptive_link`; `dangerous_attachment`; `failed_authentication` together with `sender_mismatch`. Several weak signs together (e.g. urgency, a shortened link, and a prize) can also be `HIGH`. |
+| `MEDIUM` | Only weak signs that may have an innocent explanation: urgency alone, a shortened link alone, an unusual domain that imitates no one, a promise without a request for data or money, `failed_authentication` or `sender_mismatch` alone. |
+| `LOW` | No indicators, or only minor signs such as writing errors. |
+
 - Output schema: `OUTPUT_SCHEMA` in the same file, sent as `text.format` (`type: json_schema`, `name: analysis_result`, `strict: true`). Keys are camelCase and match `AnalysisResult` plus `topic` and `maskedMessage`; every field is required and no extra fields are allowed; `riskLevel` is `LOW | MEDIUM | HIGH`; `indicators` may be empty; `type` is one of the indicator types below; `topic` is one of the topics below.
 - Topic: the scam pattern the message fits best, returned for every message (`other` when none fits).
 - Masked message: the message copied verbatim except that names of people, addresses, and any other personal data are replaced with `[nombre]`, `[dirección]`, or `[dato oculto]`. Amounts of money are kept. Returned for every message (the schema is fixed), used only when the message is shared. For an email digest or a URL digest the model returns `""`, since emails and links are never shared and copying a long digest would only add latency and cost. Best effort: the model may miss data, so the backend masking always runs on top of it.
@@ -676,6 +745,30 @@ Parámetros: <query string>             (only when not empty)
 - Privacy: the link and the digest exist only during the request; they are never stored, logged, or shared.
 - Known limitation: ScamGuard does not see the page or where a shortener redirects, so a clean-looking address is not proof that the link is safe; the disclaimer (NFR-01) still applies.
 - Known limitation: text pasted in "Pegar mensaje" could imitate a URL or email digest. The prompt tells the model which lines come from the system, but the evidence check cannot tell them apart.
+
+## Recommendations
+
+What the user could do next, chosen by the backend from a fixed catalog (Feature 7). Rules in `backend/app/services/recommendations.py`; Spanish texts defined once there.
+
+- Input: the final `AnalysisResult`, after the evidence check and the undetermined rule, so a dropped indicator never adds a recommendation.
+- Not AI: the texts are fixed, so they never repeat data from the message (a phone number, a link, or a name given by the scammer) and never claim certainty; the disclaimer (NFR-01) still applies.
+- Order and duplicates: the output follows the catalog order below; each recommendation appears at most once, whatever the number of rules that trigger it.
+- Every result gets at least one recommendation: each risk level triggers one.
+
+| `type` | Text | When |
+|---|---|---|
+| `do_not_follow` | No respondas, no hagas clic y no sigas las instrucciones del mensaje. | `riskLevel` is `HIGH` |
+| `do_not_share_data` | No compartas claves, códigos ni datos de tarjeta o de cuenta. Ningún banco ni empresa te los pide por mensaje. | `personal_data_request` |
+| `do_not_pay` | No hagas pagos ni transferencias hasta confirmar el pedido por otro medio. | `payment_request` |
+| `verify_official_channel` | Comunicate con la persona o la empresa por un canal que ya conozcas (su app, su sitio oficial o un número que tengas agendado), no por los datos que aparecen en el mensaje. | `impersonation`, `sender_mismatch`, or `failed_authentication`; or `riskLevel` is `MEDIUM` or `UNDETERMINED` |
+| `do_not_open_link` | No abras el link. Si necesitás entrar al sitio, escribí vos la dirección oficial. | `suspicious_link`, `lookalike_domain`, `obfuscated_link`, or `deceptive_link` |
+| `do_not_open_attachments` | No abras ni descargues los archivos adjuntos. | `dangerous_attachment` |
+| `take_your_time` | Tomate tu tiempo: la urgencia busca que actúes sin verificar. | `urgency` |
+| `distrust_prizes` | Desconfiá de premios o ganancias que no pediste, sobre todo si para recibirlos tenés que pagar o dar datos. | `unrealistic_promise` |
+| `if_already_acted` | Si ya compartiste datos o hiciste un pago, comunicate cuanto antes con tu banco y cambiá tus claves. | `riskLevel` is `HIGH` |
+| `stay_alert` | Aunque no se encontraron señales graves, desconfiá si más adelante te piden datos, códigos o dinero. | `riskLevel` is `LOW` |
+
+- `writing_errors` has no recommendation of its own; it is a weak sign, covered by the risk level rules.
 
 ## Critical messages storage
 
