@@ -1,0 +1,57 @@
+From: Soporte de Cuenta <notificaciones@cuenta-segura.example>
+To: usuario@example.net
+Subject: =?utf-8?q?Acci=C3=B3n?= requerida: actividad inusual detectada
+Date: Fri, 30 Oct 2026 22:31:39 +0000
+Message-ID: <179339949929.255.14082888024402735883@cuenta-segura.example>
+Reply-To: mesa-ayuda-verificacion@example.org
+X-Priority: 1
+Importance: high
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="===============8538231060939014411=="
+
+--===============8538231060939014411==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hola:
+
+Detectamos varios intentos de acceso a tu cuenta desde un dispositivo nuevo. =
+Para protegerla, limitamos temporalmente algunas operaciones.
+
+La verificaci=C3=B3n debe completarse hoy. Si no reconoc=C3=A9s esta activida=
+d, confirm=C3=A1 tus datos desde el siguiente portal:
+
+https://cuenta-segura-verificacion.example/session/restore?id=3D48291
+
+El formulario solicita correo, contrase=C3=B1a y los datos de tu tarjeta para=
+ validar que sos el titular. Si no complet=C3=A1s el proceso, el acceso podr=
+=C3=ADa permanecer restringido.
+
+Este correo es una simulaci=C3=B3n ficticia de phishing para pruebas de segur=
+idad. No ingreses datos reales. El dominio .example est=C3=A1 reservado y no =
+corresponde a un servicio real.
+
+--===============8538231060939014411==
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+<html><body>
+<p>Hola:</p>
+<p>Detectamos varios intentos de acceso a tu cuenta desde un dispositivo nuev=
+o. Para protegerla, limitamos temporalmente algunas operaciones.</p>
+<p><strong>La verificaci=C3=B3n debe completarse hoy.</strong> Si no reconoc=
+=C3=A9s esta actividad, confirm=C3=A1 tus datos desde el siguiente portal:</p>
+<p><a href=3D"https://cuenta-segura-verificacion.example/session/restore?id=
+=3D48291">Verificar mi cuenta</a></p>
+<p>El formulario solicita correo, contrase=C3=B1a y los datos de tu tarjeta p=
+ara validar que sos el titular. Si no complet=C3=A1s el proceso, el acceso po=
+dr=C3=ADa permanecer restringido.</p>
+<hr>
+<p><small>Simulaci=C3=B3n ficticia de phishing para pruebas. No ingreses dato=
+s reales. El dominio .example est=C3=A1 reservado y no corresponde a un servi=
+cio real.</small></p>
+</body></html>
+
+--===============8538231060939014411==--

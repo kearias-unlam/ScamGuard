@@ -1,0 +1,1022 @@
+Delivered-To: kevin.arias@globant.com
+Received: by 2002:a05:7300:5b83:b0:360:cdac:b533 with SMTP id ba3csp6932133dyb;
+        Wed, 21 Oct 2026 14:58:17 -0700 (PDT)
+X-Received: by 2002:a05:7301:490d:b0:360:387a:bc62 with SMTP id 5a478bee46e88-368ba23b833mr634879eec.28.1792619897463;
+        Wed, 21 Oct 2026 14:58:17 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792619897; cv=none;
+        d=google.com; s=arc-20260327;
+        b=l3x76msJhzR59VRmHaquoQgTPfkw/FGHjOel3Sqcxh6P8mVhXX4QHCMltOl8CadGYS
+         CMD0TcmvqYSiX/imy0XtIoId5sWB+DLnF7rHKsVC4AbNYrPt7W9fJ/uETtJUmdqcVKUi
+         TEQ2VbGc+0wuTn5WmrWI/DTELeYDJDAd6QsiDFIJEcFmR+EFN4cHDqQH5OQDF5O7q7EU
+         pkrTs2e7sK+iBRv2FRt0OTOauUyK5d5ImF+u0Ci0OrFFlOvyNjP+oBENpmtasoSZke3N
+         YJLJh2X7YLzG0KcQVj5o4qPdGfYQqPKQcnVxSrTPylMBTqIaD+pFeJ2DzpvoD93Lk2nH
+         KNrw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=to:subject:message-id:mime-version:from:date
+         :content-transfer-encoding:dkim-signature;
+        bh=sSwOrIwzdaCmdQ56Tdg6hyA4Ysf6t99rWL4OtaNBjD4=;
+        fh=AS3NFASpw257aZE3gZAnVYF5e2S6UPH+67hC2cqtsjU=;
+        b=D4DrxesCMhSqpSoUfF1YppKh5b8UdAj/bvfRqteDc9BIngNSqotrFflgjbEwHGLk/E
+         F8LLlkw6FXQ7P19wOwWd6mcu0eFnKclPF23nn4QNSbnq67WxP98/CXqbhMRUgs1mLibW
+         FXGzkgaynRSG/PSi7MhHK8Ao2Ic03XXiq6jv/+aGWZUoekplvwOY0HU4msK1LK7Z6+VB
+         Ng98lo57Giof3SEXZ76tDtpNBmoweR8qFVBcfMNRVuOwNZ74cN47o4TdefjXn5IzDsnD
+         lWC48/i1woPxRouVjhqyb/p/6mtbwEOG/x6houjtXRHuFFRwfsEtsK4n+vEGFnkx+q2E
+         XDEA==;
+        dara=google.com
+ARC-Authentication-Results: i=1; mx.google.com;
+       dkim=pass header.i=@tm.openai.com header.s=s1 header.b=V1+Ki+Ng;
+       spf=pass (google.com: domain of bounces+27895149-86da-kevin.arias=globant.com@em7877.tm.openai.com designates 134.128.94.71 as permitted sender) smtp.mailfrom="bounces+27895149-86da-kevin.arias=globant.com@em7877.tm.openai.com"
+Return-Path: <bounces+27895149-86da-kevin.arias=globant.com@em7877.tm.openai.com>
+Received: from mx0a-006bb201.pphosted.com (mx0a-006bb201.pphosted.com. [148.163.145.20])
+        by mx.google.com with ESMTPS id 5a478bee46e88-3682fe5f89fsi4516917eec.90.2026.10.21.14.58.17
+        for <kevin.arias@globant.com>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 21 Oct 2026 14:58:17 -0700 (PDT)
+Received-SPF: pass (google.com: domain of bounces+27895149-86da-kevin.arias=globant.com@em7877.tm.openai.com designates 134.128.94.71 as permitted sender) client-ip=134.128.94.71;
+Authentication-Results: mx.google.com;
+       dkim=pass header.i=@tm.openai.com header.s=s1 header.b=V1+Ki+Ng;
+       spf=pass (google.com: domain of bounces+27895149-86da-kevin.arias=globant.com@em7877.tm.openai.com designates 134.128.94.71 as permitted sender) smtp.mailfrom="bounces+27895149-86da-kevin.arias=globant.com@em7877.tm.openai.com"
+Received: from pps.filterd (m0412020.ppops.net [127.0.0.1])
+	by mx0a-006bb201.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 69LKcmFt293803
+	for <kevin.arias@globant.com>; Wed, 21 Oct 2026 18:58:16 -0300
+Authentication-Results: ppops.net;
+	spf=pass smtp.mailfrom=bounces+27895149-86da-kevin.arias=globant.com@em7877.tm.openai.com;
+	dkim=pass header.d=tm.openai.com header.s=s1;
+	dmarc=pass header.from=email.openai.com
+Received: from o44.ptr7625.openai.com (o44.ptr7625.openai.com [134.128.94.71])
+	by mx0a-006bb201.pphosted.com (PPS) with ESMTPS id 4hegauvuwr-1
+	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
+	for <kevin.arias@globant.com>; Wed, 21 Oct 2026 18:58:16 -0300 (BRT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=tm.openai.com;
+	h=content-transfer-encoding:content-type:date:from:mime-version:subject:
+	to:cc:content-type:date:from:subject:to;
+	s=s1; t=1792619895;
+	bh=sSwOrIwzdaCmdQ56Tdg6hyA4Ysf6t99rWL4OtaNBjD4=;
+	b=V1+Ki+Ngy4PzI5ixPm48qi8pE2HdvGIf32ylA1U+ZDpNxEBhRQOX98NwiCmKZJ/jsCyM
+	VNEUmvJPb1MfVNDSmBCr41oVK+BCpDOWuMj6IAZARQNugDTBVxdiwLzkGgb/8/K3zldh6N
+	q5bj46ESN5erQROXupVLpWXR24/FzKvcrMa0oLbS8HD7xnh777qLlT0MogCYouSsst0Fsf
+	F4IBFiWnaHXdXjzqTnpbohRZGje8onij+cdeLNaBVS48JEHL3QALrZkrIe9KilozyXX7OY
+	fb95Wi+2W6LIGfV8GUggdEYlR8sQ5uu6jq+sYQzf8+uqNeRRClV25g/SyQ6PXCpw==
+Received: by recvd-7dd44dbfb-qnt54 with SMTP id recvd-7dd44dbfb-qnt54-1-6AD93577-25
+	2026-10-21 21:58:15.272057893 +0000 UTC m=+1918622.901935244
+Received: from Mjc4OTUxNDk (unknown)
+	by geopod-ismtpd-15 (SG) with HTTP
+	id eqpYAYewQJi0MkPBPkk7Gg
+	Wed, 21 Oct 2026 21:58:15.267 +0000 (UTC)
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html; charset=utf-8
+Date: Wed, 21 Oct 2026 21:58:15 +0000 (UTC)
+From: OpenAI <noreply@email.openai.com>
+Mime-Version: 1.0
+Message-ID: <eqpYAYewQJi0MkPBPkk7Gg@geopod-ismtpd-15>
+Subject: Actualizaciones de la =?UTF-8?B?UG9sw610aWNh?= de privacidad de
+ OpenAI
+X-SG-EID: 
+ =?us-ascii?Q?u001=2EpDXn7XyDvIUG5VuGYC+VAIfgfX9p=2FPJ3k8Jf5bQDbJSO2JLuNtY+hbBCw?=
+ =?us-ascii?Q?oWb4a4JeCfaPUhFyH026JNZutuzY3uEwwOZdFNE?=
+ =?us-ascii?Q?Tp6B7AGpm8YqbeDaURmmOqPFRBFlW7MWaF66Djq?=
+ =?us-ascii?Q?TflzCg9NquWEBJKY8R9gyKDaSpj2LU=2FPirGksV=2F?=
+ =?us-ascii?Q?A2EbOA2buAduLgY0256R9cDwIFUObPy3t=2Fx0moS?=
+ =?us-ascii?Q?QSFindxFBKhm1yTv31O4gG=2Fx3zP2VaskFe=2FZl8e?=
+ =?us-ascii?Q?WobZ?=
+X-SG-ID: 
+ =?us-ascii?Q?u001=2ESdBcvi+Evd=2FbQef8eZF3BpTL9BgbK5wfSJMJGMsmprCfzdk8Q6weRGnug?=
+ =?us-ascii?Q?VdQiDX=2F5hOa7fgt8SbYvXtVabuXXYL7z4rfu2fW?=
+ =?us-ascii?Q?qlcZTesPOk7w2SIFuYbs5+JS5DnaC2qBWgbtFIa?=
+ =?us-ascii?Q?wbNUQ=2FjXuNvZAIZ4kuz3Cbxj4T2CCaqgANPcY2r?=
+ =?us-ascii?Q?=2Fi8IBZP8wOchhKJjU5v9Qhd5jozUgAjcRyQGZ0j?=
+ =?us-ascii?Q?9gw1GABclAS9nETAeMY4SRbRpUk09KA18VleHZe?=
+ =?us-ascii?Q?Jwj1M+RnM4sTA1aCeK36CPIgD=2FyDYUg+ni3dZEt?=
+ =?us-ascii?Q?0T53ZyPVdwTfz2t=2FdprgQvudElKlnPUvDAxNzDw?=
+ =?us-ascii?Q?26eR5MNfYRNGkeZyHVmYMikm7GIjKZIKmGJNBZc?=
+ =?us-ascii?Q?nz3lm4UdtEtwPeGf7q4fWzQ6ysRskd1tOhYjKoI?=
+ =?us-ascii?Q?Nd5pkYDlaUuml24Fr5+fmVaf3WbgYzP5zmnsq=2Fj?=
+ =?us-ascii?Q?degC5e7kEcRytX2ENJ6bV=2FlFz=2Fb9s+RJu2N0Iql?=
+ =?us-ascii?Q?4frk0Ce11y7jrc5LYpHMjKfwivRIr7Lt0oecq7F?=
+ =?us-ascii?Q?ERpTDsMbycfp1uRKDr2V1Hi4xoVmzcv5sc5wghk?=
+ =?us-ascii?Q?ot5v2nChXISK8xDPWuWRP9xfS7M0HhVT=2FnPnmEC?=
+ =?us-ascii?Q?KsgSHNLn22lCuEmG4vJMVes1wivHjKfod0p7bWj?=
+ =?us-ascii?Q?gUjGuUKjEt99mtsL47YZCevCXn3AddIcotEMQey?=
+ =?us-ascii?Q?kOJmvQR5qMd8eK=2FQ=2FmYE=2FF14=2FJSZdgwNGJL6Puc?=
+ =?us-ascii?Q?zPSJxQ=3D=3D?=
+To: kevin.arias@globant.com
+X-Entity-ID: u001.z+BCMNcYspTozD0RmkVBsg==
+
+<!DOCTYPE html>
+<html dir=3D"ltr">
+<head>
+ =20
+ =20
+ =20
+ =20
+  <meta charset=3D"utf-8">
+  <meta http-equiv=3D"x-ua-compatible" content=3D"ie=3Dedge">
+  <title></title>
+  <meta name=3D"viewport" content=3D"width=3Ddevice-width, initial-scale=3D=
+1">
+  <meta name=3D"color-scheme" content=3D"light dark only">
+  <meta name=3D"supported-color-schemes" content=3D"light dark only">
+ =20
+  <style type=3D"text/css">
+    @media (prefers-color-scheme: dark) {
+      .privacy-policy-marketing-update-link {
+        color: #FFFFFF !important;
+        -webkit-text-fill-color: #FFFFFF !important;
+      }
+    }
+    [data-ogsc] .privacy-policy-marketing-update-link,
+    [data-ogsb] .privacy-policy-marketing-update-link {
+      color: #FFFFFF !important;
+      -webkit-text-fill-color: #FFFFFF !important;
+    }
+  </style>
+
+ =20
+ =20
+  <style type=3D"text/css">
+  /**
+   * Google webfonts. Recommended to include the .woff version for cross-cl=
+ient compatibility.
+   */
+  @media screen {
+    /* OpenAI Sans font family */
+    @font-face {
+      font-display: swap;
+      font-family: "OpenAI Sans";
+      font-style: normal;
+      font-weight: 400;
+      src: url("https://cdn.openai.com/common/fonts/openai-sans/v2/OpenAISa=
+ns-Regular.woff2") format("woff2");
+    }
+
+    @font-face {
+      font-display: swap;
+      font-family: "OpenAI Sans";
+      font-style: normal;
+      font-weight: 500;
+      src: url("https://cdn.openai.com/common/fonts/openai-sans/v2/OpenAISa=
+ns-Medium.woff2") format("woff2");
+    }
+
+    @font-face {
+      font-display: swap;
+      font-family: "OpenAI Sans";
+      font-style: normal;
+      font-weight: 600;
+      src: url("https://cdn.openai.com/common/fonts/openai-sans/v2/OpenAISa=
+ns-Semibold.woff2") format("woff2");
+    }
+
+    @font-face {
+      font-display: swap;
+      font-family: "OpenAI Sans";
+      font-style: normal;
+      font-weight: 700;
+      src: url("https://cdn.openai.com/common/fonts/openai-sans/v2/OpenAISa=
+ns-Bold.woff2") format("woff2");
+    }
+  }
+
+  :root {
+    color-scheme: light dark only;
+    supported-color-schemes: light dark only;
+  }
+
+  /**
+   * Avoid browser level font resizing.
+   * 1. Windows Mobile
+   * 2. iOS / OSX
+   */
+  body,
+  table,
+  td,
+  a {
+    -ms-text-size-adjust: 100%; /* 1 */
+    -webkit-text-size-adjust: 100%; /* 2 */
+    font-family: 'OpenAI Sans', Helvetica, Arial, sans-serif;
+  }
+
+  /**
+   * Remove extra space added to tables and cells in Outlook.
+   */
+  table,
+  td {
+    mso-table-rspace: 0pt;
+    mso-table-lspace: 0pt;
+    vertical-align: top; /* Align content to the top of table cells */
+  }
+
+  /**
+   * Better fluid images in Internet Explorer.
+   */
+  img {
+    -ms-interpolation-mode: bicubic;
+  }
+
+  /**
+   * Remove blue links for iOS devices.
+   */
+  a[x-apple-data-detectors] {
+    font-family: inherit !important;
+    font-size: inherit !important;
+    font-weight: inherit !important;
+    line-height: inherit !important;
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+
+  /**
+   * Fix centering issues in Android 4.4.
+   */
+  div[style*=3D"margin: 16px 0;"] {
+    margin: 0 !important;
+  }
+
+  body {
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /**
+   * Collapse table borders to avoid space between cells.
+   */
+  table {
+    border-collapse: collapse !important;
+  }
+
+  a {
+    color: #898A8D;
+  }
+
+  .image-reset-bullets,
+  .image-reset-bullets .email-bullet-link {
+      color: #000000;
+  }
+
+  /* Give the ChatGPT logo pill consistent breathing room in light mode. */
+  .email-logo-pill {
+      background-color: #ffffff;
+      border-radius: 12px;
+      padding: 13px;
+      display: inline-block;
+  }
+
+  img {
+    height: auto;
+    line-height: 100%;
+    text-decoration: none;
+    border: 0;
+    outline: none;
+  }
+  /* Composer image sizing (mobile default) */
+  .composer-img {
+      width: 83px !important;
+      height: auto !important;
+      padding: 16px !important;
+  }
+
+  h1 {
+      font-size: 34px;
+      line-height: 41px;
+      font-weight: 400;
+      letter-spacing: 0.4px;
+      margin: 0;
+  }
+  h2 {
+      font-size: 18px;
+      font-weight: 400;
+      margin: 0;
+      line-height: 150%;
+      letter-spacing: -0.2px;
+  }
+  p {
+      font-size: 16px;
+      line-height: 130%;
+      font-weight: 500;
+      margin: 0;
+  }
+  p + p {
+      margin-top: 16px;
+  }
+  /* Intro blocks (H1/H2) sizing */
+  .intro-block {
+      width: 345px !important;
+      max-width: 345px !important;
+  }
+  /* Composer card sizing */
+  .composer-card {
+      width: 377px !important;
+      max-width: 377px !important;
+  }
+  /* Button styling */
+  a.button {
+      background-color: #000000 !important; /* default black */
+      border-radius: 24px !important; /* make button curvy */
+      padding: 11.5px 24px 11.5px !important; /* bigger size */
+      font-size: 16px !important; /* revert text size */
+      line-height: 24px !important;
+  }
+
+  a.button:active {
+      background-color: #414141 !important; /* dark gray on click */
+      border-radius: 36px !important;
+  }
+  /* CTA button hover state (supported clients only) */
+  a.button-invert:hover,
+  a.button-invert:focus {
+      background-color: #000000 !important;
+      background-image: none !important;
+      color: #FFFFFF !important;
+      border-color: #FFFFFF !important;
+  }
+  a.button-invert:hover span,
+  a.button-invert:focus span {
+      color: #FFFFFF !important;
+  }
+
+  /* Ensure hover keeps text legible even with dark-mode overrides. */
+  a.button-invert:hover,
+  a.button-invert:focus {
+      color: #FFFFFF !important;
+      -webkit-text-fill-color: #FFFFFF !important;
+  }
+  a.button-invert:hover span,
+  a.button-invert:focus span {
+      color: #FFFFFF !important;
+      -webkit-text-fill-color: #FFFFFF !important;
+  }
+  /* Badges: use real rows so the stacked layout survives across email clie=
+nts */
+  .badges {
+      width: 100% !important;
+      max-width: 128px !important;
+  }
+  .badges .badge {
+      width: 100% !important;
+      vertical-align: bottom !important;
+  }
+  .badges .badge img {
+      width: 120px !important;
+      max-width: 120px !important;
+      height: auto !important;
+      margin: 0 auto !important;
+  }
+
+  /* Desktop: larger typography */
+  @media screen and (min-width:480px) {
+      h1 {
+          font-size: 34px !important;
+          line-height: 41px !important;
+          letter-spacing: 0.4px;
+          font-weight: 400 !important;
+      }
+      h2 {
+        font-size: 18px;
+        font-weight: 400;
+        margin: 0;
+        line-height: 150%;
+        letter-spacing: -0.2px;
+      }
+      /* Header cell: increase side padding on desktop only */
+      td.header-td {
+          padding-left: 57px !important;
+          padding-right: 57px !important;
+      }
+      /* Composer image sizing for desktop */
+      .composer-img {
+          width: 98px !important;
+      }
+     =20
+     =20
+      /* Body content cells: increase side padding on desktop */
+      td.content-td {
+          padding-left: 60px !important;
+          padding-right: 60px !important;
+      }
+      td.footer-td {
+          padding-left: 56px !important;
+          padding-right: 56px !important;
+      }
+      p {
+          font-size: 16px !important;
+          line-height: 130% !important;
+          font-weight: 400;
+      }
+      td {
+          font-size: 10px !important;
+          line-height: 16px !important;
+          font-weight: 400;
+      }
+     =20
+      a.button {
+          font-size: 16px !important;
+          line-height: 24px !important;
+      }
+      .footer-row td {
+          vertical-align: bottom !important;
+          padding-left: 0 !important;
+      }
+      /* Composer card width on desktop */
+      .composer-card {
+          width: 400px !important;
+          max-width: 400px !important;
+      }
+      /* Intro blocks width on desktop */
+      .intro-block {
+          width: 360px !important;
+          max-width: 360px !important;
+      }
+  }
+  /* Mobile stacking helper for columns */
+  @media screen and (max-width:480px) {
+      /* Ensure footer badges bottom-align with copyright on mobile */
+      td.header-td {
+          padding-left: 21px !important;
+          padding-right: 21px !important;
+      }
+      /* Body content cells: smaller side padding on mobile */
+      td.content-td {
+          padding-left: 24px !important;
+          padding-right: 24px !important;
+      }
+      td.footer-td {
+          padding-left: 20px !important;
+          padding-right: 20px !important;
+      }
+      .footer-row td {
+          vertical-align: bottom !important;
+          padding-left: 0 !important;
+      }
+  }
+
+ =20
+  /* Dark mode: keep the template-authored canvas consistent across all sec=
+tions. */
+  @media (prefers-color-scheme: dark) {
+      body.generic,
+      .wrapperMod,
+      .heroMod03 {
+          background-color: #000000 !important;
+      }
+      body {
+          background-color: #000000 !important;
+          color: #ffffff !important;
+      }
+      .email-shell {
+          background-color: #000000 !important;
+      }
+      .content-td {
+          background-color: #000000 !important;
+      }
+      h1, h2, p {
+          color: #ffffff !important;
+      }
+      .heroMod03 h1,
+      .heroMod03 h2,
+      .heroMod03 p,
+      .box h1,
+      .box h2,
+      .box p,
+      .box a {
+          color: #FFFFFF !important;
+          -webkit-text-fill-color: #FFFFFF !important;
+      }
+      .prompt-card-table {
+          background: #000000 !important;
+          box-shadow: none !important;
+      }
+      .prompt-card-border {
+          border-color: #FFFFFF !important;
+      }
+      .prompt-card-text,
+      .prompt-card-text h2 {
+          color: #FFFFFF !important;
+      }
+      .email-header-td {
+          background-color: #000000 !important;
+          padding-top: 8px !important;
+          padding-bottom: 8px !important;
+      }
+      .email-header-inner {
+          padding-top: 16px !important;
+          padding-bottom: 16px !important;
+      }
+      .email-footer-surface {
+          background-color: #1f1f1f !important;
+          border-radius: 16px !important;
+          padding: 24px !important;
+      }
+      .email-footer-row {
+          background-color: #000000 !important;
+      }
+      .email-footer-logo-cell {
+          padding-bottom: 12px !important;
+      }
+      .email-logo-pill {
+          background-color: #ffffff !important;
+          border-radius: 12px !important;
+          padding: 4px !important;
+          display: inline-block !important;
+      }
+      .email-header-logo-pill {
+          border-radius: 16px !important;
+          padding: 12px !important;
+      }
+      .email-logo-pill img {
+          background-color: transparent !important;
+      }
+      .email-footer-logo-img {
+          width: 90px !important;
+          height: auto !important;
+      }
+      .email-footer-copy {
+          color: #ffffff !important;
+          padding-left: 0 !important;
+      }
+      .email-footer-copy a {
+          color: #ffffff !important;
+      }
+      .email-footer-copy .email-footer-copyright {
+          color: #a0a0a0 !important;
+      }
+      .image-reset-bullets,
+      .image-reset-bullets .email-bullet-link,
+      .image-reset-bullets .email-bullet-link strong {
+          color: #FFFFFF !important;
+          -webkit-text-fill-color: #FFFFFF !important;
+      }
+      a.button-invert {
+          background-color: #171717 !important;
+          background-image: none !important;
+          color: #FFFFFF !important;
+          border-color: #171717 !important;
+          -webkit-text-fill-color: currentColor !important;
+      }
+      a.button-invert span {
+          color: inherit !important;
+          -webkit-text-fill-color: currentColor !important;
+      }
+      a.email-feedback-chip {
+          background-color: #2F2F2F !important;
+          color: #ECECEC !important;
+          border-color: #424242 !important;
+          -webkit-text-fill-color: #ECECEC !important;
+      }
+  }
+
+  /* Dark mode fallback for clients that use data-ogsc/data-ogsb */
+  [data-ogsc] body,
+  [data-ogsb] body {
+      background-color: #000000 !important;
+      color: #ffffff !important;
+  }
+  [data-ogsc] body.generic,
+  [data-ogsb] body.generic,
+  [data-ogsc] .wrapperMod,
+  [data-ogsb] .wrapperMod,
+  [data-ogsc] .heroMod03,
+  [data-ogsb] .heroMod03 {
+      background-color: #000000 !important;
+  }
+  [data-ogsc] .email-shell,
+  [data-ogsb] .email-shell {
+      background-color: #000000 !important;
+  }
+  [data-ogsc] .content-td,
+  [data-ogsb] .content-td {
+      background-color: #000000 !important;
+  }
+  [data-ogsc] h1,
+  [data-ogsb] h1,
+  [data-ogsc] h2,
+  [data-ogsb] h2,
+  [data-ogsc] p,
+  [data-ogsb] p {
+      color: #FFFFFF !important;
+      -webkit-text-fill-color: #FFFFFF !important;
+  }
+  [data-ogsc] .heroMod03 h1,
+  [data-ogsb] .heroMod03 h1,
+  [data-ogsc] .heroMod03 h2,
+  [data-ogsb] .heroMod03 h2,
+  [data-ogsc] .heroMod03 p,
+  [data-ogsb] .heroMod03 p,
+  [data-ogsc] .box h1,
+  [data-ogsb] .box h1,
+  [data-ogsc] .box h2,
+  [data-ogsb] .box h2,
+  [data-ogsc] .box p,
+  [data-ogsb] .box p,
+  [data-ogsc] .box a,
+  [data-ogsb] .box a {
+      color: #FFFFFF !important;
+      -webkit-text-fill-color: #FFFFFF !important;
+  }
+  [data-ogsc] .prompt-card-table,
+  [data-ogsb] .prompt-card-table {
+      background: #000000 !important;
+      box-shadow: none !important;
+  }
+  [data-ogsc] .prompt-card-border,
+  [data-ogsb] .prompt-card-border {
+      border-color: #FFFFFF !important;
+  }
+  [data-ogsc] .prompt-card-text,
+  [data-ogsb] .prompt-card-text,
+  [data-ogsc] .prompt-card-text h2,
+  [data-ogsb] .prompt-card-text h2 {
+      color: #FFFFFF !important;
+  }
+  [data-ogsc] .email-header-td,
+  [data-ogsb] .email-header-td {
+      background-color: #000000 !important;
+      padding-top: 8px !important;
+      padding-bottom: 8px !important;
+  }
+  [data-ogsc] .email-footer-surface,
+  [data-ogsb] .email-footer-surface {
+      background-color: #1f1f1f !important;
+      border-radius: 16px !important;
+      padding: 24px !important;
+  }
+  [data-ogsc] .email-footer-row,
+  [data-ogsb] .email-footer-row {
+      background-color: #000000 !important;
+  }
+  [data-ogsc] .email-header-inner,
+  [data-ogsb] .email-header-inner {
+      padding-top: 16px !important;
+      padding-bottom: 16px !important;
+  }
+  [data-ogsc] .email-footer-logo-cell,
+  [data-ogsb] .email-footer-logo-cell {
+      padding-bottom: 12px !important;
+  }
+  [data-ogsc] .email-logo-pill,
+  [data-ogsb] .email-logo-pill {
+      background-color: #ffffff !important;
+      border-radius: 12px !important;
+      padding: 4px !important;
+      display: inline-block !important;
+  }
+  [data-ogsc] .email-header-logo-pill,
+  [data-ogsb] .email-header-logo-pill {
+      border-radius: 16px !important;
+      padding: 12px !important;
+  }
+  [data-ogsc] .email-logo-pill img,
+  [data-ogsb] .email-logo-pill img {
+      background-color: transparent !important;
+  }
+  [data-ogsc] .email-footer-logo-img,
+  [data-ogsb] .email-footer-logo-img {
+      width: 90px !important;
+      height: auto !important;
+  }
+  [data-ogsc] .email-footer-copy,
+  [data-ogsb] .email-footer-copy {
+      color: #ffffff !important;
+      padding-left: 0 !important;
+  }
+  [data-ogsc] .email-footer-copy a,
+  [data-ogsb] .email-footer-copy a {
+      color: #ffffff !important;
+  }
+  [data-ogsc] .email-footer-copy .email-footer-copyright,
+  [data-ogsb] .email-footer-copy .email-footer-copyright {
+      color: #a0a0a0 !important;
+  }
+  [data-ogsc] .image-reset-bullets,
+  [data-ogsb] .image-reset-bullets,
+  [data-ogsc] .image-reset-bullets .email-bullet-link,
+  [data-ogsb] .image-reset-bullets .email-bullet-link,
+  [data-ogsc] .image-reset-bullets .email-bullet-link strong,
+  [data-ogsb] .image-reset-bullets .email-bullet-link strong {
+      color: #FFFFFF !important;
+      -webkit-text-fill-color: #FFFFFF !important;
+  }
+  [data-ogsc] a.button-invert,
+  [data-ogsb] a.button-invert {
+      background-color: #171717 !important;
+      background-image: none !important;
+      color: #FFFFFF !important;
+      border-color: #171717 !important;
+      -webkit-text-fill-color: currentColor !important;
+  }
+  [data-ogsc] a.button-invert span,
+  [data-ogsb] a.button-invert span {
+      color: inherit !important;
+      -webkit-text-fill-color: currentColor !important;
+  }
+  [data-ogsc] a.email-feedback-chip,
+  [data-ogsb] a.email-feedback-chip {
+      background-color: #2F2F2F !important;
+      color: #ECECEC !important;
+      border-color: #424242 !important;
+      -webkit-text-fill-color: #ECECEC !important;
+  }
+ =20
+  a.email-feedback-chip:hover,
+  a.email-feedback-chip:focus {
+      background-color: #f3f3f3 !important;
+      background-image: linear-gradient(#f3f3f3, #f3f3f3) !important;
+      border-color: #b4b4b4 !important;
+      color: #0d0d0d !important;
+      -webkit-text-fill-color: #0d0d0d !important;
+  }
+
+
+  /* RTL mirroring */
+  [dir=3D"rtl"] body,
+  [dir=3D"rtl"] table,
+  [dir=3D"rtl"] td,
+  [dir=3D"rtl"] a {
+      direction: rtl !important;
+  }
+  [dir=3D"rtl"] h1,
+  [dir=3D"rtl"] h2,
+  [dir=3D"rtl"] p {
+      text-align: right !important;
+  }
+ =20
+
+  </style>
+
+
+
+</head>
+<body dir=3D"ltr" class=3D"generic" bgcolor=3D"#FFFFFF" style=3D"background=
+-color: #FFFFFF;">
+
+  <div class=3D"preheader" style=3D"display: none; max-width: 0; max-height=
+: 600; overflow: hidden; font-size: 1px; line-height: 1px; color: #fff; opa=
+city: 0;">
+    Actualizaciones de la Pol=C3=ADtica de privacidad de OpenAI
+   =20
+  </div>
+
+  <!-- start body -->
+  <table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=3D"100%" di=
+r=3D"ltr" class=3D"wrapperMod" bgcolor=3D"#FFFFFF" style=3D"background-colo=
+r: #FFFFFF;">
+    <!-- start body block -->
+    <tr>
+      <td align=3D"center">
+        <!--[if (gte mso 9)|(IE)]>
+        <table align=3D"center" border=3D"0" cellpadding=3D"0" cellspacing=
+=3D"0" width=3D"360">
+        <tr>
+        <td align=3D"center" valign=3D"top" width=3D"360">
+        <![endif]-->
+        <table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=3D"10=
+0%" class=3D"email-shell heroMod03" bgcolor=3D"#FFFFFF" style=3D"width: 100=
+%; max-width: 600px; background-color:#FFFFFF;">
+         =20
+                        <!-- header image -->
+           =20
+           =20
+           =20
+            <tr>
+                <td valign=3D"top" class=3D"header-td email-header-td" bgco=
+lor=3D"#FFFFFF" style=3D"padding: 42px 24px 42px 24px; background-color:#FF=
+FFFF;">
+                    <table align=3D"center" width=3D"100%" border=3D"0" cel=
+lpadding=3D"0" cellspacing=3D"0" class=3D"email-header-surface" style=3D"mi=
+n-width:100%; background-color:transparent;">
+                        <tbody><tr>
+                            <td valign=3D"top" align=3D"center" class=3D"em=
+ail-header-inner" style=3D"padding-top: 0; padding-bottom: 0;">
+
+                               =20
+	                                <a href=3D"https://chatgpt.com/?entry_id=
+=3D984092ec-4ab5-42e5-9c70-922a146fcd6b&deep_link_id=3D3962028f-241b-4e49-a=
+ad8-16161e9fca34&auth_modal=3D1&login_hint=3Dkevin.arias%40globant.com&utm_=
+campaign=3Dprivacy-policy-marketing-update-row-oct-2026-es&utm_medium=3Dema=
+il&utm_source=3Dsendgrid" target=3D"_blank" class=3D"email-logo-pill email-=
+header-logo-pill" style=3D"display:inline-block; background-color:#ffffff; =
+background-image:linear-gradient(#ffffff,#ffffff); border-radius:12px; padd=
+ing:4px;">
+                                  <img alt=3D"ChatGPT" src=3D"https://persi=
+stent.oaistatic.com/chatgpt/icons/chatgpt_logo.png" width=3D"103" style=3D"=
+display:block; margin:0 auto; width:103px; height:auto; max-width:100%; bor=
+der:0; background-color:#ffffff; background-image:linear-gradient(#ffffff,#=
+ffffff); border-radius:10px;">
+                                </a>
+                               =20
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+         =20
+
+         =20
+  <tr>
+    <td align=3D"center" bgcolor=3D"#ffffff" class=3D"content-td" style=3D"=
+padding: 24px 24px 32px 24px;">
+      <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cellspaci=
+ng=3D"0" align=3D"center" width=3D"100%" style=3D"max-width: 552px; width: =
+100%;">
+        <tr>
+          <td align=3D"left" style=3D"padding:0; color:#000000;">
+            <p style=3D"font-family:'OpenAI Sans', Helvetica, Arial, sans-s=
+erif; font-weight:400; line-height:24px;">Hola, Kevin Nahuel Arias:</p>
+
+            <p style=3D"margin-top: 16px; font-family:'OpenAI Sans', Helvet=
+ica, Arial, sans-serif; font-weight:400; line-height:24px;">Actualizaremos =
+nuestra <a href=3D"https://openai.com/policies/services-communications-priv=
+acy-policy/?utm_campaign=3Dprivacy-policy-marketing-update-row-oct-2026-es&=
+utm_medium=3Demail&utm_source=3Dsendgrid" target=3D"_blank" class=3D"privac=
+y-policy-marketing-update-link" style=3D"color:#000000; text-decoration:und=
+erline;">Pol=C3=ADtica de privacidad </a>para incluir informaci=C3=B3n sobr=
+e los anuncios en ChatGPT, como su funcionamiento y la forma en que puedes =
+controlar tu experiencia.</p>
+
+            <p style=3D"margin-top: 16px; font-family:'OpenAI Sans', Helvet=
+ica, Arial, sans-serif; font-weight:400; line-height:24px;">Es posible que =
+aparezcan anuncios en los planes Gratis y Go. Los planes Plus, Pro, Enterpr=
+ise, Business y Education no tienen anuncios. Los anuncios no influyen en l=
+as respuestas que ChatGPT te da. Cuando veas un anuncio, siempre estar=C3=
+=A1 claramente identificado como patrocinado y aparecer=C3=A1 visualmente s=
+eparado de la respuesta org=C3=A1nica. Recibir=C3=A1s anuncios relevantes y=
+ personalizados utilizando informaci=C3=B3n que permanece =C3=BAnicamente e=
+n ChatGPT, como los anuncios con los que has interactuado o el contexto de =
+tus chats. Puedes administrar la personalizaci=C3=B3n de anuncios en cualqu=
+ier momento desde <a href=3D"https://help.openai.com/articles/20001047-ads-=
+in-chatgpt?utm_campaign=3Dprivacy-policy-marketing-update-row-oct-2026-es&u=
+tm_medium=3Demail&utm_source=3Dsendgrid#can-i-control-my-ads-experience" ta=
+rget=3D"_blank" class=3D"privacy-policy-marketing-update-link" style=3D"col=
+or:#000000; text-decoration:underline;">Configuraci=C3=B3n</a>.</p>
+
+            <p style=3D"margin-top: 16px; font-family:'OpenAI Sans', Helvet=
+ica, Arial, sans-serif; font-weight:400; line-height:24px;">Tus datos perso=
+nales y conversaciones con ChatGPT son privados y no se comparten con anunc=
+iantes. Los anunciantes no tienen acceso a los chats, al historial de chats=
+, a las memorias ni a los datos personales. Los anunciantes solo reciben in=
+formaci=C3=B3n general sobre el rendimiento de sus anuncios, como el total =
+de visualizaciones o clics.</p>
+
+            <p style=3D"margin-top: 16px; font-family:'OpenAI Sans', Helvet=
+ica, Arial, sans-serif; font-weight:400; line-height:24px;">Obt=C3=A9n m=C3=
+=A1s informaci=C3=B3n sobre los <a href=3D"https://openai.com/index/testing=
+-ads-in-chatgpt/?utm_campaign=3Dprivacy-policy-marketing-update-row-oct-202=
+6-es&utm_medium=3Demail&utm_source=3Dsendgrid" target=3D"_blank" class=3D"p=
+rivacy-policy-marketing-update-link" style=3D"color:#000000; text-decoratio=
+n:underline;">anuncios en ChatGPT</a> y los <a href=3D"https://openai.com/c=
+onsumer-privacy/?utm_campaign=3Dprivacy-policy-marketing-update-row-oct-202=
+6-es&utm_medium=3Demail&utm_source=3Dsendgrid" target=3D"_blank" class=3D"p=
+rivacy-policy-marketing-update-link" style=3D"color:#000000; text-decoratio=
+n:underline;">controles de privacidad</a>, incluida la forma en que protege=
+mos tus datos.</p>
+
+            <p style=3D"margin-top: 16px; font-family:'OpenAI Sans', Helvet=
+ica, Arial, sans-serif; font-weight:400; line-height:24px;">Gracias,</p>
+
+            <p style=3D"margin-top: 16px; font-family:'OpenAI Sans', Helvet=
+ica, Arial, sans-serif; font-weight:400; line-height:24px;">El equipo de Op=
+enAI</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+
+         =20
+
+
+        </table>
+        <!--[if (gte mso 9)|(IE)]>
+        </td>
+        </tr>
+        </table>
+        <![endif]-->
+      </td>
+    </tr>
+    <!-- end body block -->
+
+        <!-- start footer -->
+   =20
+   =20
+   =20
+   =20
+   =20
+   =20
+   =20
+   =20
+   =20
+   =20
+   =20
+   =20
+   =20
+   =20
+   =20
+   =20
+   =20
+   =20
+   =20
+   =20
+   =20
+     =20
+     =20
+   =20
+    <tr>
+      <td align=3D"center" class=3D"email-footer-row" style=3D"padding:12px=
+ 0;">
+        <!--[if mso]>
+        <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cellspa=
+cing=3D"0" width=3D"600"><tr><td>
+        <![endif]-->
+        <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cellspa=
+cing=3D"0" width=3D"100%" style=3D"max-width:600px;">
+          <tr>
+            <td align=3D"center" class=3D"footer-td email-footer-surface" s=
+tyle=3D"background-color:#ededed; border-radius:12px; padding:24px;">
+              <table role=3D"presentation" border=3D"0" cellpadding=3D"0" c=
+ellspacing=3D"0" width=3D"100%">
+                <tr>
+                 =20
+                   =20
+                    <td align=3D"left" class=3D"email-footer-logo-cell" sty=
+le=3D"padding-bottom:12px;">
+	                      <a href=3D"https://chatgpt.com/?entry_id=3D984092ec-=
+4ab5-42e5-9c70-922a146fcd6b&deep_link_id=3D3e229479-d46c-4563-8ec2-58d49be5=
+e84f&auth_modal=3D1&login_hint=3Dkevin.arias%40globant.com&utm_campaign=3Dp=
+rivacy-policy-marketing-update-row-oct-2026-es&utm_medium=3Demail&utm_sourc=
+e=3Dsendgrid" target=3D"_blank" style=3D"display:inline-block;">
+                        <img src=3D"https://cdn.mcauto-images-production.se=
+ndgrid.net/d4ef4a73d51fe844/23791e46-5717-4e4f-a33c-0cc5ba7cf5aa/176x45.png=
+" width=3D"88" height=3D"23" alt=3D"Logotipo de ChatGPT" class=3D"email-foo=
+ter-logo-img" style=3D"display:block;border:0;">
+                      </a>
+                    </td>
+                   =20
+                 =20
+                </tr>
+                <tr>
+                  <td>
+                    <table role=3D"presentation" border=3D"0" cellpadding=
+=3D"0" cellspacing=3D"0" width=3D"100%">
+                      <tr class=3D"footer-row">
+                        <td valign=3D"bottom" align=3D"left" class=3D"email=
+-footer-copy" style=3D"font-size:10px; line-height:1.8; color:#000; width:1=
+00%; padding-right:0; vertical-align: bottom; padding-left: 0;">
+                          OpenAI<br/>
+                         =20
+                         =20
+                         =20
+                            <span dir=3D"ltr">1455 3rd Street</span><br/>Sa=
+n Francisco, CA 94158<br/>
+                         =20
+                         =20
+                         =20
+                          <a href=3D"https://openai.com/policies/privacy-po=
+licy/?utm_campaign=3Dprivacy-policy-marketing-update-row-oct-2026-es&utm_me=
+dium=3Demail&utm_source=3Dsendgrid" target=3D"_blank" style=3D"color:#5D5D5=
+D; text-decoration:underline;">Privacidad</a> &middot; <a href=3D"https://o=
+penai.com/terms?utm_campaign=3Dprivacy-policy-marketing-update-row-oct-2026=
+-es&utm_medium=3Demail&utm_source=3Dsendgrid" target=3D"_blank" style=3D"co=
+lor:#5D5D5D; text-decoration:underline;">Condiciones</a><br/>
+                          <span class=3D"email-footer-copyright" style=3D"c=
+olor:#888; display:block; margin-top: 1.8em;">OpenAI =C2=A9 2015=E2=80=9320=
+26</span>
+                        </td>
+                       =20
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+        <!--[if mso]></td></tr></table><![endif]-->
+      </td>
+    </tr>
+    <!-- end footer -->
+
+  </table>
+  <!-- end body -->
+
+<img src=3D"https://s.openai.com/wf/open?upn=3Du001.OgrAXKrVoxAzhoYmM0rTTEi=
+0I72ilWBdVSHbzUUIiNQv29NVI7YBlU30Zv3FA2EmvqBBj9QViBMBiRBl10Mvf-2BY6P4X1C8d9=
+aM65WR9Y30EHhNhOJwnIp4yyJHMc0IvoOSecViPRpA5TfRAU0MeLsTl3EkLl2lNtyoqxIoexLlI=
+04RHrZh6fiUwnWRhBqsu5MnsoY-2Bailqa9nlqyJgXy6jG4J2CrYmG7QfMf-2FnpCnL59HGs8qu=
+mAg9btvKttFeyRsnl3tmGZYVKnOPMwbXqOVYnuLYxCprpNIcGaqmg3gPGAbN3GakNiD1GXeKT58=
+0TeStmVRntwu0DxOxqZWK26EfdizslXnGYHVvkKZ3BL75W5j5xDigg7bvnYAsDJXrTNE-2BtOxs=
+9QWEwB6Rfobw4S7QYLZXA1-2BDc1ljiWfv5LFHv2y3mAIsPTvPiTwh-2BaDqQLR-2BRXa8NpzQo=
+jqK4MNJ0wsORKca16cXj875OMv2Ds1UjVfWatFr8MmIMvpMpGvD3GmVhPIJSyi5YH6Xq-2F6kgK=
+yGJ6avxblcZdFJKbBOaEYOarooIwPS3I7RnWUSph3hK6yEr6LpsejjG62YjsHe88Lwm4bbnFjYa=
+TAF335ctFaheK2otQfNcHhJWl8GbqtTieIbLMtW2E7pDJ0i6wQUEqDJZKKAJUJudR3RTVm1vCwC=
+xaVGSzApv9GhVGNDNVfWP4ROiVotEebAzHoKS2NjU0EXbix0rDZGGFDlIuGxv4NDJZCDYblxXQS=
+-2BeAeP0tgPbeub4eIrkeuqqYZNy3Xy-2Fq8QkwZoKo0ymWkFNM60W-2BQNb7Q3vCv1kei-2BMN=
+cPOdPHVQRX4GwVR1-2FeuaEfT-2FIybBEjc6CtwioI1UNN-2BdjGwd6Xg9QQU28dXpdLNQJoJSU=
+5v6" alt=3D"" width=3D"1" height=3D"1" border=3D"0" style=3D"height:1px !im=
+portant;width:1px !important;border-width:0 !important;margin-top:0 !import=
+ant;margin-bottom:0 !important;margin-right:0 !important;margin-left:0 !imp=
+ortant;padding-top:0 !important;padding-bottom:0 !important;padding-right:0=
+ !important;padding-left:0 !important;"/></body>
+</html>

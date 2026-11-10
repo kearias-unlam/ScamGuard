@@ -1,0 +1,24 @@
+- Riesgo Alto:
+Estimado usuario,
+Hemos detectado actividad sospechosa en su cuenta. Por su seguridad, hemos bloqueado temporalmente el acceso a sus fondos y tarjetas asociadas.
+Para reactivar su cuenta de inmediato, debe verificar sus datos ingresando al siguiente enlace oficial dentro de las próximas 24 horas:
+[Enlace falso: bit.ly]
+Si no realiza esta verificación, su cuenta será dada de baja permanentemente.
+Atentamente, Departamento de Seguridad."
+
+- Riesgo Medio:
+Hola, tu paquete todavía figura pendiente de confirmación en nuestro sistema. Estamos intentando coordinar la entrega, pero necesitamos que confirmes si todavía estás disponible para recibirlo esta semana. De lo contrario, podría reprogramarse el envío.
+
+- Riesgo bajo:
+Hola, te informamos que estamos realizando una actualización de nuestros sistemas. Para evitar inconvenientes al operar desde tu cuenta, te recomendamos revisar que tus datos de contacto estén actualizados durante los próximos días. Si ya realizaste la actualización, podés ignorar este mensaje.
+
+
+Link: 
+- Riesgo Alto: http://banc0-seguro-login.net
+- Riesgo Medio: https://mercado-pago.example/verificar-cuenta
+- Riesgo Bajo: https://google.com
+
+Mensajes EML:
+
+- Riesgo Bajo: Actualizaciones de la Politica de privacidad
+- Riesgo Alto: phishing_riesgo_alto_2.emñ
