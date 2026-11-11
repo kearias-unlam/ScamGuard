@@ -6,7 +6,7 @@ Single source of truth for what ScamGuard must do. Implement only what is listed
 - Each User Story is loaded into Azure DevOps with the `ado-work-items` skill. Record the ADO ID next to each Feature, User Story, and Task once created.
 - Reference story IDs in commits and tests (e.g. `// US-1.2`). Each acceptance criterion maps to one Playwright test.
 - Every task ships with the tests it adds or breaks; no task leaves the suite failing.
-- E2E tests mock `POST /analysis`, `POST /analysis/email`, and `POST /analysis/url` with `page.route` through the shared helper `tests/fixtures/analysis.ts`, and `GET /critical-messages` through `tests/fixtures/critical-messages.ts`; Pytest covers the backend with the AI client stubbed and SQLite on a temporary file.
+- E2E tests mock `POST /analysis`, `POST /analysis/email`, and `POST /analysis/url` with `page.route` through the shared helper `tests/fixtures/analysis.ts`, and `GET /critical-messages` through `tests/fixtures/critical-messages.ts`, the session (`GET /api/auth/session`) through `tests/fixtures/session.ts`, and the history endpoints through `tests/fixtures/history.ts`; Pytest covers the backend with the AI client stubbed and SQLite on a temporary file.
 - Selectors marked **(new)** do not exist yet; confirm them with a page snapshot after implementation.
 - Task dependencies are listed as "Depends on"; do not start a task before its dependencies are done.
 
@@ -452,6 +452,74 @@ Criterios de aceptación:
 Tasks:
 - #95 Frontend: narrow centered column and centered hero. In `src/app/globals.css`, `.home` centers its children horizontally; `.input-card` and `.result-column` get `width: min(100%, max(33.333vw, 30rem))`, as documented in [Visual design](#visual-design); the hero centers its text, eyebrow, and `panel-link`. No text, role, element type, or `data-testid` changes. WCAG AA unchanged. Add the US-8.2 AC1 to AC3 tests to `tests/columna-centrada.spec.ts` (same locators as #94; AC2 compares the left gap with the right gap within 1 px; AC3 compares the width with the page width minus the `main` side padding). Verification: the full Playwright suite stays green; attach screenshots of the home page at 1920, 1280, and 375 px wide, empty and with a result. Depends on #94.
 
+## Feature 9 - Inicio de sesión
+
+ADO ID: #96
+
+El usuario puede iniciar sesión con su cuenta de Google o de Microsoft (personal o de la universidad) a través de SSO. El inicio de sesión es opcional: sin sesión, ScamGuard funciona igual que hasta ahora (análisis, panel y "Reintentar"); con sesión, además se guarda su historial (Feature 10). ScamGuard no maneja contraseñas: la identidad la confirman Google o Microsoft (ver [Authentication](#authentication)).
+
+### US-9.1 Iniciar sesión con Google o Microsoft
+Como usuario quiero iniciar sesión con mi cuenta de Google o de Microsoft para que ScamGuard me reconozca sin crear una cuenta nueva.
+
+ADO ID: #98 · Status: pending
+
+Criterios de aceptación:
+1. Sin sesión, el encabezado muestra el enlace "Iniciar sesión", que lleva a la página "Iniciar sesión" con los botones "Continuar con Google" y "Continuar con Microsoft".
+2. Al hacer clic en "Continuar con Google", se inicia el inicio de sesión con Google.
+3. Al hacer clic en "Continuar con Microsoft", se inicia el inicio de sesión con Microsoft.
+4. Con sesión, el encabezado muestra el nombre del usuario y el botón "Cerrar sesión", y no muestra "Iniciar sesión".
+5. Al hacer clic en "Cerrar sesión", el encabezado vuelve a mostrar "Iniciar sesión".
+
+Tasks:
+- #101 Frontend: Auth.js setup. Add `next-auth` (Auth.js; approved for Feature 9, exact version pinned on install) with the Google and Microsoft Entra ID providers in `src/auth.ts` and the route handler `src/app/api/auth/[...nextauth]/route.ts`, as documented in [Authentication](#authentication) (JWT session, no database adapter, custom sign-in page `/login`). `SessionProvider` wraps the layout without a server-side session, so the client reads it from `GET /api/auth/session` (mockable in E2E). Add the frontend variables to a new `.env.example` at the repository root and document the one-time setup (Google OAuth client, Entra app registration, redirect URIs) in `README.md`. No visible change yet.
+- #102 Frontend: login page and header session. `src/app/login/page.tsx` with the `h1` "Iniciar sesión", "Continuar con Google" (`login-google-button` **(new)**), "Continuar con Microsoft" (`login-microsoft-button` **(new)**), each calling Auth.js `signIn` with its provider and returning to `/`, and "Volver al análisis". `SiteHeader` shows, without a session, the "Iniciar sesión" link (`login-link` **(new)**) and, with a session, the user's name (`user-name` **(new)**) and "Cerrar sesión" (`logout-button` **(new)**). Plain CSS with the palette variables (cards and buttons reuse the existing styles); WCAG AA. Create `tests/fixtures/session.ts` (mocks `**/api/auth/session` signed in or signed out, and `**/api/auth/signin/*` and `**/api/auth/signout`) and add `tests/inicio-sesion.spec.ts` for AC1 to AC5 (AC2 and AC3 assert the request to `**/api/auth/signin/google` and `**/api/auth/signin/microsoft-entra-id`). Attach screenshots of the login page and of the header with and without a session. Depends on #101.
+- #103 Backend: user from the session token. Add `PyJWT` to `backend/requirements.txt` (approved for Feature 9). `backend/app/auth.py` defines a `User` (`id`) and the optional dependency `get_current_user`: no `Authorization` header gives `None`; a valid token gives the `User`; an invalid or expired token, or a missing `SCAMGUARD_JWT_SECRET`, returns `401` (see [Authentication](#authentication)). Add `SCAMGUARD_JWT_SECRET` to `backend/.env.example` and `backend/app/auth.py` to the backend structure in `AGENTS.md`. CORS also allows the `Authorization` header. Pytest: no header, valid token, expired token, wrong signature, missing secret, and CORS with `Authorization`.
+- #104 Frontend: send the session token to the backend. The Auth.js `jwt` and `session` callbacks add `backendToken` to the session, signed as documented in [Authentication](#authentication) with Node's built-in `crypto` (no new dependency). `SessionProvider` refetches the session every 30 minutes (`refetchInterval`), so the 1-hour token does not expire in an open tab. The `post*` functions of `src/lib/api.ts` take an optional token and send it as `Authorization: Bearer <token>`; `page.tsx` passes it only with a session, so without one the requests do not change. Add to `tests/fixtures/session.ts` a `backendToken` in the mocked session and a test that, with a session, `POST /analysis` carries the header, and without one it does not. Depends on #102 and #103.
+
+## Feature 10 - Historial de análisis
+
+ADO ID: #97
+
+Con la sesión iniciada (Feature 9), el usuario ve en una barra lateral a la izquierda, al estilo de ChatGPT, los análisis que hizo y puede volver a abrirlos. Cada análisis exitoso (mensaje, correo o link) es una entrada del historial. Sin sesión no hay historial: el análisis funciona como hasta ahora y no se guarda nada. El historial se guarda en el backend, por usuario, y nadie más lo ve (ver [Analysis history storage](#analysis-history-storage)). Versión gratuita: como máximo 3 análisis; con el historial lleno no se puede hacer un análisis nuevo hasta eliminar uno. La versión completa (historial sin límite, con un modelo freemium) queda fuera de alcance y se definirá más adelante.
+
+### US-10.1 Ver mi historial de análisis
+Como usuario con la sesión iniciada quiero ver en una barra lateral mis análisis anteriores para volver a consultarlos sin tener que repetirlos.
+
+ADO ID: #99 · Status: pending
+
+El título de cada entrada es el resumen del análisis, recortado. Al abrir una entrada se ve su resultado completo (nivel de riesgo, explicación, resumen, indicadores, recomendaciones y aviso), no el mensaje original, que no se guarda.
+
+Criterios de aceptación:
+1. Sin sesión, la página principal no muestra la barra lateral "Historial".
+2. Con sesión y sin análisis guardados, la barra lateral "Historial" muestra "Todavía no hay análisis en tu historial." (`history-empty`).
+3. Con sesión, cada análisis guardado se muestra en `history-entry` con su título y su fecha, del más reciente al más antiguo.
+4. Después de un análisis exitoso, el análisis aparece primero en el historial.
+5. Al elegir un análisis del historial, su resultado se muestra en `analysis-result`.
+6. Si el historial no se puede cargar, se muestra "No se pudo cargar el historial. Intentá de nuevo más tarde." (`history-error`) y el análisis sigue funcionando.
+
+Tasks:
+- #105 Contract: add `HistoryEntryKind`, `HistoryEntrySummary`, `HistoryResponse`, and `HistoryEntry` (see [API contract](#api-contract)) to `src/types.ts` and the matching Pydantic models to `backend/app/models.py`. Nothing is served or rendered yet.
+- #106 Storage: `backend/app/storage/history.py` with the `analysis_history` table documented in [Analysis history storage](#analysis-history-storage): `save_history_entry`, `list_history_entries`, `get_history_entry`, `delete_history_entry`, and `count_history_entries`, always filtered by user. Reuses the DB path and `StorageError` of the critical messages storage (moved to a shared module, not duplicated). Pytest on a temporary DB file: save and list (order, only the user's entries), get another user's entry returns nothing, delete, and a `sqlite3` error becoming `StorageError`. Depends on #105.
+- #107 Backend: save analyses and `GET /history`. The three analysis endpoints receive `get_current_user`; with a user, after a successful analysis the service saves an entry (kind, title, and the full `MessageAnalysisResponse`); a `StorageError` on save is logged and the analysis is returned as usual; without a user nothing is saved. `GET /history` and `GET /history/{id}` as in the [API contract](#api-contract) (`401` without a user, `404` for an entry that does not exist or belongs to another user, `503` with the history text on a storage error). Pytest: an analysis with a user is saved with its title; without a user nothing is saved; a failed analysis is not saved; a storage error on save still returns 200; list order; get own entry; another user's entry is `404`; `401` without a user. Depends on #103, #105, and #106.
+- #108 Frontend: history sidebar. Add `getHistory` and `getHistoryEntry` to `src/lib/api.ts` (with the token; throw on non-2xx). A `HistorySidebar` component, rendered by the home page only with a session: an `aside` named by its `h2` "Historial" **(new)**, one `history-entry` **(new)** button per entry with its title and date (`dd/mm/aaaa`, display mapping only), `history-empty` **(new)**, and `history-error` **(new)**. `page.tsx` reloads the history after a successful analysis; choosing an entry loads it and shows its analysis in the result column, as a new result does (the form, "Reintentar", and the last request do not change). Layout as in [Visual design](#visual-design); without a session nothing changes, so the Feature 8 tests stay green. Create `tests/fixtures/history.ts` (mocks `**/history` and `**/history/*`) and add `tests/historial.spec.ts` for AC1 to AC6. Attach screenshots at 1920 and 375 px wide, empty, with entries, and with an entry open. Depends on #104 and #105.
+
+### US-10.2 Límite del historial en la versión gratuita
+Como usuario con la sesión iniciada quiero saber cuándo mi historial está lleno y elegir qué análisis eliminar para poder seguir analizando sin perder uno sin darme cuenta.
+
+ADO ID: #100 · Status: pending
+
+Ningún análisis se elimina solo: solo el usuario elimina entradas del historial. El límite vale para mensajes, correos y links por igual y lo controla el backend.
+
+Criterios de aceptación:
+1. La barra lateral muestra el aviso "Versión gratuita: hasta 3 análisis en tu historial." (`history-limit-notice`).
+2. Con 3 análisis en el historial, el botón de análisis de la pestaña visible está deshabilitado y se muestra "Llegaste al límite de 3 análisis de la versión gratuita. Eliminá uno del historial para hacer un análisis nuevo." (`history-full-message`).
+3. Cada análisis del historial tiene un botón "Eliminar" (`history-delete-button`); al hacer clic, el análisis deja de mostrarse en el historial.
+4. Con el historial lleno, al eliminar un análisis deja de mostrarse el mensaje de límite y el botón de análisis se habilita.
+
+Tasks:
+- #109 Backend: history limit and delete. `HISTORY_LIMIT = 3`, defined once in the backend and returned as `limit` and `isFull` by `GET /history`. With a user whose history is full, the three analysis endpoints return `409` with the full history text before calling the AI. `DELETE /history/{id}` returns `204`, or `404` for an entry that does not exist or belongs to another user. CORS also allows `DELETE`. Pytest: a fourth analysis returns `409` and the AI is not called; without a user there is no limit; after a delete the next analysis is saved; deleting another user's entry is `404`; CORS for `DELETE`. Depends on #107.
+- #110 Frontend: full history and delete. Add `deleteHistoryEntry` to `src/lib/api.ts`. `HistorySidebar` shows `history-limit-notice` **(new)** and an "Eliminar" button per entry (`history-delete-button` **(new)**, accessible name "Eliminar" plus the entry title) that deletes it and reloads the history; a result already shown stays. With `isFull`, the forms receive a prop that disables their analyze button and the input card shows `history-full-message` **(new)** (the frontend relies on `isFull` and never counts entries itself). A `409` from an analysis endpoint shows the same message and reloads the history. Add the delete helper to `tests/fixtures/history.ts` and `tests/limite-historial.spec.ts` for AC1 to AC4. Depends on #108 and #109.
+
 ## UI texts
 
 | Where | Text |
@@ -509,6 +577,18 @@ Tasks:
 | Unreadable link error | No se pudo leer el link. Verificá que sea una dirección completa, por ejemplo https://ejemplo.com. |
 | Recommendations heading (US-7.1) | Qué podés hacer |
 | Recommendation texts (set by the backend) | See the catalog in [Recommendations](#recommendations) |
+| Header login link (US-9.1) | Iniciar sesión |
+| Login page heading | Iniciar sesión |
+| Login buttons | Continuar con Google / Continuar con Microsoft |
+| Login page link back to home | Volver al análisis |
+| Header logout button | Cerrar sesión |
+| History sidebar heading (US-10.1) | Historial |
+| History empty | Todavía no hay análisis en tu historial. |
+| History error | No se pudo cargar el historial. Intentá de nuevo más tarde. |
+| History entry date | dd/mm/aaaa |
+| History limit notice (US-10.2) | Versión gratuita: hasta 3 análisis en tu historial. |
+| History full message (also the `409` body) | Llegaste al límite de 3 análisis de la versión gratuita. Eliminá uno del historial para hacer un análisis nuevo. |
+| Delete history entry button | Eliminar |
 
 ## Visual design
 
@@ -541,6 +621,7 @@ Plain CSS in `src/app/globals.css` (built into Next.js; no CSS framework). Color
 - All text/background pairs meet WCAG AA (4.5:1); focus is always visible (`:focus-visible` outline, 2px `--color-primary`, 2px offset).
 - Layout (Feature 5): full-width header with an inner max-width of 77.5rem; `main` with the same max-width, centered, with 1.25rem side padding (2rem from 40rem). The panel stays a single column.
 - Home layout (Feature 8, replaces the two columns of Feature 5): the hero, the input card, and the result column are stacked in one column, centered horizontally, with the result below the input card at every screen width. The input card and the result column share the same width, `min(100%, max(33.333vw, 30rem))`: one third of the viewport on wide screens, never narrower than 30rem so the tabs and the form stay usable (so below a 90rem, 1440 px, viewport the column is 30rem, wider than one third), and the full available width when the screen is narrower than that. The hero text, eyebrow, and `panel-link` are centered above the column.
+- History sidebar (Feature 10, only with a session): from 64rem wide, a 16rem column on the left of `main`, and the hero, input card, and result column stay centered in the remaining width (Feature 8 widths unchanged); below 64rem, the sidebar goes above the hero at full width. Entries are buttons in a list, with the shared focus outline; the limit notice is a muted note like the disclaimer. Without a session the home layout is exactly the Feature 8 one.
 - Risk badge colors keep the `--color-risk-*` tokens; the indicator icon backgrounds use `--color-primary-soft`, since an indicator has no level of its own.
 
 ## API contract
@@ -596,7 +677,7 @@ export interface MessageAnalysisResponse {
 - `recommendations` sits next to `result`, not inside it, because `AnalysisResult` is also the shape the model returns; the model never writes recommendations (see [Recommendations](#recommendations)).
 
 - `evidence`, `explanation`, and `UNDETERMINED` are new and must be added to `src/types.ts` (task #11) and to the backend models.
-- The frontend reads the backend base URL from `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:8000`). E2E tests mock `**/analysis`, `**/analysis/email`, `**/analysis/url`, and `**/critical-messages`, so no backend needs to run.
+- The frontend reads the backend base URL from `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:8000`). E2E tests mock `**/analysis`, `**/analysis/email`, `**/analysis/url`, `**/critical-messages`, `**/history`, `**/history/*`, and the Auth.js routes `**/api/auth/*`, so no backend or identity provider needs to run.
 - JSON fields are camelCase; backend models use snake_case with camelCase aliases.
 - Errors:
   - `422`: empty or whitespace-only message. The UI cannot send it (the button is disabled), so it is covered by Pytest only.
@@ -666,6 +747,35 @@ export interface UrlAnalysisRequest {
   - `422`: `url` is blank, has more than 2,000 characters, or is not a valid link (see [URL digest](#url-digest)). For an invalid link the body is `{ "detail": "No se pudo leer el link. Verificá que sea una dirección completa, por ejemplo https://ejemplo.com." }`; blank or too long keeps FastAPI's default validation body. The frontend ignores the body and shows the unreadable link text from [UI texts](#ui-texts), without retry.
   - `503`: same as `POST /analysis`. Any other non-2xx or network error shows the `POST /analysis` error text with retry.
 - Links are never fetched, stored, or shared in the panel: the request has no `shareInPanel`.
+
+Session and history (Features 9 and 10)
+
+- The three analysis endpoints accept an optional `Authorization: Bearer <token>` header (see [Authentication](#authentication)). Without it they behave as before. With a valid token, a successful analysis is also saved in the user's history; the response does not change.
+- New analysis errors: `401` when the token is invalid or expired; `409` when the user's history is full (body: `{ "detail": "<history full message from UI texts>" }`), returned before calling the AI. The frontend shows the history full message for `409` and the busy error with retry for `401`.
+
+```ts
+export type HistoryEntryKind = 'message' | 'email' | 'url';
+
+export interface HistoryEntrySummary {
+  id: number;
+  kind: HistoryEntryKind;
+  title: string; // The analysis summary, cut to 80 characters
+  createdAt: string; // UTC, ISO 8601
+}
+
+export interface HistoryResponse {
+  entries: HistoryEntrySummary[]; // Most recent first
+  limit: number; // 3 in the free version; defined once in the backend
+  isFull: boolean; // entries.length >= limit
+}
+
+export interface HistoryEntry extends HistoryEntrySummary {
+  analysis: MessageAnalysisResponse; // As returned when it was analyzed
+}
+```
+
+- `GET /history` → `HistoryResponse`. `GET /history/{id}` → `HistoryEntry`. `DELETE /history/{id}` → `204`.
+- All three require a valid token: `401` without one. An entry that does not exist or belongs to another user is `404`. A storage error is `503` with body `{ "detail": "No se pudo cargar el historial. Intentá de nuevo más tarde." }`. The frontend ignores the bodies.
 
 ## AI contract
 
@@ -824,6 +934,27 @@ What the user could do next, chosen by the backend from a fixed catalog (Feature
 - Failure: a save error is logged and never changes the `POST /analysis` response; a read error returns the `503` of `GET /critical-messages`.
 - Retention: messages are never deleted.
 
+## Authentication
+
+Login with SSO (Feature 9). Optional: every existing feature works without a session.
+
+- Frontend: Auth.js (`next-auth`) in Next.js, with the Google and Microsoft Entra ID providers. Microsoft uses the `common` v2.0 issuer, so both personal and work or school accounts can sign in. Session strategy `jwt` (encrypted cookie; no database adapter). Custom sign-in page `/login`.
+- Configuration (frontend `.env.local`, never committed; listed in `.env.example`): `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `AUTH_MICROSOFT_ENTRA_ID_ID`, `AUTH_MICROSOFT_ENTRA_ID_SECRET`, `AUTH_MICROSOFT_ENTRA_ID_ISSUER`, and `SCAMGUARD_JWT_SECRET`. The backend `.env` has the same `SCAMGUARD_JWT_SECRET`.
+- User id: `<provider>:<provider account id>` (e.g. `google:1234`), stable across logins. The name is shown in the header; the email is not stored by ScamGuard.
+- Backend token: the session carries `backendToken`, a JWT signed with HS256 and `SCAMGUARD_JWT_SECRET`, with `sub` (user id) and `exp` (1 hour), rebuilt by the Auth.js callbacks when the session is read. The frontend sends it as `Authorization: Bearer <token>`; the backend verifies it with PyJWT (signature, `exp`, and `sub` present). The backend never talks to Google or Microsoft.
+- Errors: an invalid or expired token, or a missing `SCAMGUARD_JWT_SECRET` while a token is sent, returns `401`; it never falls back to anonymous.
+- Known limitation: some universities require an administrator to approve a new app before their Microsoft 365 accounts can use it. Try a university account early.
+
+## Analysis history storage
+
+- Engine: the same SQLite file as [Critical messages storage](#critical-messages-storage) (`SCAMGUARD_DB_PATH`), module `backend/app/storage/history.py`, same `StorageError`.
+- Table `analysis_history`: `id INTEGER PRIMARY KEY`, `user_id TEXT NOT NULL`, `kind TEXT NOT NULL` (`message`, `email`, or `url`), `title TEXT NOT NULL`, `analysis_json TEXT NOT NULL` (the `MessageAnalysisResponse` as returned), `created_at TEXT NOT NULL` (UTC, ISO 8601). Created on first use.
+- What is saved: only successful analyses of a signed-in user, with its result and recommendations. The submitted message, email file, link, digest, and `sensitiveData` are never saved; the indicator evidence quotes inside the result are saved, since they are part of the result.
+- Title: the result `summary`, trimmed and cut to 80 characters with "…" when longer.
+- Limit: `HISTORY_LIMIT = 3` per user, checked before calling the AI. Entries are never deleted automatically; `DELETE /history/{id}` deletes the row permanently.
+- Every query filters by `user_id`: a user can never read or delete another user's entries.
+- Failure: a save error is logged and never changes the analysis response; a read error returns the `503` of the history endpoints.
+
 ## Non-functional requirements
 
 ### NFR-01 Decision support disclaimer
@@ -845,4 +976,4 @@ Follow `.github/instructions/*.instructions.md`.
 Each story has tests for the happy path and the most likely failure path, as defined in `AGENTS.md`.
 
 ### NFR-07 Privacy of stored messages
-Only `HIGH` risk messages the user chose to share are stored, always masked, and the panel says so. See [Critical messages storage](#critical-messages-storage). Email files (Feature 4) are never stored or shared; see [Email digest](#email-digest). Links (Feature 6) are never fetched, stored, or shared; see [URL digest](#url-digest).
+Only `HIGH` risk messages the user chose to share are stored, always masked, and the panel says so. See [Critical messages storage](#critical-messages-storage). Email files (Feature 4) are never stored or shared; see [Email digest](#email-digest). Links (Feature 6) are never fetched, stored, or shared; see [URL digest](#url-digest). The analysis history (Feature 10) is stored only for signed-in users, holds results but never the submitted input, is visible only to its owner, and is deleted when the user deletes an entry; see [Analysis history storage](#analysis-history-storage).
