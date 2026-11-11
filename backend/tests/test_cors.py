@@ -36,3 +36,18 @@ def test_cors_preflight_rejects_other_origin(client: TestClient) -> None:
 
     assert response.status_code == 400
     assert "access-control-allow-origin" not in response.headers
+
+
+# US-9.1 (#103): the frontend sends the session token in the Authorization header.
+def test_cors_preflight_allows_authorization_header(client: TestClient) -> None:
+    response = client.options(
+        "/analysis",
+        headers={
+            "Origin": FRONTEND_ORIGIN,
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "authorization, content-type",
+        },
+    )
+
+    assert response.status_code == 200
+    assert "authorization" in response.headers["access-control-allow-headers"].lower()
