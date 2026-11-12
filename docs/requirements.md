@@ -485,7 +485,7 @@ Con la sesión iniciada (Feature 9), el usuario ve en una barra lateral a la izq
 ### US-10.1 Ver mi historial de análisis
 Como usuario con la sesión iniciada quiero ver en una barra lateral mis análisis anteriores para volver a consultarlos sin tener que repetirlos.
 
-ADO ID: #99 · Status: pending
+ADO ID: #99 · Status: done
 
 El título de cada entrada es el resumen del análisis, recortado. Al abrir una entrada se ve su resultado completo (nivel de riesgo, explicación, resumen, indicadores, recomendaciones y aviso), no el mensaje original, que no se guarda.
 
