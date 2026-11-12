@@ -1,4 +1,6 @@
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
+
+import { expect, test } from './fixtures/test';
 
 // US-8.1: see the result below the input.
 

@@ -6,7 +6,7 @@ Single source of truth for what ScamGuard must do. Implement only what is listed
 - Each User Story is loaded into Azure DevOps with the `ado-work-items` skill. Record the ADO ID next to each Feature, User Story, and Task once created.
 - Reference story IDs in commits and tests (e.g. `// US-1.2`). Each acceptance criterion maps to one Playwright test.
 - Every task ships with the tests it adds or breaks; no task leaves the suite failing.
-- E2E tests mock `POST /analysis`, `POST /analysis/email`, and `POST /analysis/url` with `page.route` through the shared helper `tests/fixtures/analysis.ts`, and `GET /critical-messages` through `tests/fixtures/critical-messages.ts`, the session (`GET /api/auth/session`) through `tests/fixtures/session.ts`, and the history endpoints through `tests/fixtures/history.ts`; Pytest covers the backend with the AI client stubbed and SQLite on a temporary file.
+- E2E tests mock `POST /analysis`, `POST /analysis/email`, and `POST /analysis/url` with `page.route` through the shared helper `tests/fixtures/analysis.ts`, and `GET /critical-messages` through `tests/fixtures/critical-messages.ts`, the session (`GET /api/auth/session`) through `tests/fixtures/session.ts` (every spec imports `test` from `tests/fixtures/test.ts`, which mocks it signed out by default), and the history endpoints through `tests/fixtures/history.ts`; Pytest covers the backend with the AI client stubbed and SQLite on a temporary file.
 - Selectors marked **(new)** do not exist yet; confirm them with a page snapshot after implementation.
 - Task dependencies are listed as "Depends on"; do not start a task before its dependencies are done.
 
@@ -461,7 +461,7 @@ El usuario puede iniciar sesión con su cuenta de Google o de Microsoft (persona
 ### US-9.1 Iniciar sesión con Google o Microsoft
 Como usuario quiero iniciar sesión con mi cuenta de Google o de Microsoft para que ScamGuard me reconozca sin crear una cuenta nueva.
 
-ADO ID: #98 · Status: pending
+ADO ID: #98 · Status: done
 
 Criterios de aceptación:
 1. Sin sesión, el encabezado muestra el enlace "Iniciar sesión", que lleva a la página "Iniciar sesión" con los botones "Continuar con Google" y "Continuar con Microsoft".

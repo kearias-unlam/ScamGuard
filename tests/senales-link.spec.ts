@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures/test';
 
 import type { Indicator } from '../src/types';
 import { analysisResponseWithIndicators, mockUrlAnalysis, openUrlTab } from './fixtures/analysis';
