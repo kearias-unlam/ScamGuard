@@ -523,7 +523,7 @@ Tasks:
 ### US-10.3 Ver lo que analicé
 Como usuario con la sesión iniciada quiero ver en el historial el mensaje, el correo o el link que analicé para recordar a qué corresponde cada resultado.
 
-ADO ID: #111 · Status: pending
+ADO ID: #111 · Status: done
 
 Lo analizado se guarda junto al resultado, aunque tenga datos personales: es el historial del propio usuario y solo lo ve él. Se borra con "Eliminar". Para un mensaje se guarda el texto tal como se envió; para un link, el link; para un correo, el resumen que analizó ScamGuard (remitente, asunto, autenticación, adjuntos, enlaces y cuerpo; ver [Email digest](#email-digest)), no el archivo. Los "Datos a ocultar" no se guardan. Se muestra solo para leer: el formulario no cambia (US-10.1).
 
