@@ -4,10 +4,13 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
+from app.auth import User, get_current_user, require_current_user
 from app.models import (
     CriticalMessagesResponse,
     EmailAnalysisRequest,
     MessageAnalysisRequest,
+    HistoryEntry,
+    HistoryResponse,
     MessageAnalysisResponse,
     UrlAnalysisRequest,
 )
@@ -22,6 +25,13 @@ from app.services.analysis import (
     get_message_saver,
 )
 from app.services.critical_messages import get_critical_messages
+from app.services.history import (
+    HistorySaver,
+    get_history,
+    get_history_entry,
+    get_history_saver,
+    record_analysis,
+)
 
 router = APIRouter()
 
@@ -31,6 +41,8 @@ def post_analysis(
     request: MessageAnalysisRequest,
     analyzer: Annotated[Analyzer, Depends(get_analyzer)],
     save: Annotated[MessageSaver, Depends(get_message_saver)],
+    user: Annotated[User | None, Depends(get_current_user)],
+    save_history: Annotated[HistorySaver, Depends(get_history_saver)],
 ) -> MessageAnalysisResponse:
     result = analyze_message(
         request.message,
@@ -39,27 +51,48 @@ def post_analysis(
         sensitive_data=request.sensitive_data,
         save=save,
     )
-    return build_analysis_response(result)
+    response = build_analysis_response(result)
+    record_analysis(user, "message", response, save_history)  # US-10.1: only after a successful analysis.
+    return response
 
 
-# US-4.2: no saver dependency, so an email can never be stored.
+# US-4.2: no saver dependency, so an email can never be stored; only its result goes to the history (US-10.1).
 @router.post("/analysis/email", response_model=MessageAnalysisResponse)
 def post_email_analysis(
     request: EmailAnalysisRequest,
     analyzer: Annotated[Analyzer, Depends(get_analyzer)],
+    user: Annotated[User | None, Depends(get_current_user)],
+    save_history: Annotated[HistorySaver, Depends(get_history_saver)],
 ) -> MessageAnalysisResponse:
-    return build_analysis_response(analyze_email(request.email_content, analyzer))
+    response = build_analysis_response(analyze_email(request.email_content, analyzer))
+    record_analysis(user, "email", response, save_history)
+    return response
 
 
-# US-6.2: no saver dependency, so a link can never be stored.
+# US-6.2: no saver dependency, so a link can never be stored; only its result goes to the history (US-10.1).
 @router.post("/analysis/url", response_model=MessageAnalysisResponse)
 def post_url_analysis(
     request: UrlAnalysisRequest,
     analyzer: Annotated[Analyzer, Depends(get_analyzer)],
+    user: Annotated[User | None, Depends(get_current_user)],
+    save_history: Annotated[HistorySaver, Depends(get_history_saver)],
 ) -> MessageAnalysisResponse:
-    return build_analysis_response(analyze_url(request.url, analyzer))
+    response = build_analysis_response(analyze_url(request.url, analyzer))
+    record_analysis(user, "url", response, save_history)
+    return response
 
 
 @router.get("/critical-messages", response_model=CriticalMessagesResponse)
 def list_critical_messages() -> CriticalMessagesResponse:
     return get_critical_messages()
+
+
+# US-10.1: the signed-in user's history; never another user's entries.
+@router.get("/history", response_model=HistoryResponse)
+def list_history(user: Annotated[User, Depends(require_current_user)]) -> HistoryResponse:
+    return get_history(user)
+
+
+@router.get("/history/{entry_id}", response_model=HistoryEntry)
+def read_history_entry(entry_id: int, user: Annotated[User, Depends(require_current_user)]) -> HistoryEntry:
+    return get_history_entry(user, entry_id)

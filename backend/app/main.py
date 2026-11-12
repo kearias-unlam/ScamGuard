@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from app.ai.errors import AIServiceError
 from app.routes import router
 from app.services.email_digest import InvalidEmailError
+from app.services.history import HistoryEntryNotFoundError, HistoryUnavailableError
 from app.services.url_digest import InvalidUrlError
 from app.storage.database import StorageError
 
@@ -16,6 +17,7 @@ FRONTEND_ORIGIN = "http://localhost:3000"
 # User-visible 503 texts (docs/requirements.md, API contract). Defined once in the backend.
 AI_UNAVAILABLE_DETAIL = "Los servidores están ocupados. Intentá de nuevo más tarde."
 PANEL_UNAVAILABLE_DETAIL = "No se pudo cargar el panel. Intentá de nuevo más tarde."
+HISTORY_UNAVAILABLE_DETAIL = "No se pudo cargar el historial. Intentá de nuevo más tarde."
 # User-visible 422 text for an unreadable email (US-4.2); the same text the frontend shows.
 EMAIL_UNREADABLE_DETAIL = "No se pudo leer el correo. Verificá que sea un archivo .eml de hasta 1 MB."
 # User-visible 422 text for an invalid link (US-6.2); the same text the frontend shows.
@@ -44,6 +46,19 @@ async def handle_ai_service_error(request: Request, error: AIServiceError) -> JS
 async def handle_storage_error(request: Request, error: StorageError) -> JSONResponse:
     logger.warning("Storage error: %s", error)  # Internal cause only; never sent to the client.
     return JSONResponse(status_code=503, content={"detail": PANEL_UNAVAILABLE_DETAIL})
+
+
+# US-10.1: the history has its own 503 text; a StorageError from the panel keeps the panel text.
+@app.exception_handler(HistoryUnavailableError)
+async def handle_history_unavailable_error(request: Request, error: HistoryUnavailableError) -> JSONResponse:
+    logger.warning("History storage error: %s", error)  # Internal cause only; never sent to the client.
+    return JSONResponse(status_code=503, content={"detail": HISTORY_UNAVAILABLE_DETAIL})
+
+
+# US-10.1: an entry that does not exist and another user's entry look the same.
+@app.exception_handler(HistoryEntryNotFoundError)
+async def handle_history_entry_not_found(request: Request, error: HistoryEntryNotFoundError) -> JSONResponse:
+    return JSONResponse(status_code=404, content={"detail": "Not Found"})
 
 
 @app.exception_handler(InvalidEmailError)

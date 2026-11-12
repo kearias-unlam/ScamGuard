@@ -10,7 +10,7 @@ import os
 from dataclasses import dataclass
 
 import jwt
-from fastapi import Header, HTTPException
+from fastapi import Depends, Header, HTTPException
 
 JWT_SECRET_ENV = "SCAMGUARD_JWT_SECRET"
 JWT_ALGORITHM = "HS256"
@@ -57,3 +57,10 @@ def get_current_user(authorization: str | None = Header(default=None)) -> User |
     if not isinstance(subject, str) or not subject.strip():
         raise _unauthorized()
     return User(id=subject)
+
+
+def require_current_user(user: User | None = Depends(get_current_user)) -> User:
+    """For endpoints that only make sense with a session (the history): no token is 401."""
+    if user is None:
+        raise _unauthorized()
+    return user
