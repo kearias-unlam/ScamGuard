@@ -1,12 +1,12 @@
-// User-visible error texts (docs/requirements.md, UI texts). Defined once here.
-export const ANALYSIS_ERROR_TEXT = 'Los servidores están ocupados. Intentá de nuevo más tarde.';
-export const UNREADABLE_EMAIL_ERROR_TEXT =
-  'No se pudo leer el correo. Verificá que sea un archivo .eml de hasta 1 MB.';
-// US-10.2: also the 409 body; shown in the input card and, after a 409, in analysis-error.
-export const HISTORY_FULL_TEXT =
-  'Llegaste al límite de 3 análisis de la versión gratuita. Eliminá uno del historial para hacer un análisis nuevo.';
-export const UNREADABLE_URL_ERROR_TEXT =
-  'No se pudo leer el link. Verificá que sea una dirección completa, por ejemplo https://ejemplo.com.';
+import { RETRY_TEXT } from '@/lib/display-texts';
+
+// User-visible error texts are defined once in src/lib/display-texts.ts (shared with the Gmail extension, Feature 11).
+export {
+  ANALYSIS_ERROR_TEXT,
+  HISTORY_FULL_TEXT,
+  UNREADABLE_EMAIL_ERROR_TEXT,
+  UNREADABLE_URL_ERROR_TEXT,
+} from '@/lib/display-texts';
 
 interface AnalysisErrorProps {
   message: string;
@@ -33,7 +33,7 @@ export function AnalysisError({ message, showRetry, onRetry }: AnalysisErrorProp
           onClick={handleRetryClick}
           data-testid="retry-analysis-button"
         >
-          Reintentar
+          {RETRY_TEXT}
         </button>
       ) : null}
     </div>
