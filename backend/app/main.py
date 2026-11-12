@@ -10,7 +10,7 @@ from app.ai.errors import AIServiceError
 from app.routes import router
 from app.services.email_digest import InvalidEmailError
 from app.services.url_digest import InvalidUrlError
-from app.storage.critical_messages import StorageError
+from app.storage.database import StorageError
 
 FRONTEND_ORIGIN = "http://localhost:3000"
 # User-visible 503 texts (docs/requirements.md, API contract). Defined once in the backend.

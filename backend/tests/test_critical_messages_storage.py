@@ -6,13 +6,8 @@ from pathlib import Path
 import pytest
 
 from app.models import CriticalMessage
-from app.storage.critical_messages import (
-    DEFAULT_DB_PATH,
-    StorageError,
-    StoredTopic,
-    list_critical_topics,
-    save_critical_message,
-)
+from app.storage.critical_messages import StoredTopic, list_critical_topics, save_critical_message
+from app.storage.database import DEFAULT_DB_PATH, StorageError
 
 
 def test_empty_db_returns_no_topics_and_creates_the_file() -> None:

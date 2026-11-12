@@ -3,7 +3,7 @@ import pytest
 from app.ai.analyzer import AnalyzedMessage
 from app.models import AnalysisResult, Indicator, RiskLevel
 from app.services.analysis import analyze_message
-from app.storage.critical_messages import StorageError
+from app.storage.database import StorageError
 
 MODEL_EXPLANATION = "Explicación del modelo."
 

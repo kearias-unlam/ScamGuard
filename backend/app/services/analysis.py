@@ -13,7 +13,8 @@ from app.services.email_digest import build_email_digest
 from app.services.masking import mask_personal_data
 from app.services.recommendations import build_recommendations
 from app.services.url_digest import build_url_digest
-from app.storage.critical_messages import StorageError, save_critical_message
+from app.storage.critical_messages import save_critical_message
+from app.storage.database import StorageError
 
 logger = logging.getLogger(__name__)
 
