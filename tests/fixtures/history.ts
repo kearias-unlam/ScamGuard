@@ -25,6 +25,13 @@ export const newerEntry: HistoryEntrySummary = {
   createdAt: '2026-11-10T12:00:00Z',
 };
 
+export const thirdEntry: HistoryEntrySummary = {
+  id: 3,
+  kind: 'email',
+  title: 'Correo de un falso banco',
+  createdAt: '2026-11-11T12:00:00Z',
+};
+
 export function historyResponse(entries: HistoryEntrySummary[]): HistoryResponse {
   return { entries, limit: HISTORY_LIMIT, isFull: entries.length >= HISTORY_LIMIT };
 }
@@ -57,5 +64,29 @@ export async function mockHistoryEntries(page: Page, entries: HistoryEntry[]): P
       return;
     }
     await route.fulfill({ json: entry, headers: CORS_HEADERS });
+  });
+}
+
+// US-10.2: DELETE /history/{id} answers the given status. Registered after mockHistoryEntries, so it is matched
+// first: it answers the CORS preflight and DELETE, and hands any other method to the earlier route.
+export async function mockHistoryDelete(page: Page, status = 204): Promise<void> {
+  await page.route(HISTORY_ENTRY_ROUTE, async (route) => {
+    const method = route.request().method();
+    if (method === 'OPTIONS') {
+      await route.fulfill({
+        status: 204,
+        headers: {
+          ...CORS_HEADERS,
+          'Access-Control-Allow-Methods': 'GET, DELETE',
+          'Access-Control-Allow-Headers': 'Authorization',
+        },
+      });
+      return;
+    }
+    if (method !== 'DELETE') {
+      await route.fallback();
+      return;
+    }
+    await route.fulfill({ status, headers: CORS_HEADERS });
   });
 }

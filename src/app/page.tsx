@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import {
   ANALYSIS_ERROR_TEXT,
+  HISTORY_FULL_TEXT,
   AnalysisError,
   UNREADABLE_EMAIL_ERROR_TEXT,
   UNREADABLE_URL_ERROR_TEXT,
@@ -17,7 +18,15 @@ import { EmailAnalysisForm } from '@/components/EmailAnalysisForm';
 import { HistorySidebar } from '@/components/HistorySidebar';
 import { MessageAnalysisForm } from '@/components/MessageAnalysisForm';
 import { UrlAnalysisForm } from '@/components/UrlAnalysisForm';
-import { ApiError, getHistory, getHistoryEntry, postAnalysis, postEmailAnalysis, postUrlAnalysis } from '@/lib/api';
+import {
+  ApiError,
+  deleteHistoryEntry,
+  getHistory,
+  getHistoryEntry,
+  postAnalysis,
+  postEmailAnalysis,
+  postUrlAnalysis,
+} from '@/lib/api';
 import type { HistoryResponse, MessageAnalysisRequest, MessageAnalysisResponse } from '@/types';
 
 // What "Analizar" sent last, so "Reintentar" resends it (US-4.2, US-6.2). The email keeps the chosen File and the
@@ -47,8 +56,16 @@ const UNREADABLE_ERROR_TEXTS: Record<SubmittedRequest['kind'], string | null> = 
   url: UNREADABLE_URL_ERROR_TEXT,
 };
 
-function unreadableErrorText(submitted: SubmittedRequest, error: unknown): string | null {
-  return error instanceof ApiError && error.status === 422 ? UNREADABLE_ERROR_TEXTS[submitted.kind] : null;
+// Errors that "Reintentar" cannot fix get their own text and no retry button; null means the busy error with retry.
+// US-10.2: a 409 means the history is full, for any kind of request.
+function noRetryErrorText(submitted: SubmittedRequest, error: unknown): string | null {
+  if (!(error instanceof ApiError)) {
+    return null;
+  }
+  if (error.status === 409) {
+    return HISTORY_FULL_TEXT;
+  }
+  return error.status === 422 ? UNREADABLE_ERROR_TEXTS[submitted.kind] : null;
 }
 
 export default function HomePage() {
@@ -63,13 +80,15 @@ export default function HomePage() {
   const [url, setUrl] = useState('');
   const [lastSubmittedRequest, setLastSubmittedRequest] = useState<SubmittedRequest | null>(null);
   const [status, setStatus] = useState<AnalysisRequestStatus>('idle');
-  // Text of the unreadable email or link error (shown without retry), or null for the busy error.
-  const [unreadableText, setUnreadableText] = useState<string | null>(null);
+  // Text of an error shown without retry (unreadable email or link, full history), or null for the busy error.
+  const [noRetryText, setNoRetryText] = useState<string | null>(null);
   // The whole response, so the result and its recommendations (US-7.1) are always set and cleared together.
   const [analysis, setAnalysis] = useState<MessageAnalysisResponse | null>(null);
   // US-10.1: the signed-in user's history; null until loaded.
   const [history, setHistory] = useState<HistoryResponse | null>(null);
   const [historyError, setHistoryError] = useState(false);
+  // US-10.2: the frontend relies on isFull from the backend and never counts entries itself.
+  const isHistoryFull = hasSession && history?.isFull === true;
 
   const loadHistory = useCallback(async (token: string): Promise<void> => {
     try {
@@ -155,8 +174,12 @@ export default function HomePage() {
         void loadHistory(backendToken);
       }
     } catch (error) {
-      setUnreadableText(unreadableErrorText(submitted, error));
+      setNoRetryText(noRetryErrorText(submitted, error));
       setStatus('error');
+      // US-10.2: after a 409 the history is reloaded, so the forms are blocked by isFull.
+      if (error instanceof ApiError && error.status === 409 && backendToken) {
+        void loadHistory(backendToken);
+      }
     }
   }
 
@@ -178,8 +201,22 @@ export default function HomePage() {
     try {
       const entry = await getHistoryEntry(id, backendToken);
       setAnalysis(entry.analysis);
-      setUnreadableText(null);
+      setNoRetryText(null);
       setStatus('success');
+    } catch {
+      setHistoryError(true);
+    }
+  }
+
+  // US-10.2: delete an entry and reload the history. The result already shown stays, even if it was that entry.
+  async function handleDeleteHistoryEntry(id: number): Promise<void> {
+    if (!backendToken) {
+      setHistoryError(true);
+      return;
+    }
+    try {
+      await deleteHistoryEntry(id, backendToken);
+      await loadHistory(backendToken);
     } catch {
       setHistoryError(true);
     }
@@ -200,6 +237,7 @@ export default function HomePage() {
           hasError={historyError || !backendToken}
           isBusy={status === 'loading'}
           onSelectEntry={(id) => void handleSelectHistoryEntry(id)}
+          onDeleteEntry={(id) => void handleDeleteHistoryEntry(id)}
         />
       ) : null}
       <section className="hero">
@@ -214,12 +252,18 @@ export default function HomePage() {
         </Link>
       </section>
       <AnalysisInputTabs activeTab={activeTab} onTabChange={handleTabChange}>
+        {isHistoryFull ? (
+          <p className="history-full-message" data-testid="history-full-message">
+            {HISTORY_FULL_TEXT}
+          </p>
+        ) : null}
         {activeTab === 'message' ? (
           <MessageAnalysisForm
             message={message}
             shareInPanel={shareInPanel}
             sensitiveData={sensitiveData}
             isSubmitting={status === 'loading'}
+            isAnalysisBlocked={isHistoryFull}
             onMessageChange={handleMessageChange}
             onShareInPanelChange={handleShareInPanelChange}
             onSensitiveDataChange={handleSensitiveDataChange}
@@ -231,6 +275,7 @@ export default function HomePage() {
           <EmailAnalysisForm
             emailFile={emailFile}
             isSubmitting={status === 'loading'}
+            isAnalysisBlocked={isHistoryFull}
             onEmailFileChange={handleEmailFileChange}
             onSubmit={handleEmailSubmit}
             onClear={handleClearEmail}
@@ -240,6 +285,7 @@ export default function HomePage() {
           <UrlAnalysisForm
             url={url}
             isSubmitting={status === 'loading'}
+            isAnalysisBlocked={isHistoryFull}
             onUrlChange={handleUrlChange}
             onSubmit={handleUrlSubmit}
             onClear={handleClearUrl}
@@ -255,8 +301,8 @@ export default function HomePage() {
         <AnalysisStatus status={status} />
         {status === 'error' ? (
           <AnalysisError
-            message={unreadableText ?? ANALYSIS_ERROR_TEXT}
-            showRetry={unreadableText === null}
+            message={noRetryText ?? ANALYSIS_ERROR_TEXT}
+            showRetry={noRetryText === null}
             onRetry={handleRetry}
           />
         ) : null}

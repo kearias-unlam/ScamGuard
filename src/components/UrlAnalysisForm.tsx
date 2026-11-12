@@ -7,13 +7,21 @@ import { TrashIcon } from '@/components/TrashIcon';
 interface UrlAnalysisFormProps {
   url: string;
   isSubmitting: boolean;
+  isAnalysisBlocked: boolean; // US-10.2: the history is full
   onUrlChange: (url: string) => void;
   onSubmit: () => void;
   onClear: () => void;
 }
 
 // US-6.1: one link per analysis. The backend validates it; the form only checks that it is not blank.
-export function UrlAnalysisForm({ url, isSubmitting, onUrlChange, onSubmit, onClear }: UrlAnalysisFormProps) {
+export function UrlAnalysisForm({
+  url,
+  isSubmitting,
+  isAnalysisBlocked,
+  onUrlChange,
+  onSubmit,
+  onClear,
+}: UrlAnalysisFormProps) {
   const isUrlEmpty = url.trim().length === 0;
 
   function handleUrlChange(event: ChangeEvent<HTMLInputElement>): void {
@@ -26,7 +34,7 @@ export function UrlAnalysisForm({ url, isSubmitting, onUrlChange, onSubmit, onCl
 
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
-    if (isUrlEmpty || isSubmitting) {
+    if (isUrlEmpty || isSubmitting || isAnalysisBlocked) {
       return;
     }
     onSubmit();
@@ -56,7 +64,7 @@ export function UrlAnalysisForm({ url, isSubmitting, onUrlChange, onSubmit, onCl
         <button
           type="submit"
           className="button button--primary"
-          disabled={isUrlEmpty || isSubmitting}
+          disabled={isUrlEmpty || isSubmitting || isAnalysisBlocked}
           data-testid="analyze-url-button"
         >
           Analizar link

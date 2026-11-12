@@ -107,3 +107,12 @@ export async function getHistory(token: string): Promise<HistoryResponse> {
 export async function getHistoryEntry(id: number, token: string): Promise<HistoryEntry> {
   return getJson<HistoryEntry>(buildBackendUrl(`/history/${id}`), token);
 }
+
+// US-10.2: deletes one of the user's entries; 204 has no body, so nothing is parsed.
+export async function deleteHistoryEntry(id: number, token: string): Promise<void> {
+  const endpoint = buildBackendUrl(`/history/${id}`);
+  const response = await fetch(endpoint, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+  if (!response.ok) {
+    throw new ApiError(`Request to ${endpoint} failed with status ${response.status}`, response.status);
+  }
+}

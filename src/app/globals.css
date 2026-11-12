@@ -242,6 +242,35 @@ h1 {
   border-radius: 0.5rem;
 }
 
+.history-sidebar__notice {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+/* US-10.2: shown above the active form while the history is full. */
+.history-full-message {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  color: var(--color-error-text);
+  background: var(--color-error-bg);
+  border-left: 4px solid var(--color-error-text);
+  border-radius: 0.5rem;
+}
+
+.history-sidebar__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Two classes so it wins over .button, declared later. */
+.button.history-delete-button {
+  align-self: flex-end;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
 .history-sidebar__list {
   display: flex;
   flex-direction: column;

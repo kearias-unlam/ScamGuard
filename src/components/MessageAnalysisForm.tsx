@@ -14,6 +14,7 @@ interface MessageAnalysisFormProps {
   shareInPanel: boolean;
   sensitiveData: string;
   isSubmitting: boolean;
+  isAnalysisBlocked: boolean; // US-10.2: the history is full
   onMessageChange: (message: string) => void;
   onShareInPanelChange: (shareInPanel: boolean) => void;
   onSensitiveDataChange: (sensitiveData: string) => void;
@@ -26,6 +27,7 @@ export function MessageAnalysisForm({
   shareInPanel,
   sensitiveData,
   isSubmitting,
+  isAnalysisBlocked,
   onMessageChange,
   onShareInPanelChange,
   onSensitiveDataChange,
@@ -53,7 +55,7 @@ export function MessageAnalysisForm({
 
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
-    if (isMessageEmpty || isSubmitting) {
+    if (isMessageEmpty || isSubmitting || isAnalysisBlocked) {
       return;
     }
     onSubmit();
@@ -115,7 +117,7 @@ export function MessageAnalysisForm({
         <button
           type="submit"
           className="button button--primary"
-          disabled={isMessageEmpty || isSubmitting}
+          disabled={isMessageEmpty || isSubmitting || isAnalysisBlocked}
           data-testid="submit-analysis-button"
         >
           Analizar mensaje

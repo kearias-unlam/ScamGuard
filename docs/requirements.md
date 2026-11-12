@@ -506,7 +506,7 @@ Tasks:
 ### US-10.2 Límite del historial en la versión gratuita
 Como usuario con la sesión iniciada quiero saber cuándo mi historial está lleno y elegir qué análisis eliminar para poder seguir analizando sin perder uno sin darme cuenta.
 
-ADO ID: #100 · Status: pending
+ADO ID: #100 · Status: done
 
 Ningún análisis se elimina solo: solo el usuario elimina entradas del historial. El límite vale para mensajes, correos y links por igual y lo controla el backend.
 

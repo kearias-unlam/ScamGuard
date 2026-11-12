@@ -67,7 +67,8 @@ test('al elegir un análisis del historial su resultado se muestra en el resulta
   await mockHistoryEntries(page, [historyEntry(newerEntry, savedSummary)]);
   await page.goto('/');
 
-  await page.getByRole('button', { name: new RegExp(newerEntry.title) }).click();
+  // Anchored: the "Eliminar <title>" button (US-10.2) also contains the title.
+  await page.getByRole('button', { name: new RegExp(`^${newerEntry.title}`) }).click();
 
   const result = page.getByTestId('analysis-result');
   await expect(result).toBeVisible();

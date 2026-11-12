@@ -7,6 +7,7 @@ import { TrashIcon } from '@/components/TrashIcon';
 interface EmailAnalysisFormProps {
   emailFile: File | null;
   isSubmitting: boolean;
+  isAnalysisBlocked: boolean; // US-10.2: the history is full
   onEmailFileChange: (emailFile: File | null) => void;
   onSubmit: () => void;
   onClear: () => void;
@@ -15,6 +16,7 @@ interface EmailAnalysisFormProps {
 export function EmailAnalysisForm({
   emailFile,
   isSubmitting,
+  isAnalysisBlocked,
   onEmailFileChange,
   onSubmit,
   onClear,
@@ -71,7 +73,7 @@ export function EmailAnalysisForm({
 
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
-    if (!hasEmlExtension || isSubmitting) {
+    if (!hasEmlExtension || isSubmitting || isAnalysisBlocked) {
       return;
     }
     onSubmit();
@@ -162,7 +164,7 @@ export function EmailAnalysisForm({
         <button
           type="submit"
           className="button button--primary"
-          disabled={!hasEmlExtension || isSubmitting}
+          disabled={!hasEmlExtension || isSubmitting || isAnalysisBlocked}
           data-testid="analyze-email-button"
         >
           Analizar correo
