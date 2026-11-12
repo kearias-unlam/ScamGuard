@@ -14,7 +14,7 @@ async function analyzeMessage(page: Page): Promise<void> {
 test('la página muestra el encabezado "ScamGuard" y el título "¿Ese mensaje te genera dudas?"', async ({ page }) => {
   await page.goto('/');
 
-  await expect(page.getByRole('banner')).toHaveText('ScamGuard');
+  await expect(page.getByRole('banner')).toContainText('ScamGuard');
   await expect(page.getByRole('heading', { level: 1, name: '¿Ese mensaje te genera dudas?' })).toBeVisible();
 });
 

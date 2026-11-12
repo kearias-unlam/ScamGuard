@@ -88,6 +88,51 @@ h1 {
   letter-spacing: -0.04em;
 }
 
+/* Session controls (US-9.1): pushed to the right end of the header. */
+/* Two classes, so they win over the generic .button rule declared later. */
+.site-header__inner .site-header__action {
+  flex-shrink: 0;
+  align-self: center;
+  white-space: nowrap;
+}
+
+.site-header__inner > .site-header__action,
+.session-controls {
+  margin-left: auto;
+}
+
+.session-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.session-controls__name {
+  overflow: hidden;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Login page (US-9.1): a narrow card with one full-width button per provider. */
+.login-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: min(100%, 24rem);
+}
+
+.login-card .login-card__button {
+  align-self: stretch;
+}
+
+@media (max-width: 39.99rem) {
+  .site-header__inner .site-header__action {
+    padding: 0.5rem 0.75rem;
+  }
+}
+
 @media (min-width: 40rem) {
   main {
     padding: 3.5rem 2rem 3rem;

@@ -1,4 +1,7 @@
+import { SessionControls } from '@/components/SessionControls';
+
 // US-5.1: brand header on every page. "ScamGuard" is plain text; each page keeps its own h1.
+// US-9.1: the session controls sit on the right.
 export function SiteHeader() {
   return (
     <header className="site-header">
@@ -17,6 +20,7 @@ export function SiteHeader() {
           </svg>
         </span>
         <span className="site-brand">ScamGuard</span>
+        <SessionControls />
       </div>
     </header>
   );
