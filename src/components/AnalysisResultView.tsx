@@ -2,10 +2,10 @@ import { EmptyState } from '@/components/EmptyState';
 import { IndicatorList } from '@/components/IndicatorList';
 import { RecommendationList } from '@/components/RecommendationList';
 import { RiskLevelView } from '@/components/RiskLevelView';
+import { DISCLAIMER_TEXT, INDICATORS_HEADING } from '@/lib/display-texts';
 import type { AnalysisResult, Recommendation } from '@/types';
 
 // NFR-01: the result is decision support, not a fraud confirmation.
-const DISCLAIMER_TEXT = 'Este resultado es una ayuda para decidir, no una confirmación de fraude.';
 
 interface AnalysisResultViewProps {
   result: AnalysisResult | null;
@@ -27,7 +27,7 @@ export function AnalysisResultView({ result, recommendations, isIdle }: Analysis
       <p data-testid="analysis-summary">{result.summary}</p>
       {/* The count is outside the heading so its accessible name stays "Indicadores detectados". */}
       <div className="indicators-header">
-        <h2>Indicadores detectados</h2>
+        <h2>{INDICATORS_HEADING}</h2>
         <span className="count-badge" data-testid="analysis-indicators-count">
           {result.indicators.length}
         </span>

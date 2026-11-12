@@ -1,4 +1,5 @@
 import { CheckIcon } from '@/components/CheckIcon';
+import { RECOMMENDATIONS_HEADING } from '@/lib/display-texts';
 import type { Recommendation } from '@/types';
 
 interface RecommendationListProps {
@@ -13,7 +14,7 @@ export function RecommendationList({ recommendations }: RecommendationListProps)
 
   return (
     <>
-      <h2 className="recommendations-heading">Qué podés hacer</h2>
+      <h2 className="recommendations-heading">{RECOMMENDATIONS_HEADING}</h2>
       <ul className="recommendation-list" data-testid="analysis-recommendations">
         {recommendations.map((recommendation, index) => (
           <li key={`${recommendation.type}-${index}`} className="recommendation" data-testid="analysis-recommendation">

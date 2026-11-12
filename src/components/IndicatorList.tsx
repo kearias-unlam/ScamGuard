@@ -1,4 +1,5 @@
 import { IndicatorIcon } from '@/components/IndicatorIcon';
+import { NO_INDICATORS_TEXT } from '@/lib/display-texts';
 import type { Indicator } from '@/types';
 
 interface IndicatorListProps {
@@ -9,7 +10,7 @@ export function IndicatorList({ indicators }: IndicatorListProps) {
   if (indicators.length === 0) {
     return (
       <p className="muted" data-testid="analysis-indicators-empty">
-        No se detectaron indicadores.
+        {NO_INDICATORS_TEXT}
       </p>
     );
   }

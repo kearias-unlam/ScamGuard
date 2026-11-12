@@ -545,7 +545,7 @@ El usuario instala la extensión de ScamGuard en Google Chrome y, con un correo 
 ### US-11.1 Analizar el correo abierto en Gmail
 Como usuario de Gmail quiero analizar el correo que tengo abierto desde la extensión de ScamGuard para saber si es una estafa sin descargarlo ni copiarlo.
 
-ADO ID: #116 · Status: pending
+ADO ID: #116 · Status: done
 
 Criterios de aceptación:
 1. Con un correo abierto en Gmail, el popup de la extensión muestra "ScamGuard" y el botón "Analizar este correo" habilitado.
