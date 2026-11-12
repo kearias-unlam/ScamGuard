@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures/test';
 
 import { mockAnalysis } from './fixtures/analysis';
 import { mockSession, SESSION_BACKEND_TOKEN } from './fixtures/session';
