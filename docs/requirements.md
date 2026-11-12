@@ -536,6 +536,44 @@ Tasks:
 - #113 Backend: save what was analyzed. Add `analyzed_input TEXT NOT NULL` to `analysis_history` (see [Analysis history storage](#analysis-history-storage)); `save_history_entry` and `record_analysis` receive it; the message endpoint passes the message as sent, the link endpoint the link as sent, and the email endpoint the digest it analyzed (the email service returns it together with the result, so it is built once). `sensitiveData` is never saved. `GET /history/{id}` returns it. No migration: drop the local `analysis_history` table afterwards (`DROP TABLE analysis_history`; it is recreated on first use), which keeps the critical messages of the same file. Pytest: each kind saves its input; the email saves the digest, not the raw file; `sensitiveData` is not saved; `GET /history/{id}` returns `analyzedInput` and `GET /history` does not. Depends on #112.
 - #114 Frontend: show what was analyzed. When an entry is opened, the result column shows, before `analysis-result`, an `h2` "Lo que analizaste" **(new)** and the text in `history-entry-input` **(new)** (line breaks kept, long text wraps; display only). `page.tsx` keeps it with the opened analysis and clears it when a new analysis starts. Plain CSS with the palette variables (quote-like block, like the evidence). No Playwright test for this US (decided by the user): AC1 and AC2 are checked by hand with a signed-in account. Depends on #112 and #113.
 
+## Feature 11 - Extensión de Chrome para Gmail
+
+ADO ID: #115
+
+El usuario instala la extensión de ScamGuard en Google Chrome y, con un correo abierto en Gmail, lo analiza sin descargar el archivo `.eml`. La extensión obtiene el original del correo (lo mismo que "Mostrar original" en Gmail) y lo manda a `POST /analysis/email`, así el análisis es el mismo que el de Feature 4, con sus señales de remitente, autenticación, enlaces y adjuntos. Primera entrega: solo Gmail en Chrome, sin sesión ni historial (el análisis es anónimo y no se guarda), con el resultado en el popup de la extensión. Outlook web, otros navegadores, el inicio de sesión y la publicación en la Chrome Web Store quedan fuera de alcance. Ver [Chrome extension](#chrome-extension).
+
+### US-11.1 Analizar el correo abierto en Gmail
+Como usuario de Gmail quiero analizar el correo que tengo abierto desde la extensión de ScamGuard para saber si es una estafa sin descargarlo ni copiarlo.
+
+ADO ID: #116 · Status: pending
+
+Criterios de aceptación:
+1. Con un correo abierto en Gmail, el popup de la extensión muestra "ScamGuard" y el botón "Analizar este correo" habilitado.
+2. Si la pestaña activa no muestra un correo abierto de Gmail, el popup muestra "Abrí un correo en Gmail para analizarlo." y el botón "Analizar este correo" está deshabilitado.
+3. Al hacer clic en "Analizar este correo", se envía `POST /analysis/email` con el original del correo abierto en `emailContent`, y mientras tanto se muestra "Analizando mensaje..." con el botón deshabilitado.
+4. Si no se puede obtener el original del correo desde Gmail, se muestra "No se pudo obtener el correo de Gmail. Recargá la página e intentá de nuevo." y no se envía nada al backend.
+
+Tasks:
+- #118 Extension: scaffold. A Manifest V3 extension in `extension/` (see [Chrome extension](#chrome-extension)): `manifest.json` (name "ScamGuard", an action with `popup.html`, the `activeTab` and `scripting` permissions, and host permissions only for `https://mail.google.com/*` and the backend URL), `popup.html` and `popup.css` (palette variables from [Visual design](#visual-design); 22rem wide), icons, and TypeScript in `extension/src/` compiled with the project's `tsc` to `extension/dist/` (own `extension/tsconfig.json`, npm script `build:extension`; no bundler). Add `@types/chrome` as a dev dependency (approved for Feature 11, exact version pinned on install). The backend URL is one constant, `http://localhost:8000` by default. Document in `README.md` how to build and load the unpacked extension. Add `extension/dist/` to `.gitignore`. The popup shows "ScamGuard" and the disabled button only.
+- #119 Extension: read the opened email from Gmail. A function run in the active tab with `chrome.scripting.executeScript` (no persistent content script) that finds the opened message id and the account index in the Gmail page and fetches the original (the "Mostrar original" view, same origin, with the user's Gmail session), returning its raw text, or `null` when the tab is not an opened Gmail email or the fetch fails. The Gmail selectors and URL are defined once and documented in [Chrome extension](#chrome-extension) as a known limitation. Depends on #118.
+- #120 Extension: popup states and request. On open, the popup checks the active tab: AC1 or AC2. The button runs #119 and sends `POST /analysis/email` with `{ "emailContent": "<original>" }` from the popup (the backend host permission exempts it from CORS, so the backend does not change; confirm on the first manual check). Loading text and disabled button while waiting (AC3); the Gmail error of AC4 without calling the backend. Depends on #118 and #119.
+
+### US-11.2 Ver el resultado en la extensión
+Como usuario de Gmail quiero ver el resultado del análisis en la extensión para decidir qué hacer con el correo sin salir de Gmail.
+
+ADO ID: #117 · Status: pending
+
+El resultado tiene el mismo contenido y los mismos textos que en la página (Features 2, 4 y 7), en una sola columna angosta.
+
+Criterios de aceptación:
+1. Con un resultado, el popup muestra el nivel de riesgo, la explicación, el resumen, cada indicador con su título, descripción y cita, las recomendaciones de "Qué podés hacer" y el aviso "Este resultado es una ayuda para decidir, no una confirmación de fraude.".
+2. Si el backend responde que el correo no se puede leer, se muestra "No se pudo leer el correo. Verificá que sea un archivo .eml de hasta 1 MB." sin "Reintentar".
+3. Si el análisis falla por otro motivo, se muestra "Los servidores están ocupados. Intentá de nuevo más tarde." y "Reintentar", que reenvía el mismo correo.
+
+Tasks:
+- #121 Extension: result view. Render the `MessageAnalysisResponse` in the popup with plain DOM (no framework): risk level with the same Spanish values and badge colors, explanation, summary, "Indicadores detectados" with each indicator's title, description, and evidence quote, "Qué podés hacer" with the recommendations, and the disclaimer. The types come from `src/types.ts` and the Spanish risk level values and texts are shared with the web app, not copied (move them to a module both compile, e.g. `src/lib/display-texts.ts`). Display mapping only. Depends on #120.
+- #122 Extension: errors and retry. `422` shows the unreadable email text without retry; any other non-2xx or network error shows the busy error and "Reintentar", which resends the same original without reading Gmail again. Texts from the shared module of #121. Depends on #121.
+
 ## UI texts
 
 | Where | Text |
@@ -607,6 +645,11 @@ Tasks:
 | History full message (also the `409` body) | Llegaste al límite de 3 análisis de la versión gratuita. Eliminá uno del historial para hacer un análisis nuevo. |
 | Delete history entry button | Eliminar |
 | Analyzed input heading (US-10.3) | Lo que analizaste |
+| Extension popup title (US-11.1) | ScamGuard |
+| Extension analyze button | Analizar este correo |
+| Extension hint without an opened Gmail email | Abrí un correo en Gmail para analizarlo. |
+| Extension Gmail read error | No se pudo obtener el correo de Gmail. Recargá la página e intentá de nuevo. |
+| Extension loading, errors, result texts (US-11.2) | Same as the web app (see above) |
 
 ## Visual design
 
@@ -765,6 +808,10 @@ export interface UrlAnalysisRequest {
   - `422`: `url` is blank, has more than 2,000 characters, or is not a valid link (see [URL digest](#url-digest)). For an invalid link the body is `{ "detail": "No se pudo leer el link. Verificá que sea una dirección completa, por ejemplo https://ejemplo.com." }`; blank or too long keeps FastAPI's default validation body. The frontend ignores the body and shows the unreadable link text from [UI texts](#ui-texts), without retry.
   - `503`: same as `POST /analysis`. Any other non-2xx or network error shows the `POST /analysis` error text with retry.
 - Links are never fetched, stored, or shared in the panel: the request has no `shareInPanel`.
+
+Chrome extension (Feature 11)
+
+- The extension calls `POST /analysis/email` unchanged, without `Authorization`, so its analyses are anonymous and never saved in a history. No new endpoint.
 
 Session and history (Features 9 and 10)
 
@@ -974,6 +1021,19 @@ Login with SSO (Feature 9). Optional: every existing feature works without a ses
 - Every query filters by `user_id`: a user can never read or delete another user's entries.
 - Failure: a save error is logged and never changes the analysis response; a read error returns the `503` of the history endpoints.
 
+## Chrome extension
+
+The Gmail extension of Feature 11, in `extension/` (separate from the Next.js app and the backend).
+
+- Platform: Google Chrome, Manifest V3. Loaded unpacked for development and the demo; not published in the Chrome Web Store.
+- Code: TypeScript in `extension/src/`, compiled with the project's `tsc` (own `extension/tsconfig.json`) to `extension/dist/`; no bundler or framework. `@types/chrome` is the only new dependency (dev). Types and user-visible texts are shared with the web app, not copied.
+- Permissions: `activeTab` and `scripting` to run one function in the Gmail tab when the user opens the popup or clicks the button; host permissions only for `https://mail.google.com/*` and the backend URL. No persistent content script, no background reading of the inbox.
+- Reading the email: the function finds the opened message in the Gmail page and fetches its original (the "Mostrar original" view) from `mail.google.com` with the user's own Gmail session, inside the user's browser. ScamGuard never gets Gmail credentials or access to other emails.
+- Request: the popup sends the original as `emailContent` to `POST /analysis/email` (limit 1,000,000 characters; a larger email gets the backend `422`). The backend host permission exempts the popup from CORS, so the backend CORS settings do not change.
+- Privacy: the extension stores nothing (no `chrome.storage`); the backend treats the email as in [Email digest](#email-digest) (never stored or shared).
+- Known limitation: Gmail does not offer a public way to read the opened email from the page; the extension depends on Gmail's page structure and its "Mostrar original" URL, which Google can change without notice. The selectors and URL are defined once so they are easy to update.
+- Testing: no automated E2E for the extension, since Playwright cannot drive the real Gmail; each task lists a manual check with a real Gmail account and the unpacked extension.
+
 ## Non-functional requirements
 
 ### NFR-01 Decision support disclaimer
@@ -995,4 +1055,4 @@ Follow `.github/instructions/*.instructions.md`.
 Each story has tests for the happy path and the most likely failure path, as defined in `AGENTS.md`.
 
 ### NFR-07 Privacy of stored messages
-Only `HIGH` risk messages the user chose to share are stored, always masked, and the panel says so. See [Critical messages storage](#critical-messages-storage). Email files (Feature 4) are never stored or shared; see [Email digest](#email-digest). Links (Feature 6) are never fetched, stored, or shared; see [URL digest](#url-digest). The analysis history (Feature 10) is stored only for signed-in users, holds the results and, since US-10.3, what was analyzed (the message, the link, or the email digest, never the raw file or `sensitiveData`), is visible only to its owner, and is deleted when the user deletes an entry; see [Analysis history storage](#analysis-history-storage).
+Only `HIGH` risk messages the user chose to share are stored, always masked, and the panel says so. See [Critical messages storage](#critical-messages-storage). Email files (Feature 4) are never stored or shared; see [Email digest](#email-digest). Links (Feature 6) are never fetched, stored, or shared; see [URL digest](#url-digest). The Gmail extension (Feature 11) reads only the email the user opened and asked to analyze, stores nothing, and sends it like an `.eml` file; see [Chrome extension](#chrome-extension). The analysis history (Feature 10) is stored only for signed-in users, holds the results and, since US-10.3, what was analyzed (the message, the link, or the email digest, never the raw file or `sensitiveData`), is visible only to its owner, and is deleted when the user deletes an entry; see [Analysis history storage](#analysis-history-storage).

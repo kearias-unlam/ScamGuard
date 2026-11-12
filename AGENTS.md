@@ -2,7 +2,7 @@
 
 ## Scope
 - Build a university-ready application for scam/fraud detection.
-- Inputs: text messages (Features 1 to 3), email files in `.eml` format (Feature 4), and single links (Feature 6, analyzed without opening them). Other formats only if they are added to `docs/requirements.md` first.
+- Inputs: text messages (Features 1 to 3), email files in `.eml` format (Feature 4, also sent by the Gmail extension of Feature 11), and single links (Feature 6, analyzed without opening them). Other formats only if they are added to `docs/requirements.md` first.
 - Open scope: the user-facing features are the ones listed in `docs/requirements.md`, with no fixed limit. New features are added there first, as they are requested, before any implementation.
 - Treat the output as decision support, not as a guarantee of fraud detection.
 - Target stack:
@@ -10,6 +10,7 @@
   - Backend: Python + FastAPI
   - AI: `gpt-5.4-mini` deployed on Azure Foundry, called with the `openai` Python SDK (`OpenAI` client pointed at the Azure v1 endpoint, Responses API)
   - Auth (Feature 9): Auth.js (`next-auth`) with Google and Microsoft Entra ID SSO in the frontend; the backend verifies the session token with PyJWT
+  - Gmail extension (Feature 11): Chrome Manifest V3 in `extension/`, TypeScript compiled with `tsc` (no bundler)
   - E2E: Playwright in TypeScript
   - Backend tests: Pytest
   - Package manager: npm (frontend); pip with `backend/requirements.txt` (backend)
