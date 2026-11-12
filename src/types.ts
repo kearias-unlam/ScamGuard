@@ -77,3 +77,23 @@ export interface CriticalTopic {
 export interface CriticalMessagesResponse {
   topics: CriticalTopic[]; // Most shared first; empty when nothing is stored
 }
+
+// US-10.1: analysis history of the signed-in user.
+export type HistoryEntryKind = 'message' | 'email' | 'url';
+
+export interface HistoryEntrySummary {
+  id: number;
+  kind: HistoryEntryKind;
+  title: string; // The analysis summary, cut to 80 characters
+  createdAt: string; // UTC, ISO 8601
+}
+
+export interface HistoryResponse {
+  entries: HistoryEntrySummary[]; // Most recent first
+  limit: number; // 3 in the free version; defined once in the backend
+  isFull: boolean; // entries.length >= limit
+}
+
+export interface HistoryEntry extends HistoryEntrySummary {
+  analysis: MessageAnalysisResponse; // As returned when it was analyzed
+}

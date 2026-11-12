@@ -21,6 +21,9 @@ Topic = Literal[
 ]
 
 # US-7.1: fixed recommendation catalog (docs/requirements.md, Recommendations).
+# US-10.1: what was analyzed; the input itself is never stored.
+HistoryEntryKind = Literal["message", "email", "url"]
+
 RecommendationType = Literal[
     "do_not_follow",
     "do_not_share_data",
@@ -128,3 +131,20 @@ class CriticalTopic(CamelModel):
 
 class CriticalMessagesResponse(CamelModel):
     topics: list[CriticalTopic]
+
+
+class HistoryEntrySummary(CamelModel):
+    id: int
+    kind: HistoryEntryKind
+    title: str  # US-10.1: the analysis summary, cut to 80 characters.
+    created_at: str  # UTC, ISO 8601.
+
+
+class HistoryResponse(CamelModel):
+    entries: list[HistoryEntrySummary]  # Most recent first.
+    limit: int  # HISTORY_LIMIT; 3 in the free version.
+    is_full: bool  # len(entries) >= limit.
+
+
+class HistoryEntry(HistoryEntrySummary):
+    analysis: MessageAnalysisResponse  # As returned when it was analyzed.

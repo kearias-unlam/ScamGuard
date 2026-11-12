@@ -7,6 +7,8 @@ from app.models import (
     MAX_URL_CHARS,
     CriticalMessagesResponse,
     EmailAnalysisRequest,
+    HistoryEntry,
+    HistoryResponse,
     MessageAnalysisRequest,
     MessageAnalysisResponse,
     UrlAnalysisRequest,
@@ -100,4 +102,30 @@ def test_analysis_response_rejects_unknown_recommendation_type() -> None:
         MessageAnalysisResponse.model_validate({
             "result": {"riskLevel": "LOW", "summary": "", "explanation": "", "indicators": []},
             "recommendations": [{"type": "unknown", "text": "x"}],
+        })
+
+
+# US-10.1 (#105): history contract models serialize with camelCase keys.
+def test_history_response_serializes_camel_case() -> None:
+    response = HistoryResponse.model_validate({
+        "entries": [{"id": 1, "kind": "url", "title": "Pide validar la cuenta", "createdAt": "2026-11-10T12:00:00+00:00"}],
+        "limit": 3,
+        "isFull": False,
+    })
+
+    assert response.model_dump(by_alias=True) == {
+        "entries": [{"id": 1, "kind": "url", "title": "Pide validar la cuenta", "createdAt": "2026-11-10T12:00:00+00:00"}],
+        "limit": 3,
+        "isFull": False,
+    }
+
+
+def test_history_entry_rejects_unknown_kind() -> None:
+    with pytest.raises(ValidationError):
+        HistoryEntry.model_validate({
+            "id": 1,
+            "kind": "sms",
+            "title": "t",
+            "createdAt": "2026-11-10T12:00:00+00:00",
+            "analysis": {"result": {"riskLevel": "LOW", "summary": "s", "explanation": "e", "indicators": []}, "recommendations": []},
         })
