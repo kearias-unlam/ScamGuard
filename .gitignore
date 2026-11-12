@@ -1,6 +1,7 @@
 
 # Next.js
 /.next/
+.env*.local
 *.tsbuildinfo
 
 # Local logs

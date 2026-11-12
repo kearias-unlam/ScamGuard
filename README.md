@@ -18,3 +18,14 @@ The backend reads configuration with `os.environ` only (no python-dotenv), so lo
 Run tests: `pytest` (from `backend/` with the venv active).
 
 The frontend calls `http://localhost:8000` by default (`NEXT_PUBLIC_API_BASE_URL`); CORS allows `http://localhost:3000`.
+
+## Login with Google and Microsoft (Feature 9)
+
+Login is optional: without these values the app works as before, signed out. Copy `.env.example` to `.env.local` in the repository root and fill it in:
+
+1. `AUTH_SECRET`: run `openssl rand -base64 32`.
+2. Google: in Google Cloud Console, APIs & Services > Credentials, create an OAuth client ID of type "Web application" with the authorized redirect URI `http://localhost:3000/api/auth/callback/google`. Copy its ID and secret to `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET`.
+3. Microsoft: in the Azure portal, App registrations > New registration, choose "Accounts in any organizational directory and personal Microsoft accounts" and add the Web redirect URI `http://localhost:3000/api/auth/callback/microsoft-entra-id`. Copy the Application (client) ID to `AUTH_MICROSOFT_ENTRA_ID_ID`, create a client secret (Certificates & secrets) for `AUTH_MICROSOFT_ENTRA_ID_SECRET`, and keep `AUTH_MICROSOFT_ENTRA_ID_ISSUER` as `https://login.microsoftonline.com/common/v2.0`.
+4. `SCAMGUARD_JWT_SECRET`: run `openssl rand -base64 32` and put the same value in `.env.local` and in `backend/.env`.
+
+Some universities require an administrator to approve a new app before their Microsoft 365 accounts can sign in; try a university account early.

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Manrope } from 'next/font/google';
+import { SessionProvider } from 'next-auth/react';
 
 import { SiteHeader } from '@/components/SiteHeader';
 import './globals.css';
@@ -16,8 +17,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="es" className={manrope.variable}>
       <body>
-        <SiteHeader />
-        {children}
+        {/* No server-side session: the client reads it from GET /api/auth/session (mockable in E2E). */}
+        <SessionProvider>
+          <SiteHeader />
+          {children}
+        </SessionProvider>
       </body>
     </html>
   );
