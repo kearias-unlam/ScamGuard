@@ -20,7 +20,7 @@
 - `backend/app/routes.py`: HTTP endpoints (thin router: validate input, call services).
 - `backend/app/services/`: business logic.
 - `backend/app/ai/`: Azure OpenAI client, prompt, and output validation (the `/ai` layer).
-- `backend/app/storage/`: SQLite persistence of critical messages (standard library `sqlite3`).
+- `backend/app/storage/`: SQLite persistence (standard library `sqlite3`): `database.py` (shared DB path, connection, and `StorageError`), `critical_messages.py`, and `history.py`.
 - `backend/app/normalization.py`: text normalization shared by the evidence check and duplicate detection.
 - `backend/app/auth.py`: optional user from the session token (Feature 9, PyJWT).
 - `backend/tests/`: Pytest.
