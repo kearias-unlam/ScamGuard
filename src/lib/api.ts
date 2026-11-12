@@ -1,6 +1,8 @@
 import type {
   CriticalMessagesResponse,
   EmailAnalysisRequest,
+  HistoryEntry,
+  HistoryResponse,
   MessageAnalysisRequest,
   MessageAnalysisResponse,
   UrlAnalysisRequest,
@@ -83,4 +85,25 @@ export async function getCriticalMessages(): Promise<CriticalMessagesResponse> {
     throw new Error(`Critical messages request failed with status ${response.status}`);
   }
   return (await response.json()) as CriticalMessagesResponse;
+}
+
+// US-10.1: the signed-in user's history. Both require the session token and throw ApiError on non-2xx.
+export function getHistoryEndpoint(): string {
+  return buildBackendUrl('/history');
+}
+
+async function getJson<TResponse>(endpoint: string, token: string): Promise<TResponse> {
+  const response = await fetch(endpoint, { headers: { Authorization: `Bearer ${token}` } });
+  if (!response.ok) {
+    throw new ApiError(`Request to ${endpoint} failed with status ${response.status}`, response.status);
+  }
+  return (await response.json()) as TResponse;
+}
+
+export async function getHistory(token: string): Promise<HistoryResponse> {
+  return getJson<HistoryResponse>(getHistoryEndpoint(), token);
+}
+
+export async function getHistoryEntry(id: number, token: string): Promise<HistoryEntry> {
+  return getJson<HistoryEntry>(buildBackendUrl(`/history/${id}`), token);
 }

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import {
   ANALYSIS_ERROR_TEXT,
@@ -14,10 +14,11 @@ import { AnalysisInputTabs, type AnalysisInputTab } from '@/components/AnalysisI
 import { AnalysisResultView } from '@/components/AnalysisResultView';
 import { AnalysisStatus, type AnalysisRequestStatus } from '@/components/AnalysisStatus';
 import { EmailAnalysisForm } from '@/components/EmailAnalysisForm';
+import { HistorySidebar } from '@/components/HistorySidebar';
 import { MessageAnalysisForm } from '@/components/MessageAnalysisForm';
 import { UrlAnalysisForm } from '@/components/UrlAnalysisForm';
-import { ApiError, postAnalysis, postEmailAnalysis, postUrlAnalysis } from '@/lib/api';
-import type { MessageAnalysisRequest, MessageAnalysisResponse } from '@/types';
+import { ApiError, getHistory, getHistoryEntry, postAnalysis, postEmailAnalysis, postUrlAnalysis } from '@/lib/api';
+import type { HistoryResponse, MessageAnalysisRequest, MessageAnalysisResponse } from '@/types';
 
 // What "Analizar" sent last, so "Reintentar" resends it (US-4.2, US-6.2). The email keeps the chosen File and the
 // link its submitted text, so a retry resends them even if the form changed since.
@@ -51,7 +52,9 @@ function unreadableErrorText(submitted: SubmittedRequest, error: unknown): strin
 }
 
 export default function HomePage() {
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
+  const backendToken = session?.backendToken;
+  const hasSession = sessionStatus === 'authenticated';
   const [activeTab, setActiveTab] = useState<AnalysisInputTab>('message');
   const [message, setMessage] = useState('');
   const [shareInPanel, setShareInPanel] = useState(false);
@@ -64,6 +67,25 @@ export default function HomePage() {
   const [unreadableText, setUnreadableText] = useState<string | null>(null);
   // The whole response, so the result and its recommendations (US-7.1) are always set and cleared together.
   const [analysis, setAnalysis] = useState<MessageAnalysisResponse | null>(null);
+  // US-10.1: the signed-in user's history; null until loaded.
+  const [history, setHistory] = useState<HistoryResponse | null>(null);
+  const [historyError, setHistoryError] = useState(false);
+
+  const loadHistory = useCallback(async (token: string): Promise<void> => {
+    try {
+      setHistory(await getHistory(token));
+      setHistoryError(false);
+    } catch {
+      setHistoryError(true);
+    }
+  }, []);
+
+  // Loads the history when the session (and its token) is available; the 30-minute token refresh reloads it too.
+  useEffect(() => {
+    if (backendToken) {
+      void loadHistory(backendToken);
+    }
+  }, [backendToken, loadHistory]);
 
   // US-5.2: the form state lives here, so changing tabs clears nothing.
   function handleTabChange(nextTab: AnalysisInputTab): void {
@@ -125,9 +147,13 @@ export default function HomePage() {
     setAnalysis(null);
     setStatus('loading');
     try {
-      const response = await sendRequest(submitted, session?.backendToken);
+      const response = await sendRequest(submitted, backendToken);
       setAnalysis(response);
       setStatus('success');
+      // US-10.1 AC4: the new analysis was saved by the backend; reload so it shows first.
+      if (backendToken) {
+        void loadHistory(backendToken);
+      }
     } catch (error) {
       setUnreadableText(unreadableErrorText(submitted, error));
       setStatus('error');
@@ -142,6 +168,23 @@ export default function HomePage() {
     });
   }
 
+  // US-10.1 AC5: show a saved analysis in the result column, as a new result. The form, the last request for
+  // "Reintentar", and the history stay. If it cannot be loaded, the history error is shown and the result stays.
+  async function handleSelectHistoryEntry(id: number): Promise<void> {
+    if (!backendToken) {
+      setHistoryError(true);
+      return;
+    }
+    try {
+      const entry = await getHistoryEntry(id, backendToken);
+      setAnalysis(entry.analysis);
+      setUnreadableText(null);
+      setStatus('success');
+    } catch {
+      setHistoryError(true);
+    }
+  }
+
   // Resends the last submitted request (message with its share fields, email, or link), not the current form content.
   function handleRetry(): void {
     if (lastSubmittedRequest !== null) {
@@ -150,7 +193,15 @@ export default function HomePage() {
   }
 
   return (
-    <main className="home">
+    <main className={hasSession ? 'home home--with-history' : 'home'}>
+      {hasSession ? (
+        <HistorySidebar
+          history={history}
+          hasError={historyError || !backendToken}
+          isBusy={status === 'loading'}
+          onSelectEntry={(id) => void handleSelectHistoryEntry(id)}
+        />
+      ) : null}
       <section className="hero">
         <p className="hero__eyebrow">Detector de estafas</p>
         <h1>¿Ese mensaje te genera dudas?</h1>

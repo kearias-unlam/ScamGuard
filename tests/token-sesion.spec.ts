@@ -1,6 +1,7 @@
 import { expect, test } from './fixtures/test';
 
 import { mockAnalysis } from './fixtures/analysis';
+import { historyResponse, mockHistory } from './fixtures/history';
 import { mockSession, SESSION_BACKEND_TOKEN } from './fixtures/session';
 
 // US-9.1 (#104): the session token goes to the backend only with a session.
@@ -9,6 +10,7 @@ const MESSAGE = 'Ganaste un premio, hacé clic acá';
 
 test('con sesión, "Analizar mensaje" envía el token de sesión en el encabezado Authorization', async ({ page }) => {
   await mockSession(page, { signedIn: true });
+  await mockHistory(page, [historyResponse([])]);
   await mockAnalysis(page);
   await page.goto('/');
   await expect(page.getByRole('banner').getByRole('button', { name: 'Cerrar sesión' })).toBeVisible();
