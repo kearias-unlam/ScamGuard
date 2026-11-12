@@ -14,6 +14,7 @@ import {
 import { AnalysisInputTabs, type AnalysisInputTab } from '@/components/AnalysisInputTabs';
 import { AnalysisResultView } from '@/components/AnalysisResultView';
 import { AnalysisStatus, type AnalysisRequestStatus } from '@/components/AnalysisStatus';
+import { AnalyzedInputView } from '@/components/AnalyzedInputView';
 import { EmailAnalysisForm } from '@/components/EmailAnalysisForm';
 import { HistorySidebar } from '@/components/HistorySidebar';
 import { MessageAnalysisForm } from '@/components/MessageAnalysisForm';
@@ -84,6 +85,8 @@ export default function HomePage() {
   const [noRetryText, setNoRetryText] = useState<string | null>(null);
   // The whole response, so the result and its recommendations (US-7.1) are always set and cleared together.
   const [analysis, setAnalysis] = useState<MessageAnalysisResponse | null>(null);
+  // US-10.3: what was analyzed, only while an entry opened from the history is shown.
+  const [analyzedInput, setAnalyzedInput] = useState<string | null>(null);
   // US-10.1: the signed-in user's history; null until loaded.
   const [history, setHistory] = useState<HistoryResponse | null>(null);
   const [historyError, setHistoryError] = useState(false);
@@ -164,6 +167,7 @@ export default function HomePage() {
   async function runAnalysis(submitted: SubmittedRequest): Promise<void> {
     setLastSubmittedRequest(submitted);
     setAnalysis(null);
+    setAnalyzedInput(null); // US-10.3 AC2
     setStatus('loading');
     try {
       const response = await sendRequest(submitted, backendToken);
@@ -201,6 +205,7 @@ export default function HomePage() {
     try {
       const entry = await getHistoryEntry(id, backendToken);
       setAnalysis(entry.analysis);
+      setAnalyzedInput(entry.analyzedInput);
       setNoRetryText(null);
       setStatus('success');
     } catch {
@@ -306,6 +311,7 @@ export default function HomePage() {
             onRetry={handleRetry}
           />
         ) : null}
+        {analyzedInput !== null && analysis !== null ? <AnalyzedInputView analyzedInput={analyzedInput} /> : null}
         <AnalysisResultView
           result={analysis?.result ?? null}
           recommendations={analysis?.recommendations ?? []}
