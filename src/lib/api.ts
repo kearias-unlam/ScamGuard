@@ -34,10 +34,19 @@ export function getUrlAnalysisEndpoint(): string {
   return buildBackendUrl('/analysis/url');
 }
 
-async function postJson<TResponse>(endpoint: string, body: unknown): Promise<TResponse> {
+// US-9.1 (#104): with a session, the backend token goes in the Authorization header; without one, no header is sent.
+function buildHeaders(token?: string): Record<string, string> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  return headers;
+}
+
+async function postJson<TResponse>(endpoint: string, body: unknown, token?: string): Promise<TResponse> {
   const response = await fetch(endpoint, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: buildHeaders(token),
     body: JSON.stringify(body),
   });
   if (!response.ok) {
@@ -48,18 +57,20 @@ async function postJson<TResponse>(endpoint: string, body: unknown): Promise<TRe
 
 export async function postAnalysis(
   request: MessageAnalysisRequest,
+  token?: string,
 ): Promise<MessageAnalysisResponse> {
-  return postJson<MessageAnalysisResponse>(getAnalysisEndpoint(), request);
+  return postJson<MessageAnalysisResponse>(getAnalysisEndpoint(), request, token);
 }
 
 export async function postEmailAnalysis(
   request: EmailAnalysisRequest,
+  token?: string,
 ): Promise<MessageAnalysisResponse> {
-  return postJson<MessageAnalysisResponse>(getEmailAnalysisEndpoint(), request);
+  return postJson<MessageAnalysisResponse>(getEmailAnalysisEndpoint(), request, token);
 }
 
-export async function postUrlAnalysis(request: UrlAnalysisRequest): Promise<MessageAnalysisResponse> {
-  return postJson<MessageAnalysisResponse>(getUrlAnalysisEndpoint(), request);
+export async function postUrlAnalysis(request: UrlAnalysisRequest, token?: string): Promise<MessageAnalysisResponse> {
+  return postJson<MessageAnalysisResponse>(getUrlAnalysisEndpoint(), request, token);
 }
 
 export function getCriticalMessagesEndpoint(): string {

@@ -8,6 +8,8 @@ const SIGNIN_ROUTE = '**/api/auth/signin/*';
 const SIGNOUT_ROUTE = '**/api/auth/signout';
 
 export const SESSION_USER_NAME = 'Ana Pérez';
+// Opaque for the frontend: it only forwards it to the backend (#104).
+export const SESSION_BACKEND_TOKEN = 'test-backend-token';
 
 const providers = {
   google: {
@@ -37,7 +39,11 @@ export async function mockSession(page: Page, { signedIn, userName = SESSION_USE
 
   await page.route(SESSION_ROUTE, async (route) => {
     const session = isSignedIn
-      ? { user: userName === null ? {} : { name: userName }, expires: '2099-01-01T00:00:00.000Z' }
+      ? {
+          user: userName === null ? {} : { name: userName },
+          expires: '2099-01-01T00:00:00.000Z',
+          backendToken: SESSION_BACKEND_TOKEN,
+        }
       : null;
     await route.fulfill({ json: session });
   });

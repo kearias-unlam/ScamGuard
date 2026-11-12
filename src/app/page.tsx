@@ -1,6 +1,7 @@
 "use client";
 
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 
 import {
@@ -25,14 +26,15 @@ type SubmittedRequest =
   | { kind: 'email'; emailFile: File }
   | { kind: 'url'; url: string };
 
-async function sendRequest(submitted: SubmittedRequest): Promise<MessageAnalysisResponse> {
+// The token is not part of SubmittedRequest, so "Reintentar" always sends the current one (US-9.1).
+async function sendRequest(submitted: SubmittedRequest, token?: string): Promise<MessageAnalysisResponse> {
   switch (submitted.kind) {
     case 'message':
-      return postAnalysis(submitted.request);
+      return postAnalysis(submitted.request, token);
     case 'email':
-      return postEmailAnalysis({ emailContent: await submitted.emailFile.text() });
+      return postEmailAnalysis({ emailContent: await submitted.emailFile.text() }, token);
     case 'url':
-      return postUrlAnalysis({ url: submitted.url });
+      return postUrlAnalysis({ url: submitted.url }, token);
   }
 }
 
@@ -49,6 +51,7 @@ function unreadableErrorText(submitted: SubmittedRequest, error: unknown): strin
 }
 
 export default function HomePage() {
+  const { data: session } = useSession();
   const [activeTab, setActiveTab] = useState<AnalysisInputTab>('message');
   const [message, setMessage] = useState('');
   const [shareInPanel, setShareInPanel] = useState(false);
@@ -122,7 +125,7 @@ export default function HomePage() {
     setAnalysis(null);
     setStatus('loading');
     try {
-      const response = await sendRequest(submitted);
+      const response = await sendRequest(submitted, session?.backendToken);
       setAnalysis(response);
       setStatus('success');
     } catch (error) {
