@@ -487,7 +487,7 @@ Como usuario con la sesión iniciada quiero ver en una barra lateral mis anális
 
 ADO ID: #99 · Status: done
 
-El título de cada entrada es el resumen del análisis, recortado. Al abrir una entrada se ve su resultado completo (nivel de riesgo, explicación, resumen, indicadores, recomendaciones y aviso), no el mensaje original, que no se guarda.
+El título de cada entrada es el resumen del análisis, recortado. Al abrir una entrada se ve su resultado completo (nivel de riesgo, explicación, resumen, indicadores, recomendaciones y aviso). Desde US-10.3 también se ve lo que se analizó.
 
 Criterios de aceptación:
 1. Sin sesión, la página principal no muestra la barra lateral "Historial".
@@ -519,6 +519,22 @@ Criterios de aceptación:
 Tasks:
 - #109 Backend: history limit and delete. `HISTORY_LIMIT` (defined in #107) is enforced: with a user whose history is full, the three analysis endpoints return `409` with the full history text before calling the AI (one dependency, `ensure_history_not_full`, shared by the three; if counting fails with `StorageError`, it is logged and the analysis goes on, since the later save fails too). `DELETE /history/{id}` returns `204`, `404` for an entry that does not exist or belongs to another user, `401` without a user, and `503` with the history text on a storage error. CORS also allows `DELETE`. Pytest: a fourth analysis returns `409` and the AI is not called (the three endpoints); without a user there is no limit; a failed count does not block the analysis; after a delete the next analysis is saved; deleting another user's entry is `404`; CORS for `DELETE`. Depends on #107.
 - #110 Frontend: full history and delete. Add `deleteHistoryEntry` to `src/lib/api.ts`. `HistorySidebar` shows `history-limit-notice` **(new)** and an "Eliminar" button per entry (`history-delete-button` **(new)**, accessible name "Eliminar" plus the entry title) that deletes it and reloads the history; a result already shown stays. With `isFull`, the forms receive a prop that disables their analyze button and the input card shows `history-full-message` **(new)** (the frontend relies on `isFull` and never counts entries itself; the texts are fixed UI texts, so "3" is not built from `limit`). A `409` from an analysis endpoint shows the same message in `analysis-error` without "Reintentar" (as the unreadable email and link errors) and reloads the history, so the message may show in both places. If a delete fails, `history-error` is shown and the list stays. Add the delete helper to `tests/fixtures/history.ts` and `tests/limite-historial.spec.ts` for AC1 to AC4. Depends on #108 and #109.
+
+### US-10.3 Ver lo que analicé
+Como usuario con la sesión iniciada quiero ver en el historial el mensaje, el correo o el link que analicé para recordar a qué corresponde cada resultado.
+
+ADO ID: #111 · Status: pending
+
+Lo analizado se guarda junto al resultado, aunque tenga datos personales: es el historial del propio usuario y solo lo ve él. Se borra con "Eliminar". Para un mensaje se guarda el texto tal como se envió; para un link, el link; para un correo, el resumen que analizó ScamGuard (remitente, asunto, autenticación, adjuntos, enlaces y cuerpo; ver [Email digest](#email-digest)), no el archivo. Los "Datos a ocultar" no se guardan. Se muestra solo para leer: el formulario no cambia (US-10.1).
+
+Criterios de aceptación:
+1. Al elegir un análisis del historial, la columna "Resultado del análisis" muestra el título "Lo que analizaste" y el mensaje, el correo o el link analizado (`history-entry-input`), antes del resultado.
+2. Al hacer un análisis nuevo, "Lo que analizaste" deja de mostrarse.
+
+Tasks:
+- #112 Contract: analyzed input in the history entry. Add `analyzedInput` to `HistoryEntry` (see [API contract](#api-contract)) in `src/types.ts` and `backend/app/models.py` (`analyzed_input`). It is not part of `HistoryEntrySummary`, so `GET /history` does not change. Add it to the entries of `tests/fixtures/history.ts` so the suite stays green. Nothing is saved or rendered yet.
+- #113 Backend: save what was analyzed. Add `analyzed_input TEXT NOT NULL` to `analysis_history` (see [Analysis history storage](#analysis-history-storage)); `save_history_entry` and `record_analysis` receive it; the message endpoint passes the message as sent, the link endpoint the link as sent, and the email endpoint the digest it analyzed (the email service returns it together with the result, so it is built once). `sensitiveData` is never saved. `GET /history/{id}` returns it. No migration: delete the local `backend/data/scamguard.db` afterwards, since the table changes. Pytest: each kind saves its input; the email saves the digest, not the raw file; `sensitiveData` is not saved; `GET /history/{id}` returns `analyzedInput` and `GET /history` does not. Depends on #112.
+- #114 Frontend: show what was analyzed. When an entry is opened, the result column shows, before `analysis-result`, an `h2` "Lo que analizaste" **(new)** and the text in `history-entry-input` **(new)** (line breaks kept, long text wraps; display only). `page.tsx` keeps it with the opened analysis and clears it when a new analysis starts. Plain CSS with the palette variables (quote-like block, like the evidence). No Playwright test for this US (decided by the user): AC1 and AC2 are checked by hand with a signed-in account. Depends on #112 and #113.
 
 ## UI texts
 
@@ -590,6 +606,7 @@ Tasks:
 | History limit notice (US-10.2) | Versión gratuita: hasta 3 análisis en tu historial. |
 | History full message (also the `409` body) | Llegaste al límite de 3 análisis de la versión gratuita. Eliminá uno del historial para hacer un análisis nuevo. |
 | Delete history entry button | Eliminar |
+| Analyzed input heading (US-10.3) | Lo que analizaste |
 
 ## Visual design
 
@@ -772,6 +789,7 @@ export interface HistoryResponse {
 
 export interface HistoryEntry extends HistoryEntrySummary {
   analysis: MessageAnalysisResponse; // As returned when it was analyzed
+  analyzedInput: string; // US-10.3: the message or link as sent, or the email digest; only in the full entry
 }
 ```
 
@@ -950,7 +968,7 @@ Login with SSO (Feature 9). Optional: every existing feature works without a ses
 
 - Engine: the same SQLite file as [Critical messages storage](#critical-messages-storage) (`SCAMGUARD_DB_PATH`), module `backend/app/storage/history.py`. The DB path, the connection helper, and `StorageError` live in the shared `backend/app/storage/database.py` (#106), used by both storages.
 - Table `analysis_history`: `id INTEGER PRIMARY KEY`, `user_id TEXT NOT NULL`, `kind TEXT NOT NULL` (`message`, `email`, or `url`), `title TEXT NOT NULL`, `analysis_json TEXT NOT NULL` (the `MessageAnalysisResponse` as returned), `created_at TEXT NOT NULL` (UTC, ISO 8601). Created on first use.
-- What is saved: only successful analyses of a signed-in user, with its result and recommendations. The submitted message, email file, link, digest, and `sensitiveData` are never saved; the indicator evidence quotes inside the result are saved, since they are part of the result.
+- What is saved: only successful analyses of a signed-in user, with its result and recommendations and, since US-10.3, what was analyzed (`analyzed_input TEXT NOT NULL`): the message as sent, the link as sent, or the [email digest](#email-digest) (never the raw `.eml` file). It may contain personal data; it is the user's own history, visible only to them, and deleted with the entry. `sensitiveData` is never saved.
 - Title: the result `summary`, trimmed; when longer than 80 characters, the first 80 (trailing spaces removed) plus "…". Defined once, in `backend/app/services/history.py`.
 - Limit: `HISTORY_LIMIT = 3` per user, defined in `backend/app/services/history.py` (#107 returns it as `limit` and `isFull`; #109 enforces it), checked before calling the AI. Entries are never deleted automatically; `DELETE /history/{id}` deletes the row permanently.
 - Every query filters by `user_id`: a user can never read or delete another user's entries.
@@ -977,4 +995,4 @@ Follow `.github/instructions/*.instructions.md`.
 Each story has tests for the happy path and the most likely failure path, as defined in `AGENTS.md`.
 
 ### NFR-07 Privacy of stored messages
-Only `HIGH` risk messages the user chose to share are stored, always masked, and the panel says so. See [Critical messages storage](#critical-messages-storage). Email files (Feature 4) are never stored or shared; see [Email digest](#email-digest). Links (Feature 6) are never fetched, stored, or shared; see [URL digest](#url-digest). The analysis history (Feature 10) is stored only for signed-in users, holds results but never the submitted input, is visible only to its owner, and is deleted when the user deletes an entry; see [Analysis history storage](#analysis-history-storage).
+Only `HIGH` risk messages the user chose to share are stored, always masked, and the panel says so. See [Critical messages storage](#critical-messages-storage). Email files (Feature 4) are never stored or shared; see [Email digest](#email-digest). Links (Feature 6) are never fetched, stored, or shared; see [URL digest](#url-digest). The analysis history (Feature 10) is stored only for signed-in users, holds the results and, since US-10.3, what was analyzed (the message, the link, or the email digest, never the raw file or `sensitiveData`), is visible only to its owner, and is deleted when the user deletes an entry; see [Analysis history storage](#analysis-history-storage).
