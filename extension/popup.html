@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ScamGuard</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <header>
+      <h1>ScamGuard</h1>
+    </header>
+
+    <main>
+      <section aria-labelledby="analysis-heading">
+        <h2 id="analysis-heading">Analizá este link</h2>
+        <form>
+          <label for="active-url">URL de la pestaña activa</label>
+          <input id="active-url" name="active-url" type="url" readonly aria-describedby="url-help">
+          <p id="url-help">La URL se analiza sin abrirla ni descargar su contenido.</p>
+          <button type="button" id="analyze-url-button">Analizar link</button>
+        </form>
+      </section>
+
+      <section id="analysis-status" aria-live="polite" aria-atomic="true">
+        <h2>Estado del análisis</h2>
+        <p id="initial-state">Listo para analizar.</p>
+        <p id="loading-state" hidden>Analizando link...</p>
+        <p id="error-state" role="alert" hidden></p>
+        <button type="button" id="retry-analysis-button" hidden>Reintentar</button>
+      </section>
+
+      <section id="analysis-result" aria-labelledby="result-heading" hidden>
+        <h2 id="result-heading">Resultado del análisis</h2>
+        <dl>
+          <div>
+            <dt>Nivel de riesgo</dt>
+            <dd id="risk-level"></dd>
+          </div>
+        </dl>
+        <p id="analysis-summary"></p>
+        <p id="analysis-explanation"></p>
+
+        <section aria-labelledby="indicators-heading">
+          <h3 id="indicators-heading">Indicadores detectados</h3>
+          <ul id="analysis-indicators"></ul>
+        </section>
+
+        <section aria-labelledby="recommendations-heading">
+          <h3 id="recommendations-heading">Qué podés hacer</h3>
+          <ul id="analysis-recommendations"></ul>
+        </section>
+
+        <p id="analysis-disclaimer">
+          Este resultado es una ayuda para decidir, no una confirmación de fraude.
+        </p>
+      </section>
+    </main>
+    <script src="popup.js" defer></script>
+  </body>
+</html>

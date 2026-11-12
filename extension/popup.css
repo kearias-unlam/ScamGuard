@@ -1,0 +1,231 @@
+:root {
+  color-scheme: light;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  color: #111827;
+  background: #f5f7fb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+body {
+  width: 360px;
+  min-height: 240px;
+  margin: 0;
+  background: #f5f7fb;
+}
+
+header {
+  padding: 1rem 1.25rem;
+  color: #ffffff;
+  background: #1d4ed8;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 0;
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+
+h2 {
+  margin-bottom: 1rem;
+  font-size: 1.05rem;
+  line-height: 1.3;
+}
+
+h3 {
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+main {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+main > section {
+  padding: 1rem;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+}
+
+input,
+button {
+  font: inherit;
+}
+
+input {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.6rem 0.7rem;
+  color: #111827;
+  background: #f9fafc;
+  border: 1px solid #9ca3af;
+  border-radius: 0.5rem;
+}
+
+input[readonly] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+input:focus-visible,
+button:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+
+#url-help {
+  margin: 0.5rem 0 1rem;
+  color: #4b5563;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+button {
+  min-height: 2.5rem;
+  padding: 0.6rem 0.9rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+#analyze-url-button {
+  width: 100%;
+  color: #ffffff;
+  background: #1d4ed8;
+}
+
+#retry-analysis-button {
+  color: #1d4ed8;
+  background: #ffffff;
+  border-color: #1d4ed8;
+}
+
+button:hover:not(:disabled) {
+  filter: brightness(0.9);
+}
+
+button:disabled {
+  color: #4b5563;
+  background: #e5e7eb;
+  border-color: #d1d5db;
+  cursor: not-allowed;
+}
+
+#analysis-status {
+  color: #4b5563;
+}
+
+#analysis-status h2 {
+  margin-bottom: 0.5rem;
+}
+
+#analysis-status p {
+  margin-bottom: 0;
+  line-height: 1.45;
+}
+
+#error-state {
+  color: #b91c1c;
+  background: #fef2f2;
+  border-left: 4px solid #b91c1c;
+  padding: 0.65rem 0.75rem;
+}
+
+#analysis-result {
+  border-color: #93c5fd;
+}
+
+#analysis-result dl {
+  margin: 0 0 1rem;
+}
+
+#analysis-result dt {
+  margin-bottom: 0.35rem;
+  color: #4b5563;
+  font-weight: 600;
+}
+
+#risk-level {
+  display: inline-block;
+  padding: 0.3rem 0.65rem;
+  color: #374151;
+  background: #e5e7eb;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+#analysis-summary,
+#analysis-explanation {
+  line-height: 1.5;
+}
+
+#analysis-indicators,
+#analysis-recommendations {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+#analysis-indicators li,
+#analysis-recommendations li {
+  padding: 0.7rem;
+  background: #f9fafc;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  line-height: 1.45;
+}
+
+#analysis-indicators li strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+#analysis-indicators li p {
+  margin-bottom: 0.4rem;
+}
+
+#analysis-indicators li blockquote {
+  margin: 0;
+  padding-left: 0.65rem;
+  color: #4b5563;
+  border-left: 3px solid #93c5fd;
+  font-style: italic;
+}
+
+#analysis-disclaimer {
+  margin-bottom: 0;
+  padding-top: 0.75rem;
+  color: #4b5563;
+  border-top: 1px solid #d1d5db;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
