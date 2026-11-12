@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from app.ai.errors import AIServiceError
 from app.routes import router
 from app.services.email_digest import InvalidEmailError
-from app.services.history import HistoryEntryNotFoundError, HistoryUnavailableError
+from app.services.history import HistoryEntryNotFoundError, HistoryFullError, HistoryUnavailableError
 from app.services.url_digest import InvalidUrlError
 from app.storage.database import StorageError
 
@@ -18,6 +18,10 @@ FRONTEND_ORIGIN = "http://localhost:3000"
 AI_UNAVAILABLE_DETAIL = "Los servidores están ocupados. Intentá de nuevo más tarde."
 PANEL_UNAVAILABLE_DETAIL = "No se pudo cargar el panel. Intentá de nuevo más tarde."
 HISTORY_UNAVAILABLE_DETAIL = "No se pudo cargar el historial. Intentá de nuevo más tarde."
+# US-10.2: the same text the frontend shows when the history is full.
+HISTORY_FULL_DETAIL = (
+    "Llegaste al límite de 3 análisis de la versión gratuita. Eliminá uno del historial para hacer un análisis nuevo."
+)
 # User-visible 422 text for an unreadable email (US-4.2); the same text the frontend shows.
 EMAIL_UNREADABLE_DETAIL = "No se pudo leer el correo. Verificá que sea un archivo .eml de hasta 1 MB."
 # User-visible 422 text for an invalid link (US-6.2); the same text the frontend shows.
@@ -30,7 +34,7 @@ app = FastAPI(title="ScamGuard API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[FRONTEND_ORIGIN],
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "DELETE"],
     allow_headers=["Content-Type", "Authorization"],
     allow_credentials=False,
 )
@@ -53,6 +57,12 @@ async def handle_storage_error(request: Request, error: StorageError) -> JSONRes
 async def handle_history_unavailable_error(request: Request, error: HistoryUnavailableError) -> JSONResponse:
     logger.warning("History storage error: %s", error)  # Internal cause only; never sent to the client.
     return JSONResponse(status_code=503, content={"detail": HISTORY_UNAVAILABLE_DETAIL})
+
+
+# US-10.2: the free version keeps at most HISTORY_LIMIT entries; checked before calling the AI.
+@app.exception_handler(HistoryFullError)
+async def handle_history_full_error(request: Request, error: HistoryFullError) -> JSONResponse:
+    return JSONResponse(status_code=409, content={"detail": HISTORY_FULL_DETAIL})
 
 
 # US-10.1: an entry that does not exist and another user's entry look the same.

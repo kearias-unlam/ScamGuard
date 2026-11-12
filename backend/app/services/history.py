@@ -3,7 +3,9 @@
 import logging
 from collections.abc import Callable
 
-from app.auth import User
+from fastapi import Depends
+
+from app.auth import User, get_current_user
 from app.models import HistoryEntry, HistoryEntryKind, HistoryResponse, MessageAnalysisResponse
 from app.storage import history as history_storage
 from app.storage.database import StorageError
@@ -25,6 +27,25 @@ class HistoryUnavailableError(Exception):
 
 class HistoryEntryNotFoundError(Exception):
     """The entry does not exist or belongs to another user. main.py maps it to 404."""
+
+
+class HistoryFullError(Exception):
+    """US-10.2: the user's history is full. main.py maps it to 409 with the history full text."""
+
+
+def ensure_history_not_full(user: User | None = Depends(get_current_user)) -> None:
+    """US-10.2: dependency of the three analysis endpoints, resolved before the AI is called.
+    Without a user there is no limit. If counting fails, the error is logged and the analysis goes on:
+    the later save fails too, so the limit cannot really be exceeded."""
+    if user is None:
+        return
+    try:
+        count = history_storage.count_history_entries(user.id)
+    except StorageError as error:
+        logger.warning("History count failed; the analysis is not blocked: %s", error)
+        return
+    if count >= HISTORY_LIMIT:
+        raise HistoryFullError(user.id)
 
 
 def get_history_saver() -> HistorySaver:
@@ -69,3 +90,13 @@ def get_history_entry(user: User, entry_id: int) -> HistoryEntry:
     if entry is None:
         raise HistoryEntryNotFoundError(str(entry_id))
     return entry
+
+
+def delete_history_entry(user: User, entry_id: int) -> None:
+    """US-10.2: delete one of the user's entries permanently."""
+    try:
+        deleted = history_storage.delete_history_entry(user.id, entry_id)
+    except StorageError as error:
+        raise HistoryUnavailableError(str(error)) from error
+    if not deleted:
+        raise HistoryEntryNotFoundError(str(entry_id))

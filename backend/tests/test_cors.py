@@ -51,3 +51,19 @@ def test_cors_preflight_allows_authorization_header(client: TestClient) -> None:
 
     assert response.status_code == 200
     assert "authorization" in response.headers["access-control-allow-headers"].lower()
+
+
+# US-10.2 (#109): the frontend deletes history entries with DELETE and the session token.
+def test_cors_preflight_allows_delete_for_history(client: TestClient) -> None:
+    response = client.options(
+        "/history/1",
+        headers={
+            "Origin": FRONTEND_ORIGIN,
+            "Access-Control-Request-Method": "DELETE",
+            "Access-Control-Request-Headers": "authorization",
+        },
+    )
+
+    assert response.status_code == 200
+    assert "DELETE" in response.headers["access-control-allow-methods"]
+    assert "authorization" in response.headers["access-control-allow-headers"].lower()
