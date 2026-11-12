@@ -25,3 +25,6 @@ __pycache__/
 
 #App logs
 logs/
+
+# Gmail extension build output (Feature 11)
+/extension/dist/

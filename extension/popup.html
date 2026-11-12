@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>ScamGuard</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="popup">
+      <h1 class="popup__title">ScamGuard</h1>
+      <p class="popup__hint" id="popup-hint" data-testid="popup-hint" hidden></p>
+      <button type="button" class="button button--primary" id="analyze-email-button" data-testid="analyze-email-button" disabled>
+        Analizar este correo
+      </button>
+      <p class="popup__status" id="popup-status" role="status" data-testid="popup-status"></p>
+      <p class="popup__error" id="popup-error" role="alert" data-testid="popup-error" hidden></p>
+    </main>
+    <!-- MV3 forbids inline scripts; tsc emits the module under dist/ (rootDir is the repo root). -->
+    <script type="module" src="dist/extension/src/popup.js"></script>
+  </body>
+</html>

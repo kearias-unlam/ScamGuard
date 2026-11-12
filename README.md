@@ -29,3 +29,14 @@ Login is optional: without these values the app works as before, signed out. Cop
 4. `SCAMGUARD_JWT_SECRET`: run `openssl rand -base64 32` and put the same value in `.env.local` and in `backend/.env`.
 
 Some universities require an administrator to approve a new app before their Microsoft 365 accounts can sign in; try a university account early.
+
+## Gmail extension (Feature 11)
+
+A Chrome extension (Manifest V3) in `extension/` that analyzes the email opened in Gmail with `POST /analysis/email`. It is loaded unpacked; it is not published in the Chrome Web Store.
+
+1. Build it from the repository root: `npm run build:extension` (compiles `extension/src/` with `tsc` to `extension/dist/`; run it again after every change).
+2. Start the backend (see above); the extension calls `http://localhost:8000` (`extension/src/config.ts`, repeated in `host_permissions` of `extension/manifest.json`).
+3. In Chrome, open `chrome://extensions`, turn on "Developer mode", click "Load unpacked", and choose the `extension/` folder. After a rebuild, click the reload icon of the extension.
+4. Open an email in Gmail and click the ScamGuard icon in the toolbar.
+
+To debug the popup, right-click it and choose "Inspect". The icons in `extension/icons/` were generated once from `shield.svg` with the macOS tools `qlmanage` and `sips`.

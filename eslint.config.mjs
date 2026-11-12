@@ -16,6 +16,7 @@ const eslintConfig = [
       'test-results/**',
       '.playwright-mcp/**',
       'next-env.d.ts',
+      'extension/dist/**',
     ],
   },
   ...compat.extends('next/core-web-vitals', 'next/typescript'),

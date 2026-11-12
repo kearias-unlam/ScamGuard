@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "ScamGuard",
+  "version": "0.1.0",
+  "description": "Analiza el correo abierto en Gmail para detectar indicios de estafa.",
+  "action": {
+    "default_title": "ScamGuard",
+    "default_popup": "popup.html",
+    "default_icon": { "16": "icons/icon-16.png", "32": "icons/icon-32.png" }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": ["https://mail.google.com/*", "http://localhost:8000/*"]
+}
