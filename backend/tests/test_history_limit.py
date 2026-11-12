@@ -57,7 +57,10 @@ def _fill_history(user_id: str = ANA) -> list[int]:
     analysis = MessageAnalysisResponse(
         result=AnalysisResult(risk_level="LOW", summary="s", explanation="e", indicators=[]), recommendations=[]
     )
-    return [save_history_entry(user_id, "message", f"Entrada {index}", analysis).id for index in range(HISTORY_LIMIT)]
+    return [
+        save_history_entry(user_id, "message", f"Entrada {index}", analysis, "texto analizado").id
+        for index in range(HISTORY_LIMIT)
+    ]
 
 
 @pytest.mark.parametrize(("path", "body"), ANALYSIS_REQUESTS)

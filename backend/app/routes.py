@@ -55,11 +55,13 @@ def post_analysis(
         save=save,
     )
     response = build_analysis_response(result)
-    record_analysis(user, "message", response, save_history)  # US-10.1: only after a successful analysis.
+    # US-10.1: only after a successful analysis. US-10.3: with the message as sent; sensitiveData is never saved.
+    record_analysis(user, "message", response, request.message, save_history)
     return response
 
 
-# US-4.2: no saver dependency, so an email can never be stored; only its result goes to the history (US-10.1).
+# US-4.2: no saver dependency, so an email is never shared in the panel; its result and digest (never the raw file)
+# go to the user's history (US-10.1, US-10.3).
 @router.post("/analysis/email", response_model=MessageAnalysisResponse, dependencies=[Depends(ensure_history_not_full)])
 def post_email_analysis(
     request: EmailAnalysisRequest,
@@ -67,12 +69,14 @@ def post_email_analysis(
     user: Annotated[User | None, Depends(get_current_user)],
     save_history: Annotated[HistorySaver, Depends(get_history_saver)],
 ) -> MessageAnalysisResponse:
-    response = build_analysis_response(analyze_email(request.email_content, analyzer))
-    record_analysis(user, "email", response, save_history)
+    analyzed = analyze_email(request.email_content, analyzer)
+    response = build_analysis_response(analyzed.result)
+    record_analysis(user, "email", response, analyzed.digest, save_history)
     return response
 
 
-# US-6.2: no saver dependency, so a link can never be stored; only its result goes to the history (US-10.1).
+# US-6.2: no saver dependency, so a link is never shared in the panel; its result and the link as sent go to the
+# user's history (US-10.1, US-10.3).
 @router.post("/analysis/url", response_model=MessageAnalysisResponse, dependencies=[Depends(ensure_history_not_full)])
 def post_url_analysis(
     request: UrlAnalysisRequest,
@@ -81,7 +85,7 @@ def post_url_analysis(
     save_history: Annotated[HistorySaver, Depends(get_history_saver)],
 ) -> MessageAnalysisResponse:
     response = build_analysis_response(analyze_url(request.url, analyzer))
-    record_analysis(user, "url", response, save_history)
+    record_analysis(user, "url", response, request.url, save_history)
     return response
 
 

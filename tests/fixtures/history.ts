@@ -36,8 +36,16 @@ export function historyResponse(entries: HistoryEntrySummary[]): HistoryResponse
   return { entries, limit: HISTORY_LIMIT, isFull: entries.length >= HISTORY_LIMIT };
 }
 
-export function historyEntry(summary: HistoryEntrySummary, resultSummary: string): HistoryEntry {
-  return { ...summary, analysis: { ...analysisResponse, result: { ...analysisResponse.result, summary: resultSummary } } };
+export function historyEntry(
+  summary: HistoryEntrySummary,
+  resultSummary: string,
+  analyzedInput = 'Hola, soy tu banco. Ingresá a este link para validar tu cuenta.',
+): HistoryEntry {
+  return {
+    ...summary,
+    analysis: { ...analysisResponse, result: { ...analysisResponse.result, summary: resultSummary } },
+    analyzedInput,
+  };
 }
 
 // Each GET /history answers the next item and repeats the last one; a number answers that error status.

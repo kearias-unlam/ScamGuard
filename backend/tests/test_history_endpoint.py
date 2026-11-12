@@ -118,9 +118,9 @@ def test_an_invalid_token_is_401_and_the_ai_is_not_called(client: TestClient) ->
 
 
 def test_list_returns_the_users_entries_most_recent_first_with_the_limit(client: TestClient) -> None:
-    first = save_history_entry(ANA, "message", "Primero", _analysis())
-    save_history_entry(BETO, "url", "De otro usuario", _analysis())
-    second = save_history_entry(ANA, "url", "Segundo", _analysis())
+    first = save_history_entry(ANA, "message", "Primero", _analysis(), "texto analizado")
+    save_history_entry(BETO, "url", "De otro usuario", _analysis(), "texto analizado")
+    second = save_history_entry(ANA, "url", "Segundo", _analysis(), "texto analizado")
 
     response = client.get("/history", headers=_auth())
 
@@ -134,13 +134,13 @@ def test_list_returns_the_users_entries_most_recent_first_with_the_limit(client:
 
 def test_list_is_full_at_the_limit(client: TestClient) -> None:
     for index in range(HISTORY_LIMIT):
-        save_history_entry(ANA, "message", f"Entrada {index}", _analysis())
+        save_history_entry(ANA, "message", f"Entrada {index}", _analysis(), "texto analizado")
 
     assert client.get("/history", headers=_auth()).json()["isFull"] is True
 
 
 def test_another_users_entry_is_404(client: TestClient) -> None:
-    saved = save_history_entry(BETO, "message", "Privado", _analysis())
+    saved = save_history_entry(BETO, "message", "Privado", _analysis(), "texto analizado")
 
     assert client.get(f"/history/{saved.id}", headers=_auth()).status_code == 404
     assert client.get(f"/history/{saved.id + 100}", headers=_auth()).status_code == 404
@@ -173,3 +173,51 @@ def test_a_storage_error_on_read_is_503_with_the_history_text(
 )
 def test_title_is_the_trimmed_summary_cut_to_80_characters(summary: str, title: str) -> None:
     assert build_history_title(summary) == title
+
+
+# US-10.3 (#113): what was analyzed is saved with the entry, and only the full entry returns it.
+def _analyzed_input_of_latest(client: TestClient) -> str:
+    entry_id = list_history_entries(ANA)[0].id
+    entry = client.get(f"/history/{entry_id}", headers=_auth())
+    assert entry.status_code == 200
+    return entry.json()["analyzedInput"]
+
+
+def test_the_message_is_saved_as_sent_without_the_sensitive_data(client: TestClient) -> None:
+    message = "Hola Ana, soy de tu banco.\nPasame tu clave 1234 hoy."
+    body = {"message": message, "shareInPanel": True, "sensitiveData": "Ana, 1234"}
+
+    assert client.post("/analysis", json=body, headers=_auth()).status_code == 200
+
+    analyzed_input = _analyzed_input_of_latest(client)
+    assert analyzed_input == message
+    entry = client.get(f"/history/{list_history_entries(ANA)[0].id}", headers=_auth()).json()
+    assert "sensitiveData" not in entry and "Ana, 1234" not in str(entry["analysis"])
+
+
+def test_the_link_is_saved_as_sent(client: TestClient) -> None:
+    url = "https://banco-seguro.example.com/validar?cuenta=1"
+
+    assert client.post("/analysis/url", json={"url": url}, headers=_auth()).status_code == 200
+
+    assert _analyzed_input_of_latest(client) == url
+
+
+def test_the_email_saves_its_digest_not_the_raw_file(client: TestClient) -> None:
+    raw = "From: Banco <banco@example.com>\nSubject: Aviso\nX-Secret-Header: no-va\n\nValidá tu cuenta hoy."
+
+    assert client.post("/analysis/email", json={"emailContent": raw}, headers=_auth()).status_code == 200
+
+    analyzed_input = _analyzed_input_of_latest(client)
+    assert analyzed_input.startswith("De: Banco <banco@example.com>")
+    assert "Asunto: Aviso" in analyzed_input
+    assert "Cuerpo:\nValidá tu cuenta hoy." in analyzed_input
+    assert "X-Secret-Header" not in analyzed_input
+
+
+def test_the_history_list_does_not_include_the_analyzed_input(client: TestClient) -> None:
+    client.post("/analysis", json={"message": "Validá tu cuenta"}, headers=_auth())
+
+    entries = client.get("/history", headers=_auth()).json()["entries"]
+
+    assert entries and all("analyzedInput" not in entry for entry in entries)

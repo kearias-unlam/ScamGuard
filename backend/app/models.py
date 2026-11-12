@@ -148,3 +148,4 @@ class HistoryResponse(CamelModel):
 
 class HistoryEntry(HistoryEntrySummary):
     analysis: MessageAnalysisResponse  # As returned when it was analyzed.
+    analyzed_input: str  # US-10.3: the message or link as sent, or the email digest; only in the full entry.

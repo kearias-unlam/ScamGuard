@@ -17,8 +17,8 @@ HISTORY_LIMIT = 3
 TITLE_MAX_CHARS = 80
 TITLE_ELLIPSIS = "…"
 
-# Stores one entry for the user; raises StorageError on any failure.
-HistorySaver = Callable[[str, HistoryEntryKind, str, MessageAnalysisResponse], object]
+# Stores one entry for the user (user id, kind, title, response, analyzed input); raises StorageError on any failure.
+HistorySaver = Callable[[str, HistoryEntryKind, str, MessageAnalysisResponse, str], object]
 
 
 class HistoryUnavailableError(Exception):
@@ -62,14 +62,18 @@ def build_history_title(summary: str) -> str:
 
 
 def record_analysis(
-    user: User | None, kind: HistoryEntryKind, response: MessageAnalysisResponse, save: HistorySaver
+    user: User | None,
+    kind: HistoryEntryKind,
+    response: MessageAnalysisResponse,
+    analyzed_input: str,
+    save: HistorySaver,
 ) -> None:
-    """Save a successful analysis for a signed-in user. Without a user nothing is saved.
-    A storage failure is logged and never changes the analysis response."""
+    """Save a successful analysis for a signed-in user, with what was analyzed (US-10.3). Without a user nothing is
+    saved. A storage failure is logged and never changes the analysis response."""
     if user is None:
         return
     try:
-        save(user.id, kind, build_history_title(response.result.summary), response)
+        save(user.id, kind, build_history_title(response.result.summary), response, analyzed_input)
     except StorageError as error:
         logger.warning("History entry not saved: %s", error)  # Internal cause only; never sent to the client.
 

@@ -96,4 +96,5 @@ export interface HistoryResponse {
 
 export interface HistoryEntry extends HistoryEntrySummary {
   analysis: MessageAnalysisResponse; // As returned when it was analyzed
+  analyzedInput: string; // US-10.3: the message or link as sent, or the email digest; only in the full entry
 }

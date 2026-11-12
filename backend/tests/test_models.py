@@ -128,4 +128,22 @@ def test_history_entry_rejects_unknown_kind() -> None:
             "title": "t",
             "createdAt": "2026-11-10T12:00:00+00:00",
             "analysis": {"result": {"riskLevel": "LOW", "summary": "s", "explanation": "e", "indicators": []}, "recommendations": []},
+            "analyzedInput": "hola",
         })
+
+
+# US-10.3 (#112): the full entry carries what was analyzed; the summary used by GET /history does not.
+def test_history_entry_serializes_the_analyzed_input_in_camel_case() -> None:
+    entry = HistoryEntry.model_validate({
+        "id": 1,
+        "kind": "message",
+        "title": "t",
+        "createdAt": "2026-11-10T12:00:00+00:00",
+        "analysis": {"result": {"riskLevel": "LOW", "summary": "s", "explanation": "e", "indicators": []}, "recommendations": []},
+        "analyzedInput": "Hola, soy tu banco.",
+    })
+
+    assert entry.model_dump(by_alias=True)["analyzedInput"] == "Hola, soy tu banco."
+    assert "analyzedInput" not in HistoryResponse.model_validate(
+        {"entries": [{"id": 1, "kind": "message", "title": "t", "createdAt": "x"}], "limit": 3, "isFull": False}
+    ).model_dump(by_alias=True)["entries"][0]

@@ -5,6 +5,7 @@ recommendations for its checked result (US-7.1)."""
 
 import logging
 from collections.abc import Callable
+from dataclasses import dataclass
 
 from app.ai.analyzer import AnalyzedMessage, analyze_with_model
 from app.models import AnalysisResult, MessageAnalysisResponse, Topic
@@ -81,11 +82,18 @@ def analyze_message(
     return result
 
 
-def analyze_email(email_content: str, analyzer: Analyzer) -> AnalysisResult:
+@dataclass(frozen=True)
+class AnalyzedEmail:
+    result: AnalysisResult
+    digest: str  # US-10.3: what was analyzed, saved in the user's history instead of the raw file.
+
+
+def analyze_email(email_content: str, analyzer: Analyzer) -> AnalyzedEmail:
     """US-4.2: analyze the email digest with the same rules as a message. Raises InvalidEmailError (422) when the email
-    has no readable text body. Emails are never shared, so nothing is ever saved."""
+    has no readable text body. Emails are never shared in the panel. The digest is built once and returned with the
+    result."""
     digest = build_email_digest(email_content)
-    return analyze_message(digest, analyzer, share_in_panel=False)
+    return AnalyzedEmail(result=analyze_message(digest, analyzer, share_in_panel=False), digest=digest)
 
 
 def analyze_url(url: str, analyzer: Analyzer) -> AnalysisResult:

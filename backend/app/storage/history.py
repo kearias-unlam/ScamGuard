@@ -1,7 +1,8 @@
 """SQLite persistence of the analysis history (see docs/requirements.md, Analysis history storage).
 
 Every query filters by user_id: a user can never read or delete another user's entries.
-Only the result is stored; the submitted message, email, or link never reaches this module."""
+Since US-10.3 what was analyzed is stored too (the message or link as sent, or the email digest), visible only to its
+owner; the raw email file and sensitiveData never reach this module."""
 
 import sqlite3
 from collections.abc import Iterator
@@ -18,6 +19,7 @@ CREATE TABLE IF NOT EXISTS analysis_history (
     kind TEXT NOT NULL,
     title TEXT NOT NULL,
     analysis_json TEXT NOT NULL,
+    analyzed_input TEXT NOT NULL,
     created_at TEXT NOT NULL
 )
 """
@@ -37,13 +39,14 @@ def _summary(row: tuple[int, str, str, str]) -> HistoryEntrySummary:
 
 
 def save_history_entry(
-    user_id: str, kind: HistoryEntryKind, title: str, analysis: MessageAnalysisResponse
+    user_id: str, kind: HistoryEntryKind, title: str, analysis: MessageAnalysisResponse, analyzed_input: str
 ) -> HistoryEntrySummary:
     created_at = datetime.now(UTC).isoformat(timespec="microseconds")
     with _connect() as connection:
         cursor = connection.execute(
-            "INSERT INTO analysis_history (user_id, kind, title, analysis_json, created_at) VALUES (?, ?, ?, ?, ?)",
-            (user_id, kind, title, analysis.model_dump_json(by_alias=True), created_at),
+            "INSERT INTO analysis_history (user_id, kind, title, analysis_json, analyzed_input, created_at)"
+            " VALUES (?, ?, ?, ?, ?, ?)",
+            (user_id, kind, title, analysis.model_dump_json(by_alias=True), analyzed_input, created_at),
         )
         entry_id = cursor.lastrowid
     if entry_id is None:
@@ -65,13 +68,15 @@ def get_history_entry(user_id: str, entry_id: int) -> HistoryEntry | None:
     """None when the entry does not exist or belongs to another user."""
     with _connect() as connection:
         row = connection.execute(
-            f"SELECT {_SUMMARY_COLUMNS}, analysis_json FROM analysis_history WHERE id = ? AND user_id = ?",
+            f"SELECT {_SUMMARY_COLUMNS}, analysis_json, analyzed_input FROM analysis_history WHERE id = ? AND user_id = ?",
             (entry_id, user_id),
         ).fetchone()
     if row is None:
         return None
     summary = _summary(row[:4])
-    return HistoryEntry(**summary.model_dump(), analysis=MessageAnalysisResponse.model_validate_json(row[4]))
+    return HistoryEntry(
+        **summary.model_dump(), analysis=MessageAnalysisResponse.model_validate_json(row[4]), analyzed_input=row[5]
+    )
 
 
 def delete_history_entry(user_id: str, entry_id: int) -> bool:

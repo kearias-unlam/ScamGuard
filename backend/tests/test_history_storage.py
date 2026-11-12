@@ -26,9 +26,9 @@ def _analysis(summary: str = "Pide validar la cuenta") -> MessageAnalysisRespons
 
 
 def test_save_and_list_most_recent_first_and_only_the_users_entries() -> None:
-    first = save_history_entry(ANA, "message", "Primero", _analysis())
-    save_history_entry(BETO, "url", "De otro usuario", _analysis())
-    second = save_history_entry(ANA, "email", "Segundo", _analysis())
+    first = save_history_entry(ANA, "message", "Primero", _analysis(), "texto analizado")
+    save_history_entry(BETO, "url", "De otro usuario", _analysis(), "texto analizado")
+    second = save_history_entry(ANA, "email", "Segundo", _analysis(), "texto analizado")
 
     entries = list_history_entries(ANA)
 
@@ -39,7 +39,7 @@ def test_save_and_list_most_recent_first_and_only_the_users_entries() -> None:
 
 def test_get_own_entry_returns_the_full_analysis() -> None:
     analysis = _analysis("Resumen guardado")
-    saved = save_history_entry(ANA, "message", "Resumen guardado", analysis)
+    saved = save_history_entry(ANA, "message", "Resumen guardado", analysis, "Hola, soy tu banco.\nValidá tu cuenta.")
 
     entry = get_history_entry(ANA, saved.id)
 
@@ -47,17 +47,18 @@ def test_get_own_entry_returns_the_full_analysis() -> None:
     assert entry.id == saved.id
     assert entry.kind == "message"
     assert entry.analysis == analysis
+    assert entry.analyzed_input == "Hola, soy tu banco.\nValidá tu cuenta."  # US-10.3: line breaks kept.
 
 
 def test_get_another_users_entry_returns_nothing() -> None:
-    saved = save_history_entry(ANA, "message", "Privado", _analysis())
+    saved = save_history_entry(ANA, "message", "Privado", _analysis(), "texto analizado")
 
     assert get_history_entry(BETO, saved.id) is None
     assert get_history_entry(ANA, saved.id + 100) is None
 
 
 def test_delete_only_the_users_own_entry() -> None:
-    saved = save_history_entry(ANA, "message", "Borrable", _analysis())
+    saved = save_history_entry(ANA, "message", "Borrable", _analysis(), "texto analizado")
 
     assert delete_history_entry(BETO, saved.id) is False
     assert count_history_entries(ANA) == 1
@@ -68,9 +69,9 @@ def test_delete_only_the_users_own_entry() -> None:
 
 
 def test_count_is_per_user() -> None:
-    save_history_entry(ANA, "message", "a", _analysis())
-    save_history_entry(ANA, "url", "b", _analysis())
-    save_history_entry(BETO, "email", "c", _analysis())
+    save_history_entry(ANA, "message", "a", _analysis(), "texto analizado")
+    save_history_entry(ANA, "url", "b", _analysis(), "texto analizado")
+    save_history_entry(BETO, "email", "c", _analysis(), "texto analizado")
 
     assert count_history_entries(ANA) == 2
     assert count_history_entries(BETO) == 1
@@ -78,7 +79,7 @@ def test_count_is_per_user() -> None:
 
 def test_history_and_critical_messages_share_the_same_db_file() -> None:
     save_critical_message("other", "texto [enmascarado]")
-    save_history_entry(ANA, "message", "t", _analysis())
+    save_history_entry(ANA, "message", "t", _analysis(), "texto analizado")
 
     assert len(list_critical_topics()) == 1
     assert count_history_entries(ANA) == 1
@@ -88,6 +89,6 @@ def test_sqlite_error_becomes_storage_error(tmp_path: Path, monkeypatch: pytest.
     monkeypatch.setenv("SCAMGUARD_DB_PATH", str(tmp_path))  # A directory cannot be opened as a DB.
 
     with pytest.raises(StorageError):
-        save_history_entry(ANA, "message", "t", _analysis())
+        save_history_entry(ANA, "message", "t", _analysis(), "texto analizado")
     with pytest.raises(StorageError):
         list_history_entries(ANA)
