@@ -17,6 +17,7 @@ import { AnalysisStatus, type AnalysisRequestStatus } from '@/components/Analysi
 import { AnalyzedInputView } from '@/components/AnalyzedInputView';
 import { EmailAnalysisForm } from '@/components/EmailAnalysisForm';
 import { HistorySidebar } from '@/components/HistorySidebar';
+import { LoginInvite } from '@/components/LoginInvite';
 import { MessageAnalysisForm } from '@/components/MessageAnalysisForm';
 import { UrlAnalysisForm } from '@/components/UrlAnalysisForm';
 import {
@@ -256,6 +257,8 @@ export default function HomePage() {
           Ver mensajes críticos
         </Link>
       </section>
+      {/* US-9.2: only once the session is known to be missing, so it never flashes for a signed-in user. */}
+      {sessionStatus === 'unauthenticated' ? <LoginInvite /> : null}
       <AnalysisInputTabs activeTab={activeTab} onTabChange={handleTabChange}>
         {isHistoryFull ? (
           <p className="history-full-message" data-testid="history-full-message">

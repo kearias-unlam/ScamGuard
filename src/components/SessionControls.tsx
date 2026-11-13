@@ -1,7 +1,8 @@
 'use client';
 
-import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
+
+import { GoogleSignInButton } from '@/components/GoogleSignInButton';
 
 // US-9.1: shown when the provider sends no name.
 const DEFAULT_USER_NAME = 'Usuario';
@@ -15,11 +16,8 @@ export function SessionControls() {
   }
 
   if (status !== 'authenticated') {
-    return (
-      <Link href="/login" className="button button--secondary site-header__action" data-testid="login-link">
-        Iniciar sesión
-      </Link>
-    );
+    // US-9.2: the header starts the Google sign-in directly; there is no sign-in page.
+    return <GoogleSignInButton testId="header-login-button" className="site-header__action" />;
   }
 
   function handleLogout(): void {

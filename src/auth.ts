@@ -40,7 +40,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     MicrosoftEntraID({ issuer: process.env.AUTH_MICROSOFT_ENTRA_ID_ISSUER }),
   ],
   session: { strategy: 'jwt' },
-  pages: { signIn: '/login' },
+  // US-9.2: no sign-in page; the buttons call signIn('google') directly, so Auth.js never shows its own page.
+  pages: { signIn: '/' },
   callbacks: {
     // `account` is present only on sign-in; the user id is kept in the encrypted session cookie afterwards.
     jwt({ token, account }) {

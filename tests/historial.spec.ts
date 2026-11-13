@@ -18,7 +18,7 @@ test('sin sesión la página principal no muestra la barra lateral "Historial"',
   await page.goto('/');
 
   await expect(page.getByRole('heading', { level: 1, name: '¿Ese mensaje te genera dudas?' })).toBeVisible();
-  await expect(page.getByRole('banner').getByRole('link', { name: 'Iniciar sesión' })).toBeVisible();
+  await expect(page.getByRole('banner').getByRole('button', { name: 'Continuar con Google' })).toBeVisible();
   await expect(page.getByRole('complementary', { name: 'Historial' })).toHaveCount(0);
 });
 

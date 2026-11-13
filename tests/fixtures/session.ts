@@ -53,9 +53,9 @@ export async function mockSession(page: Page, { signedIn, userName = SESSION_USE
   await page.route(PROVIDERS_ROUTE, async (route) => {
     await route.fulfill({ json: providers });
   });
-  // The real flow would redirect to Google or Microsoft; the mock keeps the browser on the login page.
+  // The real flow would redirect to Google; the mock keeps the browser on the home page (US-9.2: no sign-in page).
   await page.route(SIGNIN_ROUTE, async (route) => {
-    await route.fulfill({ json: { url: 'http://localhost:3000/login' } });
+    await route.fulfill({ json: { url: 'http://localhost:3000/' } });
   });
   await page.route(SIGNOUT_ROUTE, async (route) => {
     isSignedIn = false;

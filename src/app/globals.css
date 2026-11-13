@@ -115,21 +115,78 @@ h1 {
   text-overflow: ellipsis;
 }
 
-/* Login page (US-9.1): a narrow card with one full-width button per provider. */
-.login-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  width: min(100%, 24rem);
+/* Google sign-in button (US-9.2): secondary style with the Google "G" logo, in the header. */
+.google-sign-in-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
 }
 
-.login-card .login-card__button {
-  align-self: stretch;
+.google-sign-in-button__logo {
+  flex-shrink: 0;
+  width: 1.125rem;
+  height: 1.125rem;
 }
+
+/* Login invite (US-9.2): compact card between the hero and the input card, as wide as the column (US-8.2). */
+.card.login-invite {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  box-sizing: border-box;
+  width: min(100%, max(33.333vw, 30rem));
+  padding: 1.25rem 1.5rem;
+}
+
+.login-invite__icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+  border-radius: 0.75rem;
+}
+
+.login-invite__icon svg {
+  width: 1.375rem;
+  height: 1.375rem;
+}
+
+.login-invite__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.login-invite__body h2 {
+  margin: 0;
+  font-size: 1.0625rem;
+}
+
+.login-invite__body p {
+  font-size: 0.9375rem;
+  color: var(--color-muted);
+}
+
 
 @media (max-width: 39.99rem) {
   .site-header__inner .site-header__action {
     padding: 0.5rem 0.75rem;
+  }
+
+  /* US-9.2: the header shows "G Google" on narrow screens; the full name stays for assistive technology. */
+  .site-header__action .google-sign-in-button__prefix {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }
 

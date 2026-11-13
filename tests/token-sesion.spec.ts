@@ -27,7 +27,7 @@ test('sin sesión, "Analizar mensaje" no envía el encabezado Authorization', as
   await mockSession(page, { signedIn: false });
   await mockAnalysis(page);
   await page.goto('/');
-  await expect(page.getByRole('banner').getByRole('link', { name: 'Iniciar sesión' })).toBeVisible();
+  await expect(page.getByRole('banner').getByRole('button', { name: 'Continuar con Google' })).toBeVisible();
 
   const analysisRequest = page.waitForRequest((request) => request.method() === 'POST' && request.url().endsWith('/analysis'));
   await page.getByLabel('Mensaje', { exact: true }).fill(MESSAGE);
