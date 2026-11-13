@@ -1,0 +1,22 @@
+Return-Path: <biblioteca@universidad-demo.edu.ar>
+Authentication-Results: mx.ejemplo.com;
+       spf=pass smtp.mailfrom=universidad-demo.edu.ar;
+       dkim=pass header.d=universidad-demo.edu.ar;
+       dmarc=pass header.from=universidad-demo.edu.ar
+From: Biblioteca Central <biblioteca@universidad-demo.edu.ar>
+To: estudiante@ejemplo.com
+Subject: Recordatorio: devolución de libro
+Date: Fri, 13 Nov 2026 10:15:00 -0300
+Message-ID: <demo-bajo-001@universidad-demo.edu.ar>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+
+Hola,
+
+Te recordamos que el libro "Ingeniería de Software" que retiraste el 30/10 vence el próximo viernes 20/11.
+
+Podés devolverlo en el mostrador de la Biblioteca Central, de lunes a viernes de 9 a 20 hs, o renovarlo personalmente en el mismo horario.
+
+Saludos,
+Biblioteca Central

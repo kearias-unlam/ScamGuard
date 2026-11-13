@@ -1,0 +1,54 @@
+Return-Path: <bounce@mailer-alertas-demo.net>
+Authentication-Results: mx.ejemplo.com;
+       spf=fail smtp.mailfrom=mailer-alertas-demo.net;
+       dkim=fail header.d=bancoandino-alertas.net;
+       dmarc=fail header.from=bancoandino-alertas.net
+From: Banco Andino <seguridad@bancoandino-alertas.net>
+Reply-To: soporte.bancoandino@gmail-demo.com
+To: estudiante@ejemplo.com
+Subject: URGENTE: tu cuenta será bloqueada hoy
+Date: Fri, 13 Nov 2026 03:12:00 -0300
+Message-ID: <demo-alto-001@bancoandino-alertas.net>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mix-001"
+
+--mix-001
+Content-Type: multipart/alternative; boundary="alt-001"
+
+--alt-001
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+
+Estimado cliente:
+
+Detectamos movimientos inusuales en tu cuenta. Si no verificás tus datos en las próximas 24 horas, tu cuenta y tus tarjetas serán bloqueadas.
+
+Ingresá a https://www.bancoandino.com.ar/seguridad y confirmá tu usuario, tu clave y el número de tu tarjeta.
+
+Adjuntamos el resumen de los movimientos detectados.
+
+Atentamente,
+Área de Seguridad - Banco Andino
+
+--alt-001
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+
+<html><body>
+<p>Estimado cliente:</p>
+<p>Detectamos movimientos inusuales en tu cuenta. Si no verificás tus datos en las próximas 24 horas, tu cuenta y tus tarjetas serán bloqueadas.</p>
+<p>Ingresá a <a href="http://bancoandino-alertas.net/login.php">https://www.bancoandino.com.ar/seguridad</a> y confirmá tu usuario, tu clave y el número de tu tarjeta.</p>
+<p>Adjuntamos el resumen de los movimientos detectados.</p>
+<p>Atentamente,<br>Área de Seguridad - Banco Andino</p>
+</body></html>
+
+--alt-001--
+
+--mix-001
+Content-Type: text/html; name="resumen_movimientos.pdf.html"
+Content-Disposition: attachment; filename="resumen_movimientos.pdf.html"
+Content-Transfer-Encoding: base64
+
+PGh0bWw+PGJvZHk+PHA+QXJjaGl2byBkZSBkZW1vc3RyYWNpb24gZGUgU2NhbUd1YXJkLjwvcD48L2JvZHk+PC9odG1sPg==
+
+--mix-001--

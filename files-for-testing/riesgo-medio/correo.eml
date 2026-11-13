@@ -1,0 +1,22 @@
+Return-Path: <boletin@clubdelectura-demo.org>
+Authentication-Results: mx.ejemplo.com;
+       spf=fail smtp.mailfrom=clubdelectura-demo.org;
+       dkim=none;
+       dmarc=fail header.from=clubdelectura-demo.org
+From: Club de Lectura <boletin@clubdelectura-demo.org>
+To: estudiante@ejemplo.com
+Subject: Encuentro de noviembre del Club de Lectura
+Date: Fri, 13 Nov 2026 12:40:00 -0300
+Message-ID: <demo-medio-001@clubdelectura-demo.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+
+Hola,
+
+Te invitamos al encuentro de noviembre del Club de Lectura. Este mes vamos a charlar sobre "Rayuela", de Julio Cortázar.
+
+Nos vemos el sábado 21/11 a las 17 hs en el centro cultural del barrio. La entrada es libre y gratuita.
+
+¡Te esperamos!
+Club de Lectura
