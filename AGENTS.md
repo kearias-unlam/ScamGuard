@@ -8,7 +8,7 @@
 - Target stack:
   - Frontend: Next.js + TypeScript
   - Backend: Python + FastAPI
-  - AI: `gpt-5.4-mini` deployed on Azure Foundry, called with the `openai` Python SDK (`OpenAI` client pointed at the Azure v1 endpoint, Responses API)
+  - AI: `gpt-6-luna` deployed on Azure Foundry, called with the `openai` Python SDK (`OpenAI` client pointed at the Azure v1 endpoint, Responses API)
   - Auth (Feature 9): Auth.js (`next-auth`) with Google SSO in the frontend (the Microsoft Entra ID provider stays configured, without a login button for now); the backend verifies the session token with PyJWT
   - Gmail extension (Feature 11): Chrome Manifest V3 in `extension/`, TypeScript compiled with `tsc` (no bundler)
   - E2E: Playwright in TypeScript

@@ -464,10 +464,10 @@ Como usuario quiero iniciar sesión con mi cuenta de Google para que ScamGuard m
 ADO ID: #98 · Status: done
 
 Criterios de aceptación:
-1. Sin sesión, el encabezado muestra el enlace "Iniciar sesión", que lleva a la página "Iniciar sesión" con el botón "Continuar con Google" y sin "Continuar con Microsoft".
-2. Al hacer clic en "Continuar con Google", se inicia el inicio de sesión con Google.
-3. Con sesión, el encabezado muestra el nombre del usuario y el botón "Cerrar sesión", y no muestra "Iniciar sesión".
-4. Al hacer clic en "Cerrar sesión", el encabezado vuelve a mostrar "Iniciar sesión".
+1. Sin sesión, el encabezado muestra el enlace "Iniciar sesión", que lleva a la página "Iniciar sesión" con el botón "Continuar con Google" y sin "Continuar con Microsoft". Desde US-9.2 no hay página aparte: el encabezado muestra directamente el botón "Continuar con Google" y no "Continuar con Microsoft".
+2. Al hacer clic en "Continuar con Google", se inicia el inicio de sesión con Google. Desde US-9.2 es el botón del encabezado.
+3. Con sesión, el encabezado muestra el nombre del usuario y el botón "Cerrar sesión", y no muestra "Iniciar sesión". Desde US-9.2 tampoco muestra "Continuar con Google".
+4. Al hacer clic en "Cerrar sesión", el encabezado vuelve a mostrar "Iniciar sesión". Desde US-9.2 vuelve a mostrar "Continuar con Google".
 
 Tasks:
 - #101 Frontend: Auth.js setup. Add `next-auth` (Auth.js; approved for Feature 9, exact version pinned on install) with the Google and Microsoft Entra ID providers in `src/auth.ts` and the route handler `src/app/api/auth/[...nextauth]/route.ts`, as documented in [Authentication](#authentication) (JWT session, no database adapter, custom sign-in page `/login`). `SessionProvider` wraps the layout without a server-side session, so the client reads it from `GET /api/auth/session` (mockable in E2E). Add the frontend variables to a new `.env.example` at the repository root and document the one-time setup (Google OAuth client, Entra app registration, redirect URIs) in `README.md`. No visible change yet.
@@ -475,6 +475,21 @@ Tasks:
 - #103 Backend: user from the session token. Add `PyJWT` to `backend/requirements.txt` (approved for Feature 9). `backend/app/auth.py` defines a `User` (`id`) and the optional dependency `get_current_user`: no `Authorization` header gives `None`; a valid token gives the `User`; an invalid or expired token, or a missing `SCAMGUARD_JWT_SECRET`, returns `401` (see [Authentication](#authentication)). Add `SCAMGUARD_JWT_SECRET` to `backend/.env.example` and `backend/app/auth.py` to the backend structure in `AGENTS.md`. CORS also allows the `Authorization` header. Pytest: no header, valid token, expired token, wrong signature, missing secret, and CORS with `Authorization`.
 - #104 Frontend: send the session token to the backend. The Auth.js `jwt` and `session` callbacks add `backendToken` to the session, signed as documented in [Authentication](#authentication) with Node's built-in `crypto` (no new dependency). `SessionProvider` refetches the session every 30 minutes (`refetchInterval`), so the 1-hour token does not expire in an open tab. The `post*` functions of `src/lib/api.ts` take an optional token and send it as `Authorization: Bearer <token>`; `page.tsx` passes it only with a session, so without one the requests do not change. Add to `tests/fixtures/session.ts` a `backendToken` in the mocked session and a test that, with a session, `POST /analysis` carries the header, and without one it does not. Depends on #102 and #103.
 - #123 Frontend: Google only on the login page. Remove the "Continuar con Microsoft" button (`login-microsoft-button`) from `src/app/login/page.tsx`; the Microsoft Entra ID provider stays in `src/auth.ts`, `.env.example`, and `README.md`, so it can be brought back with the button alone. Update `tests/inicio-sesion.spec.ts`: AC1 asserts the Microsoft button is not shown, and the Microsoft sign-in test is removed. Depends on #102.
+
+### US-9.2 Iniciar sesión desde la página principal
+Como usuario quiero iniciar sesión con Google desde la página en la que estoy y saber para qué me sirve, sin pasar por una página aparte.
+
+ADO ID: pending · Status: pending
+
+La página "Iniciar sesión" (`/login`) deja de existir. Sin sesión, el encabezado muestra el botón "Continuar con Google", que abre Google directamente y, al terminar, vuelve a la página desde la que se inició. Además, la página principal muestra una tarjeta que explica para qué sirve iniciar sesión (guardar el historial, Feature 10), con el mismo botón. Con sesión, la tarjeta no se muestra. El botón lleva el logo "G" de Google como ícono decorativo.
+
+Criterios de aceptación:
+1. Sin sesión, la página principal muestra, entre la presentación y la carga del mensaje, la tarjeta "Guardá tus análisis" (`login-invite`) con el texto "Iniciá sesión con Google para guardar tus análisis y volver a verlos cuando quieras." y el botón "Continuar con Google".
+2. Al hacer clic en "Continuar con Google" de la tarjeta, se inicia el inicio de sesión con Google.
+3. Con sesión, la tarjeta "Guardá tus análisis" no se muestra.
+
+Tasks:
+- #T1 Frontend: Google sign-in button in the header and invite card. A `GoogleSignInButton` component (inline Google "G" SVG with `aria-hidden`, text "Continuar con Google", `type="button"`) that calls Auth.js `signIn('google')` and returns to the current page; it receives its `data-testid` as a prop. `SessionControls` renders it without a session instead of the "Iniciar sesión" link (`header-login-button` **(new)**, replaces `login-link`). A `LoginInvite` component, a `section` named by its `h2` "Guardá tus análisis" (`login-invite` **(new)**) with the text and the button (`login-invite-button` **(new)**), rendered by the home page only when the session status is `unauthenticated` (not while it loads, so the page does not flicker), between the hero and the input card, with the same width as the column (see [Visual design](#visual-design)). Delete `src/app/login/` and its CSS; `pages.signIn` in `src/auth.ts` becomes `/`, so Auth.js never shows its own page with every provider. Plain CSS with the palette variables (card like the others, compact: icon, heading, text, and button); WCAG AA. Update `tests/inicio-sesion.spec.ts` (US-9.1 AC1, AC2, and AC4 use the header button) and the signin mock in `tests/fixtures/session.ts`; add `tests/invitacion-sesion.spec.ts` for AC1 to AC3. Attach screenshots of the home page signed out and signed in at 1920 and 375 px wide. Depends on #123.
 
 ## Feature 10 - Historial de análisis
 
@@ -631,10 +646,12 @@ Tasks:
 | Unreadable link error | No se pudo leer el link. Verificá que sea una dirección completa, por ejemplo https://ejemplo.com. |
 | Recommendations heading (US-7.1) | Qué podés hacer |
 | Recommendation texts (set by the backend) | See the catalog in [Recommendations](#recommendations) |
-| Header login link (US-9.1) | Iniciar sesión |
-| Login page heading | Iniciar sesión |
-| Login button | Continuar con Google |
-| Login page link back to home | Volver al análisis |
+| Header login link (US-9.1; replaced by the header button in US-9.2) | Iniciar sesión |
+| Login page heading (removed in US-9.2) | Iniciar sesión |
+| Login button (header and invite card since US-9.2) | Continuar con Google |
+| Login page link back to home (removed in US-9.2) | Volver al análisis |
+| Login invite heading (US-9.2) | Guardá tus análisis |
+| Login invite text | Iniciá sesión con Google para guardar tus análisis y volver a verlos cuando quieras. |
 | Header user name when the provider sends none | Usuario |
 | Header logout button | Cerrar sesión |
 | History sidebar heading (US-10.1) | Historial |
@@ -845,7 +862,7 @@ export interface HistoryEntry extends HistoryEntrySummary {
 
 ## AI contract
 
-- Model: `gpt-5.4-mini`, deployed on Azure Foundry. Endpoint (the v1 base URL), key, and deployment name come from `.env`.
+- Model: `gpt-6-luna`, deployed on Azure Foundry. Endpoint (the v1 base URL), key, and deployment name come from `.env`.
 - SDK: `openai` Python package, `OpenAI` client with `base_url` set to the Azure v1 endpoint (`https://<resource>.services.ai.azure.com/openai/v1/`), calling the Responses API (`responses.create`). No `api_version` is needed. Structured JSON output uses `text.format` with a JSON schema (see Output schema below).
 - Timeout: 60 seconds, with no SDK retries (`max_retries=0`).
 - Input: the user message, the [email digest](#email-digest) built by the backend (Feature 4), or the [URL digest](#url-digest) built by the backend (Feature 6).
@@ -1004,7 +1021,7 @@ What the user could do next, chosen by the backend from a fixed catalog (Feature
 
 Login with SSO (Feature 9). Optional: every existing feature works without a session.
 
-- Frontend: Auth.js (`next-auth`) in Next.js, with the Google and Microsoft Entra ID providers. Microsoft uses the `common` v2.0 issuer, so both personal and work or school accounts can sign in. For now the login page shows only "Continuar con Google": the Microsoft provider stays configured in `src/auth.ts`, so bringing it back only needs the button. Session strategy `jwt` (encrypted cookie; no database adapter). Custom sign-in page `/login`.
+- Frontend: Auth.js (`next-auth`) in Next.js, with the Google and Microsoft Entra ID providers. Microsoft uses the `common` v2.0 issuer, so both personal and work or school accounts can sign in. For now the login page shows only "Continuar con Google": the Microsoft provider stays configured in `src/auth.ts`, so bringing it back only needs the button. Session strategy `jwt` (encrypted cookie; no database adapter). Custom sign-in page `/login` until US-9.2; since then there is no sign-in page: the "Continuar con Google" button calls `signIn('google')` directly and `pages.signIn` is `/`, so Auth.js never shows its default page with every provider.
 - Configuration (frontend `.env.local`, never committed; listed in `.env.example`): `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `AUTH_MICROSOFT_ENTRA_ID_ID`, `AUTH_MICROSOFT_ENTRA_ID_SECRET`, `AUTH_MICROSOFT_ENTRA_ID_ISSUER`, and `SCAMGUARD_JWT_SECRET`. The backend `.env` has the same `SCAMGUARD_JWT_SECRET`.
 - User id: `<provider>:<provider account id>` (e.g. `google:1234`), stable across logins. The name is shown in the header ("Usuario" when the provider sends none); the email is not stored by ScamGuard.
 - Backend token: the session carries `backendToken`, a JWT signed with HS256 and `SCAMGUARD_JWT_SECRET`, with `sub` (user id) and `exp` (1 hour), rebuilt by the Auth.js callbacks when the session is read. The frontend sends it as `Authorization: Bearer <token>`; the backend verifies it with PyJWT (signature, `exp`, and `sub` present). The backend never talks to Google or Microsoft.
