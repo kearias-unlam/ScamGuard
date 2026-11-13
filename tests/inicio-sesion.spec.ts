@@ -2,9 +2,9 @@ import { expect, test } from './fixtures/test';
 
 import { mockSession, SESSION_USER_NAME } from './fixtures/session';
 
-// US-9.1: sign in with Google or Microsoft.
+// US-9.1: sign in with Google.
 
-test('sin sesión el encabezado muestra "Iniciar sesión", que lleva a la página con los botones de Google y Microsoft', async ({ page }) => {
+test('sin sesión el encabezado muestra "Iniciar sesión", que lleva a la página con el botón de Google y sin el de Microsoft', async ({ page }) => {
   await mockSession(page, { signedIn: false });
   await page.goto('/');
 
@@ -13,7 +13,7 @@ test('sin sesión el encabezado muestra "Iniciar sesión", que lleva a la págin
   await expect(page).toHaveURL(/\/login$/);
   await expect(page.getByRole('heading', { level: 1, name: 'Iniciar sesión' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Continuar con Google' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Continuar con Microsoft' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Continuar con Microsoft' })).toHaveCount(0);
 });
 
 test('al hacer clic en "Continuar con Google" se inicia el inicio de sesión con Google', async ({ page }) => {
@@ -24,19 +24,6 @@ test('al hacer clic en "Continuar con Google" se inicia el inicio de sesión con
     (request) => request.method() === 'POST' && new URL(request.url()).pathname === '/api/auth/signin/google',
   );
   await page.getByRole('button', { name: 'Continuar con Google' }).click();
-
-  await signInRequest;
-});
-
-test('al hacer clic en "Continuar con Microsoft" se inicia el inicio de sesión con Microsoft', async ({ page }) => {
-  await mockSession(page, { signedIn: false });
-  await page.goto('/login');
-
-  const signInRequest = page.waitForRequest(
-    (request) =>
-      request.method() === 'POST' && new URL(request.url()).pathname === '/api/auth/signin/microsoft-entra-id',
-  );
-  await page.getByRole('button', { name: 'Continuar con Microsoft' }).click();
 
   await signInRequest;
 });

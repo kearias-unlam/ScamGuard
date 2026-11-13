@@ -3,9 +3,10 @@
 import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 
-type LoginProvider = 'google' | 'microsoft-entra-id';
+type LoginProvider = 'google';
 
-// US-9.1: login page. Auth.js sends the user to Google or Microsoft and back to the home page.
+// US-9.1: login page. Auth.js sends the user to Google and back to the home page.
+// The Microsoft Entra ID provider stays configured in `src/auth.ts`, without a button for now.
 export default function LoginPage() {
   function handleLogin(provider: LoginProvider): void {
     void signIn(provider, { redirectTo: '/' });
@@ -22,14 +23,6 @@ export default function LoginPage() {
           onClick={() => handleLogin('google')}
         >
           Continuar con Google
-        </button>
-        <button
-          type="button"
-          className="button button--primary login-card__button"
-          data-testid="login-microsoft-button"
-          onClick={() => handleLogin('microsoft-entra-id')}
-        >
-          Continuar con Microsoft
         </button>
       </div>
       <Link href="/" className="button button--secondary" data-testid="login-back-link">
