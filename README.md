@@ -17,7 +17,7 @@ The backend reads configuration with `os.environ` only (no python-dotenv), so lo
 
 Run tests: `pytest` (from `backend/` with the venv active).
 
-The frontend calls `http://localhost:8000` by default (`NEXT_PUBLIC_API_BASE_URL`); CORS allows `http://localhost:3000`.
+The frontend calls `http://localhost:8000` by default (`NEXT_PUBLIC_API_BASE_URL`); CORS allows `http://localhost:3000` by default; to also allow a deployed frontend, set `SCAMGUARD_FRONTEND_ORIGINS` to a comma-separated list of origins without a trailing slash (e.g. `http://localhost:3000,https://<your-app>.vercel.app`). It is read when the backend starts.
 
 ## Login with Google and Microsoft (Feature 9)
 

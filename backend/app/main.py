@@ -1,6 +1,7 @@
 """FastAPI application entry point: app instance, CORS, and router registration."""
 
 import logging
+import os
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,7 +14,16 @@ from app.services.history import HistoryEntryNotFoundError, HistoryFullError, Hi
 from app.services.url_digest import InvalidUrlError
 from app.storage.database import StorageError
 
-FRONTEND_ORIGIN = "http://localhost:3000"
+DEFAULT_FRONTEND_ORIGIN = "http://localhost:3000"
+
+
+def get_frontend_origins() -> list[str]:
+    """Allowed CORS origins from SCAMGUARD_FRONTEND_ORIGINS (comma-separated); localhost when unset."""
+    value = os.environ.get("SCAMGUARD_FRONTEND_ORIGINS", "")
+    origins = [origin.strip().rstrip("/") for origin in value.split(",") if origin.strip()]
+    return origins or [DEFAULT_FRONTEND_ORIGIN]
+
+
 # User-visible 503 texts (docs/requirements.md, API contract). Defined once in the backend.
 AI_UNAVAILABLE_DETAIL = "Los servidores están ocupados. Intentá de nuevo más tarde."
 PANEL_UNAVAILABLE_DETAIL = "No se pudo cargar el panel. Intentá de nuevo más tarde."
@@ -33,7 +43,7 @@ app = FastAPI(title="ScamGuard API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_ORIGIN],
+    allow_origins=get_frontend_origins(),
     allow_methods=["GET", "POST", "DELETE"],
     allow_headers=["Content-Type", "Authorization"],
     allow_credentials=False,

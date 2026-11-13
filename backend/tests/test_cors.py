@@ -1,4 +1,7 @@
+import pytest
 from fastapi.testclient import TestClient
+
+from app.main import get_frontend_origins
 
 FRONTEND_ORIGIN = "http://localhost:3000"
 
@@ -67,3 +70,16 @@ def test_cors_preflight_allows_delete_for_history(client: TestClient) -> None:
     assert response.status_code == 200
     assert "DELETE" in response.headers["access-control-allow-methods"]
     assert "authorization" in response.headers["access-control-allow-headers"].lower()
+
+
+# Deployment: allowed origins come from SCAMGUARD_FRONTEND_ORIGINS, so localhost and a deployed frontend both work.
+def test_frontend_origins_default_to_localhost(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("SCAMGUARD_FRONTEND_ORIGINS", raising=False)
+
+    assert get_frontend_origins() == [FRONTEND_ORIGIN]
+
+
+def test_frontend_origins_read_comma_separated_list(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("SCAMGUARD_FRONTEND_ORIGINS", " http://localhost:3000, https://scamguard.vercel.app/ ,")
+
+    assert get_frontend_origins() == ["http://localhost:3000", "https://scamguard.vercel.app"]
