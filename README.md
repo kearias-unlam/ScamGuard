@@ -19,6 +19,8 @@ Run tests: `pytest` (from `backend/` with the venv active).
 
 The frontend calls `http://localhost:8000` by default (`NEXT_PUBLIC_API_BASE_URL`); CORS allows `http://localhost:3000` by default; to also allow a deployed frontend, set `SCAMGUARD_FRONTEND_ORIGINS` to a comma-separated list of origins without a trailing slash (e.g. `http://localhost:3000,https://<your-app>.vercel.app`). It is read when the backend starts.
 
+Deployment: `backend/Dockerfile` builds the backend image (the platform sets `PORT`). Set the same variables as in `backend/.env`, plus `SCAMGUARD_FRONTEND_ORIGINS`, and point `SCAMGUARD_DB_PATH` to a persistent volume (e.g. `/data/scamguard.db`), since SQLite needs a disk that survives redeploys.
+
 ## Login with Google and Microsoft (Feature 9)
 
 Login is optional: without these values the app works as before, signed out. Copy `.env.example` to `.env.local` in the repository root and fill it in:
